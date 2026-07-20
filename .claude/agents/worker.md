@@ -13,6 +13,9 @@ tools: Read, Write, Edit, Bash, Grep, Glob
    — หน้าจอ/state/API ต้องตรงตามแผน ห้ามคิด flow เพิ่มเอง
    แล้ว**เปิดรูป design ของหน้าจอนั้น**จาก `docs/design/SME-PAYROLL/` (feature plan ระบุชื่อไฟล์ png ไว้)
    เพื่อเทียบ layout/state — แต่ค่าสี/spacing ยึด token ใน `@theme` เป็นคำตอบสุดท้าย
+   ⚠️ **รูปมี device frame, status bar (9:41/แบต) และแถบ LIFF header ของ LINE (‹ ชื่อหน้า ✕ + URL)
+   ติดมาด้วย — ห้าม implement สามอย่างนี้** LINE วาดให้เอง แอปเราเริ่มใต้แถบ LINE ลงมา
+   (ชื่อหน้าตั้งผ่าน `usePageTitle()` — ดู feature-plans/00 §0)
 3. ดูไฟล์ข้างเคียงใน feature เดียวกัน แล้วเขียนให้เข้ากับรูปแบบเดิม (naming, import, โครง)
 
 ## กฎที่ห้ามละเมิด (สรุปจาก CLAUDE.md — ฉบับเต็มอยู่ที่นั่น)

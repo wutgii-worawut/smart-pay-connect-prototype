@@ -24,7 +24,7 @@ UI language is **Thai**, mobile-first (LINE in-app browser). Buddhist Era (พ.�
 - `docs/feature-plans/0X-<feature>.md` — per-screen plan for each feature (components, states, APIs)
 - `docs/design/SME-PAYROLL/` — 37 design screenshots (PNG), grouped per feature; feature plans reference these by filename
 
-When a task touches a feature, **read its plan file first, then open the PNG of the screen you are building** — match layout/states to the design. Do not invent screens/flows not in the plans. Exact colors/spacing come from `@theme` tokens (source of truth), not from eyeballing the PNGs.
+When a task touches a feature, **read its plan file first, then open the PNG of the screen you are building** — match layout/states to the design. Do not invent screens/flows not in the plans. Exact colors/spacing come from `@theme` tokens (source of truth), not from eyeballing the PNGs. **The PNGs include a device frame, OS status bar, and the LINE LIFF header (back ‹ / title / ✕ / URL) — never implement these; LINE renders them.** Our app starts below the LIFF header. The only controllable part is the page title via `document.title` (see feature-plans/00 §0).
 
 ## Tech Stack (decided — do not change without asking)
 
@@ -102,7 +102,7 @@ src/
 Work is split into phases (context limits + usage limits). The shared brain lives in:
 - `plan/plan.md` — full phase breakdown (created via `/kickoff`)
 - `plan/progress.md` — **start every session by reading this file** (section 1 = bootstrap instructions, phase table with ⬜/🔄/🔍/✅ marks, "บันทึกแก้แผน" log at the bottom). Update it before ending any session
-- Commands: `/kickoff` (first time — consultant surveys, main agent writes the plan), `/resume` (every later session)
+- Commands: `/kickoff` (first time — consultant surveys, main agent writes the plan), `/resume` (every later session), `/wrap-up` (stop mid-phase — save detailed state to progress.md so the next session can continue)
 - Never mark a phase ✅ or start the next phase without explicit user approval
 
 ## Conventions
