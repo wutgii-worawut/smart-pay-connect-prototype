@@ -1,6 +1,6 @@
 # 01 — Registration (auth feature) — 4 หน้าจอ
 
-> โฟลเดอร์: `features/auth/` | อ้างอิงเอกสารหลัก: 13.2 (register ครั้งเดียว), 3.4 (OTP), 16.3 (API)
+> โฟลเดอร์: `features/auth/` | อ้างอิงarchitecture.md: 13.2 (register ครั้งเดียว), 3.4 (OTP), 16.3 (API)
 > เข้าหน้านี้เมื่อ `POST /auth/login` ตอบ `NEED_REGISTER` เท่านั้น — ผูกสำเร็จแล้วไม่เห็นอีก
 
 ## หน้าจอ
@@ -16,12 +16,12 @@
 ### 1.2 Digital ID Only — `1.LINEOA-Registration-Digital ID Only.png`
 - หน้าเดียวกับ 1.1 แต่**ตัดฟอร์มออก เหลือปุ่ม ThaID อย่างเดียว** → เป็น "config mode" ของหน้าเดียวกัน ไม่ใช่หน้าใหม่
 - ทำเป็น flag `VITE_REGISTER_MODE = 'form+thaid' | 'thaid-only'` (หรือ config จาก API)
-- ⚠️ **ThaID integration = scope ใหญ่แยกต่างหาก** (OAuth กับแอป ThaID + backend ตรวจ) — เอกสารหลักตั้งเป็นคำถามไว้แล้ว: phase ไหน? **แนะนำ phase แรกทำเฉพาะ form+OTP, ปุ่ม ThaID ซ่อนไว้** (noted → Open Questions 23)
+- ⚠️ **ThaID integration = scope ใหญ่แยกต่างหาก** (OAuth กับแอป ThaID + backend ตรวจ) — architecture.md ตั้งเป็นคำถามไว้แล้ว: phase ไหน? **แนะนำ phase แรกทำเฉพาะ form+OTP, ปุ่ม ThaID ซ่อนไว้** (noted → Open Questions 23)
 
 ### 1.3 OTP — `2.LINEOA-Registration-OTP.png`
 - Route: `/register/otp`
 - โครง: โลโก้ → คำอธิบาย "ส่งรหัส OTP ไปยังอีเมล... (อายุ 15 นาที)" → chip อีเมล (read-only) → label "รหัส OTP เลขอ้างอิง XXXX" → `OTPInput` (6 ตัว อักษร+เลข เช่น A1B2C3) → ลิงก์ "ส่งรหัสอีกครั้ง" ↻ → `PrimaryButton` ยืนยัน
-- ⚠️ design ส่ง OTP ทาง**อีเมล** (ไม่ใช่ SMS ตามที่เดาไว้ในเอกสารหลัก 3.4) → backend ใช้ email service ไม่ต้องมี SMS provider — **อัปเดตเอกสารหลักด้วย**
+- ✅ design ส่ง OTP ทาง**อีเมล** → backend ใช้ email service ไม่ต้องมี SMS provider (architecture.md §3.4 อัปเดตตรงกันแล้ว)
 - State: countdown ก่อนกดส่งซ้ำได้, แสดงเลขอ้างอิง (ref code) จาก response
 - API: `POST /auth/register/verify-otp` `{otp, refCode}` → `{token, employee}` → เก็บ Zustand → ไปหน้า Complete
 - Error: `OTP_INVALID` ใต้ช่อง, `OTP_EXPIRED` → เสนอส่งใหม่

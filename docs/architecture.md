@@ -109,8 +109,8 @@
 - **ความปลอดภัย:** ส่งไปอีเมลที่ลงทะเบียนไว้ในระบบเดิมเท่านั้น **ห้ามให้ผู้ใช้กรอกอีเมลปลายทางเอง** (กันส่งสลิปออกนอกตัวบุคคล) + เขียน audit log ทุกครั้ง (`PAYSLIP_EMAIL`)
 
 ### 3.4 Registration ด้วย OTP (กลุ่ม 1) — ปิดคำถามเปิดของ 13.2
-- กลไกพิสูจน์ตัวจริงตอนผูกบัญชี = กรอกข้อมูล + **OTP ส่งไปเบอร์โทรที่ลงทะเบียนในระบบเดิม** (มี variant Digital ID)
-- ต้องมี: SMS/OTP provider, endpoint `POST /auth/register/request-otp` + `POST /auth/register/verify-otp`, จำกัดจำนวนครั้งขอ OTP (rate limit) และอายุ OTP สั้น
+- กลไกพิสูจน์ตัวจริงตอนผูกบัญชี = กรอกเลขบัตร ปชช. + อีเมลองค์กร แล้วยืนยันด้วย **OTP ส่งไปอีเมลที่ลงทะเบียนในระบบเดิม** (อายุ 15 นาที + เลขอ้างอิง ตาม design จอ OTP; มี variant Digital ID/ThaID)
+- ต้องมี: **email service สำหรับส่ง OTP** (ไม่ใช่ SMS — design ยืนยันเป็นอีเมล), endpoint `POST /auth/register/request-otp` + `POST /auth/register/verify-otp`, จำกัดจำนวนครั้งขอ OTP (rate limit) และอายุ OTP สั้น
 - ผูกสำเร็จ → บันทึก mapping `sub ↔ พนักงาน` + audit log ตาม flow 13.2 เดิม
 
 ### 3.5 ปฏิทินวันหยุด (กลุ่ม 6)
@@ -165,7 +165,7 @@ features/
 
 ```ts
 // src/utils/date.ts  (shared — ใช้ทุก feature)
-import { format, parse, differenceInBusinessDays } from 'date-fns';
+import { format, parse, eachDayOfInterval, isWeekend } from 'date-fns';
 import { th } from 'date-fns/locale';
 
 // "16 มิถุนายน 2569"
@@ -174,14 +174,21 @@ export function formatThaiDate(date: Date): string {
   return format(date, `d MMMM '${be}'`, { locale: th });
 }
 
-// นับวันลาแบบตัดเสาร์อาทิตย์
-// (preview ฝั่ง frontend — ตัวเลขที่ตัดโควตาจริง server คำนวณซ้ำเสมอ)
-export function countLeaveDays(startStr: string, endStr: string): number {
-  // รับ 'YYYY-MM-DD' แล้ว parse เป็น local date — ห้ามใช้ new Date(str)
+// นับวันลา: ตัดเสาร์อาทิตย์ + หักวันหยุดบริษัท (3.5) — signature เดียวทั้งระบบ
+// (preview ฝั่ง frontend — ตัวเลขที่ตัดโควตาจริง server คำนวณซ้ำด้วยชุดวันหยุดเดียวกัน)
+export function countLeaveDays(
+  startStr: string,           // 'YYYY-MM-DD'
+  endStr: string,             // 'YYYY-MM-DD'
+  holidays: string[],         // จาก GET /holidays?year= เช่น ['2026-07-28']
+): number {
+  // parse เป็น local date — ห้ามใช้ new Date(str) (กติกา 4.2)
   const start = parse(startStr, 'yyyy-MM-dd', new Date());
   const end = parse(endStr, 'yyyy-MM-dd', new Date());
-  return differenceInBusinessDays(end, start) + 1;
+  return eachDayOfInterval({ start, end }).filter(
+    (d) => !isWeekend(d) && !holidays.includes(format(d, 'yyyy-MM-dd')),
+  ).length;
 }
+// หมายเหตุ: ครึ่งวัน (เช้า/บ่าย = 0.5) จัดการที่ชั้นฟอร์มโดยคูณ/ปรับจากผลลัพธ์นี้
 ```
 
 ### 4.2 กติกาเรื่อง Timezone — แยกข้อมูลเวลาเป็น 2 ชนิด ห้ามปนกัน
@@ -460,8 +467,9 @@ src/
 
 @theme {
   /* ตั้งชื่อตามที่ Figma ตั้ง จะได้คุยกับ designer ภาษาเดียวกัน */
-  --color-primary: #06c755;
-  --color-primary-dark: #05a648;
+  /* ⚠️ ค่าสีเป็น placeholder อ่านจากภาพ design — ดูดค่าจริงจาก Figma ก่อนใช้ (9.5) */
+  --color-primary: #1B6BB8;        /* น้ำเงินหลักตาม design SME-PAYROLL */
+  --color-primary-dark: #16335B;
   --color-surface: #f7f8fa;
   --color-text-secondary: #8b95a1;
 
@@ -758,6 +766,24 @@ export const router = createBrowserRouter([
   { path: '/payroll', element: <PayrollPage /> },
 ]);
 ```
+
+### 12.3 Routing Map รวม (ทุก route ในแอป)
+
+| Route | หน้า (จาก feature plans) | เข้าจาก |
+|---|---|---|
+| `/` | Home (ดักอ่าน `?target=` แล้ว redirect) | เปิด LIFF ตรง |
+| `/register` → `/register/otp` → `/register/success` | ลงทะเบียน + OTP + สำเร็จ (plan 01) | auth ตอบ `NEED_REGISTER` |
+| `/attendance` | ClockPage (state machine — plan 02) | Rich Menu `?target=attendance` |
+| `/attendance/history` | ประวัติลงเวลา | ปุ่มใน dock |
+| `/leave` | LeaveShellPage — segment การลาของฉัน\|รออนุมัติลา (plans 03+04) | Rich Menu `?target=leave` |
+| `/leave/new` | ฟอร์มยื่นลา | ปุ่ม + ใน balance |
+| `/leave/:id` | รายละเอียดใบลา (owner-view) | กดการ์ดใน list |
+| `/approval/:id` | รายละเอียดฝั่งหัวหน้า (approver modes) | กด "ตรวจสอบ" ใน segment รออนุมัติ |
+| `/payroll` | รายการสลิป (plan 05) | Rich Menu `?target=payroll` |
+| `/payroll/:id` | รายละเอียดสลิป | กดการ์ดเดือน |
+| `/calendar` | CalendarShellPage — segment ปฏิทินการลา\|วันหยุด (plan 06) | Rich Menu `?target=calendar` |
+
+> อย่าลืมเพิ่ม `'calendar'` ใน whitelist ของโค้ดดัก `?target=` (12.1) และเพิ่มปุ่ม "ดูวันหยุด" ใน Rich Menu — design มีกลุ่ม Calendar เป็นทางเข้าของตัวเอง
 
 ## 13. Session, Register และการ Verify token ฝั่ง Backend
 
@@ -1520,6 +1546,8 @@ describe('countLeaveDays', () => {
 
 ## 23. Open Questions — คำถามรอเคาะทั้งหมด (รวมที่เดียวกันลืม)
 
+> หมายเหตุโครงเอกสาร: มีข้อเสนอให้แยกไฟล์นี้เป็นหลายไฟล์ — **ตัดสินใจคงไฟล์เดียว** เพราะระบบทั้งหมด (CLAUDE.md, agents, rules, feature plans) อ้างด้วยเลข §N ของไฟล์นี้ / จะกลับมาแยกเมื่อไฟล์แตะ ~2,500+ บรรทัด หรือหลายคนแก้ชนกันบ่อย
+
 ### 23.1 คำถามเชิงนโยบาย (จากเรื่อง Role/Approval และ Remote Clock)
 
 | # | คำถาม | ตัวเลือก | สถานะ |
@@ -1528,12 +1556,15 @@ describe('countLeaveDays', () => {
 | 2 | **อนุมัติชั้นเดียวพอไหม?** | ชั้นเดียวจบ / บางประเภทต้องชั้นสอง — ถ้าชั้นเดียว ระบบง่ายลงมาก ออกแบบ status เผื่อไว้ให้แก้ทีหลังได้ | ⏳ รอเคาะ |
 | 3 | **หัวหน้าเห็นอะไรของลูกทีมบ้าง?** | ✅ **เคาะแล้วจาก design:** เห็นเฉพาะ**ใบลาของลูกทีม** (ชื่อ+รูป, ประเภท, ช่วงวันที่, จำนวนวัน, เหตุผล, ไฟล์แนบ) — ไม่มีประวัติลงเวลา ไม่มีข้อมูลเงินเดือนของลูกทีม | ✅ ตอบแล้ว |
 | 4 | **นโยบาย Remote Clock — ใครใช้ได้ ต้องมีหัวหน้ารับทราบไหม?** | (ก) อิสระ + เห็นใน report / (ข) แจ้งเตือนหัวหน้าทุกครั้ง / (ค) มีสถานะ "รอรับทราบ" / (ง) จำกัดสิทธิ์เฉพาะคนที่ถูกตั้งค่า — รายละเอียดดู ⚠️ ใน 3.1 | ⏳ รอเคาะ |
+| 5 | **แก้ไขใบลา PENDING ได้จริงไหม?** — design มีจอ "Editable" + ปุ่มแก้ไขคำขอ (plan 03 §3.5) แต่ contract ไม่มี endpoint แก้ไข | (ก) มี `PUT /leave/requests/{id}` (กระทบ data model + ต้อง reset สถานะรีวิว) / (ข) ตัดฟีเจอร์ ใช้ "ยกเลิก+ยื่นใหม่" แล้วแจ้ง designer ปรับจอ | ⏳ **รอเคาะ — กระทบ UX+data model ควรเคาะเร็ว** |
+| 6 | **หัวหน้า revoke ใบที่อนุมัติแล้ว** — design มีปุ่ม "ยกเลิกคำขอ" ในจอ History Details ฝั่งหัวหน้า (plan 04 §4.5) | ต้องเคาะ: endpoint (`POST /approval/requests/{id}/revoke`), status ใหม่ (`REVOKED` vs `CANCELLED`+actor), **คืนโควตา**, เงื่อนไขเวลา (ยกเลิกได้ถึงเมื่อไหร่ — ก่อนวันลาเริ่ม?), audit log | ⏳ **รอเคาะ — กระทบ status model+โควตา ควรเคาะเร็ว** |
 
 ### 23.2 คำถาม Infra — ต้องไปถามเพิ่มก่อนเคาะ UAT/PRD
 
 | # | คำถาม | ทำไมสำคัญ |
 |---|---|---|
 | 1 | **ระบบ admin เดิมโฮสต์อยู่ที่ไหน?** (cloud เจ้าไหน / on-premise / ผู้ให้บริการไทย) | ถ้า backend LIFF ต้องต่อ DB ระบบเดิมตรง ๆ (17.4 แบบ ข) การวางไว้ infra เดียวกันง่ายกว่ามาก — ต่อ DB ข้าม cloud คือปัญหา network/security |
+| 3 | **Map library สำหรับหน้าลงเวลา** — design เป็นแผนที่เต็มจอ (plan 02): Google Maps JS SDK (ต้องมี API key + มีค่าใช้จ่ายตามปริมาณ) vs MapLibre + OSM (ฟรี หน้าตาต่างจาก design เล็กน้อย) | องค์กรมี Google Maps API key อยู่แล้วไหม → ตัวตัดสินหลัก |
 | 2 | **มีข้อกำหนดเรื่องโฮสต์ไหม?** — โดเมนใน design เป็น `sp.go.th` (หน่วยงานรัฐ) ซึ่งมักมีข้อกำหนดโฮสต์ในประเทศ/ผ่านหน่วยงานกลาง/มาตรฐานความปลอดภัยภาครัฐ | กำหนดทางเลือก UAT/PRD ทั้งหมด — ถ้ามีข้อกำหนด อาจใช้ Vercel ได้เฉพาะ DEV และ UAT/PRD ต้องอยู่ infra ที่กำหนด |
 
 > เมื่อได้คำตอบ 2 ข้อนี้ → กลับมาเติมช่อง Hosting/Domain ของ UAT, PRD ในตาราง 18.1 และเคาะ 17.4 (API กลาง vs ต่อ DB ตรง) ไปพร้อมกัน
