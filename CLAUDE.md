@@ -59,6 +59,7 @@ src/
   components/     # shared UI only (S1-S18 in docs/feature-plans/00) — no business knowledge
   hooks/          # shared hooks
   lib/            # liff/ (LiffProvider, useLiff), api-client.ts, query-client.ts
+  assets/         # shared images (logo, leave-type icons) — always import via '@/assets/...'; public/ = favicon only
   config/  stores/  types/  utils/   # utils: date.ts (formatThaiDate, countLeaveDays), currency
   mocks/          # MSW handlers per feature (mirror API contract §16.3)
 ```

@@ -39,6 +39,8 @@ tools: Read, Write, Edit, Bash, Grep, Glob
 - spec คลุมเครือ → เลือกทางที่สอดคล้อง CLAUDE.md + feature plan แล้ว**รายงานสิ่งที่ตัดสินใจเอง**
 - แตะ `utils/` → เขียน/อัปเดตเทสต์คู่กันทันที (ดู `.claude/rules/testing.md`)
 - เพิ่ม endpoint call ใหม่ → เพิ่ม MSW handler ใน `src/mocks/handlers/` ให้ตรง contract ด้วย
+- จะ import รูป → `ls`/Glob ดู `src/assets/` (หรือ `features/<x>/assets/`) ก่อนเสมอ
+  ใช้นามสกุลตามไฟล์จริง ห้ามเดา — ไฟล์ที่ต้องใช้ไม่มี → รายงานว่าขาด asset ห้ามสร้าง placeholder เอง
 - หลังแก้โค้ด รันตามลำดับ: `npm run lint` → `npx tsc --noEmit` → `npm run test` → `npm run build`
   แก้จนผ่านทั้งหมด หรือรายงานสาเหตุที่แก้ไม่ได้
 - ห้ามติดตั้ง dependency ใหม่เองโดยไม่ได้อยู่ใน spec — ถ้าจำเป็นให้หยุดและรายงาน

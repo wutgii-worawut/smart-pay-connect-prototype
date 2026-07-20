@@ -16,6 +16,12 @@
 - Component รู้ business ของ feature ไหน → อยู่ feature นั้น; UI ล้วน → `src/components/`
 - Pure function (ไม่มี React) → `utils/*.ts` — ห้ามห่อเป็น hook; hook เฉพาะของที่แตะ React (§7)
 - ไฟล์ component = PascalCase.tsx, hooks = useXxx.ts, utils = camelCase.ts
+- **รูปภาพ**: ใช้ร่วมหลาย feature → `src/assets/` / เฉพาะ feature → `features/<x>/assets/` —
+  **import ในโค้ดเสมอ** (`import logo from '@/assets/logo-smartpay.svg'`) ห้าม hardcode path จาก `public/`
+  (`public/` มีแค่ favicon/og-image) — SVG เมื่อทำได้; ถ้าเป็น raster (PNG ฯลฯ) ต้องพื้นโปร่งใส + กว้าง ≥2× ขนาดแสดงจริง; ชื่อ kebab-case
+- **ก่อน import รูปทุกครั้ง ให้ list โฟลเดอร์ดูไฟล์จริงก่อน** (`ls src/assets/` หรือ Glob) แล้วใช้
+  **นามสกุลตามที่มีอยู่** — ห้ามเดา/พิมพ์จากความจำ (เดาผิดนามสกุลเดียว build พัง) —
+  ถ้าไฟล์ที่ต้องใช้ยังไม่มีในโฟลเดอร์ ให้รายงานว่าขาด asset อะไร ไม่ใช่สร้าง placeholder เอง
 
 ## React
 
