@@ -1,7 +1,20 @@
 # 00 — Shared Components (ของที่ใช้ซ้ำข้ามหน้าจอ/ข้าม feature)
 
 > วิเคราะห์จาก design SME-PAYROLL ทั้ง 37 หน้าจอ — component ในไฟล์นี้อยู่ที่ `src/components/` (shared)
-> ตามกฎ: "รู้ business → อยู่ใน feature / UI ล้วน → shared" (เอกสารหลักหัวข้อ 5.3, 6)
+> ตามกฎ: "รู้ business → อยู่ใน feature / UI ล้วน → shared" (architecture.md § 5.3, 6)
+
+## ⚠️ 0. สิ่งที่อยู่ในรูป design แต่ **ห้าม implement** (อ่านก่อนตาราง)
+
+รูป PNG ทุกใบเป็น mockup บนเครื่อง iPhone — มีของติดมา 3 ชั้นที่**ไม่ใช่ส่วนของแอปเรา**:
+
+| ชั้นในรูป (บน→ล่าง) | คืออะไร | ทำยังไง |
+|---|---|---|
+| กรอบมือถือ + มุมจอโค้ง + เงา | device frame ของ mockup | ❌ ไม่ทำ |
+| แถบ 9:41 + สัญญาณ + Wi-Fi + แบตเตอรี่ | OS status bar | ❌ ไม่ทำ (ระบบวาดเอง — แค่กัน safe-area ตาม architecture.md §10.2) |
+| แถบ `‹  SmartPay Connect : ลงเวลาทำงาน  ✕` + URL สีเทา | **LIFF header ของ LINE** — LINE วาดให้เองทุกหน้า | ❌ **ห้ามวาดซ้ำเด็ดขาด** (จะได้ header สองชั้น) — สิ่งเดียวที่เราคุมได้คือชื่อหน้า ผ่าน `document.title` |
+| ตั้งแต่ใต้แถบ LINE ลงมา (รวม ProfileBar ชื่อ+อีเมล) | **แอปของเราจริง** | ✅ ทำตาม design |
+
+**สิ่งที่ต้องทำแทน:** design แสดงชื่อหน้าใน LIFF header ต่างกันต่อหน้า (ลงเวลาทำงาน / บันทึกการลา / ดูสลิปเงินเดือน / ดูวันหยุด / ลงทะเบียน) → ตั้ง `document.title` ต่อ route ให้ตรง — ทำเป็น hook กลาง `usePageTitle('ลงเวลาทำงาน')` ใน `src/hooks/` เรียกจากทุก page
 
 ## 1. ตาราง Shared Components + ใครใช้บ้าง
 
@@ -24,7 +37,7 @@
 | S15 | `ProfileBar` | แถบ ชื่อ + อีเมล + kebab ⋮ ใต้ header | | ✔ | | | ✔ | |
 | S16 | Form controls: `TextInput` `Textarea` `SelectField` `DateRangeField` `OTPInput` `ToggleFullHalfDay` | ช่องกรอกมุมมนพื้นขาว | ✔ | ✔ remote reason | ✔ ฟอร์มลา | ✔ ความเห็น | | |
 | S17 | `SuccessScreen` | จอเขียว/เช็คถูก + ข้อความ + ปุ่ม | ✔ Complete | ✔ clock success | ✔ create success | | | |
-| S18 | `ErrorState` / `EmptyState` | (จากเอกสารหลัก 20.4) | ✔ | ✔ | ✔ | ✔ | ✔ | ✔ |
+| S18 | `ErrorState` / `EmptyState` | (จากarchitecture.md 20.4) | ✔ | ✔ | ✔ | ✔ | ✔ | ✔ |
 
 ## 2. คู่หน้าจอที่ "เหมือนกันจนควรเป็น component เดียว" (ประหยัดงานมากที่สุด)
 
@@ -36,7 +49,7 @@
 | **จอแผนที่ Attendance** — Clock In/Out × onsite/remote ทั้ง 8 จอ คือ**จอเดียวกัน** ต่างแค่ state | Attendance 0-9 | หน้าเดียว `ClockPage` + state machine (ดู 02-attendance.md) |
 | **Segmented + banner + tabs ของ Leave/Approval** | Leave กับ Approval ใช้ shell หน้าเดียวกัน (สลับด้วย SegmentedTabs บนสุด) | ทำเป็น `LeaveShellPage` ที่สลับเนื้อหาตาม segment — ลด routing ซ้ำ |
 
-## 3. Design tokens ที่เห็นซ้ำทั้งชุด (ลง `@theme` — เอกสารหลัก 9.3)
+## 3. Design tokens ที่เห็นซ้ำทั้งชุด (ลง `@theme` — architecture.md 9.3)
 
 | token | ค่าโดยประมาณจาก design | ใช้กับ |
 |---|---|---|
@@ -50,7 +63,7 @@
 | `--radius-card` | ~16-20px | การ์ด/ปุ่ม/ช่องกรอกทั้งหมด |
 | ฟอนต์ | ตระกูล Prompt/Kanit | ทั้งแอป |
 
-> ⚠️ ค่าสีเป็นการอ่านจากภาพ — ก่อนลง `@theme` ให้ดูดค่าจริงจากไฟล์ Figma (Design panel) ตามขั้นตอนเอกสารหลัก 9.5
+> ⚠️ ค่าสีเป็นการอ่านจากภาพ — ก่อนลง `@theme` ให้ดูดค่าจริงจากไฟล์ Figma (Design panel) ตามขั้นตอนarchitecture.md 9.5
 
 ## 4. ลำดับการสร้าง (แนะนำ)
 
