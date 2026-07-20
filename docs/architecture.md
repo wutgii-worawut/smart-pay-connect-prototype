@@ -241,6 +241,7 @@ src/
 │       ├── types/
 │       └── index.ts
 │
+├── assets/            <- รูปที่ใช้ร่วม (โลโก้, ไอคอนประเภทลา)
 ├── components/        <- shared UI
 ├── hooks/             <- shared hooks
 ├── lib/
@@ -290,6 +291,7 @@ src/
 
 | โฟลเดอร์ | เก็บอะไร |
 |---|---|
+| `assets/` | รูปที่ใช้ร่วมหลาย feature — `logo-smartpay`, `leave/leave-{vacation,sick,personal}` (ไอคอนของ LeaveTypeIcon) — **import ในโค้ดเสมอ** (`import x from '@/assets/...'`) ให้ Vite hash; `public/` มีแค่ favicon/og-image; รูปเฉพาะ feature → `features/<x>/assets/`; export จาก Figma เป็น SVG ก่อนเสมอ |
 | `components/` | UI ล้วน ๆ ที่ไม่รู้เรื่อง business เลย เช่น `Button`, `Card`, `Spinner`, `BottomNav` |
 | `hooks/` | shared hooks เช่น `useDebounce` |
 | `lib/liff/` | `LiffProvider.tsx` + `index.ts` (โค้ดหัวข้อ 12.2) |
