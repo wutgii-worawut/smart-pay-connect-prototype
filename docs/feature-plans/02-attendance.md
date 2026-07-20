@@ -1,6 +1,6 @@
 # 02 — Attendance (ลงเวลา) — 11 หน้าจอ = จริง ๆ คือ 2 หน้า + state machine
 
-> โฟลเดอร์: `features/attendance/` | อ้างอิงเอกสารหลัก: 15 (GPS), 3.1 (remote + นโยบาย), 16.3 (API)
+> โฟลเดอร์: `features/attendance/` | อ้างอิงarchitecture.md: 15 (GPS), 3.1 (remote + นโยบาย), 16.3 (API)
 > Rich Menu → `/attendance`
 
 ## ข้อค้นพบสำคัญ: หน้าจอ 0-9 (10 จอ) คือ "หน้าเดียวกัน" ต่าง state
@@ -33,8 +33,12 @@
 | Feature | `MapView` (แผนที่+หมุด+วงรัศมี), `RangeStatusPill`, `RemoteModePill`, `ClockButton` (วงกลมใหญ่ 3 สถานะ: enabled/disabled/clock-out), `ClockDock` (แถบล่าง 3 ปุ่ม), `ClockSuccessOverlay`, `RemoteReasonSheet` (Drawer กรอกเหตุผล — checklist 10.2) |
 
 ## เทคนิค/ข้อควรระวัง
-- **แผนที่**: ต้องเลือก map library — design หน้าตาเป็น Google Maps → ใช้ Google Maps JS SDK (มีค่าใช้จ่าย/API key) หรือ MapLibre+OSM (ฟรี) → **คำถามใหม่: องค์กรมี Google Maps API key ไหม?** (เพิ่มเข้า Open Questions 23)
-- ปุ่ม "โหลดแผนที่ใหม่" = ขอ GPS ใหม่ (`getPositionWithRetry` เอกสารหลัก 15) — เรียกจาก user action ตามกฎ LIFF
+- **แผนที่**: ต้องเลือก map library — design หน้าตาเป็น Google Maps → รอคำตอบ SA (architecture.md §23.2 ข้อ 3: Google / Longdo / MapLibre) — **dev ไม่ต้องรอ**: ทำ `MapView` เป็น interface กลาง (`userPos`, `officePos`, `radiusMeters`) แล้วเริ่มด้วย MapLibre ไปก่อน สลับ provider ภายใน component เดียวทีหลัง
+- **คุมโควตา map loads (architecture.md §15)**: provider เชิงพาณิชย์นับโควตา**ต่อการ init แผนที่** ไม่ใช่ต่อการขยับ —
+  - ปุ่ม "โหลดแผนที่ใหม่" = ขอ GPS ใหม่ (`getPositionWithRetry`) + `panTo()` บน instance เดิม **ห้าม re-init แผนที่**
+  - สร้าง map instance ครั้งเดียวต่อการเปิดหน้า (ระวัง React re-render ทำ init ซ้ำ = เผาโควตาเงียบ ๆ)
+  - เปลี่ยน state (in-range/out-of-range/remote/clocked-in) เปลี่ยนแค่ pill/ปุ่ม/หมุด ไม่แตะ map instance
+- ปุ่ม "โหลดแผนที่ใหม่" ต้องเรียกจาก user action ตามกฎ LIFF
 - GPS ต้องส่ง `accuracy` ไปกับ clock-in ทุกครั้ง (audit)
 - Error mapping: `OUT_OF_GEOFENCE` (ยิงตรง) → สลับ state `out-of-range`, `ALREADY_CLOCKED_IN` → refresh today
 - Remote clock: นโยบายใครใช้ได้ ยังรอเคาะ (Open Questions 23.1 ข้อ 4) — โค้ดเผื่อ flag `canRemoteClock` ต่อพนักงานไว้
@@ -50,7 +54,7 @@ features/attendance/
 ├── components/   # MapView, ClockButton, ClockDock, RangeStatusPill,
 │                 # RemoteModePill, RemoteReasonSheet, ClockSuccessOverlay,
 │                 # AttendanceHistoryList
-├── hooks/        # useAttendanceState(), useGeolocation() (จากเอกสารหลัก 15)
+├── hooks/        # useAttendanceState(), useGeolocation() (จากarchitecture.md 15)
 ├── utils/        # haversine preview (UX เท่านั้น)
 ├── pages/        # ClockPage, AttendanceHistoryPage
 └── index.ts
