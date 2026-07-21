@@ -1,6 +1,8 @@
 /**
  * app/router.tsx — router (§12.3) ทุก route ยัง placeholder จนกว่าจะถึงเฟส feature จริง ยกเว้น
- * auth (P8) + `/register`, `/register/otp`, `/register/success` (P9+P10 — จอ 1.1-1.4 ครบวง)
+ * auth (P8) + `/register`, `/register/otp`, `/register/success` (P9+P10 — จอ 1.1-1.4 ครบวง) และ
+ * `/attendance` (P12 — จอ 0-9 ครบวง, ผ่าน `AttendanceRoute` ที่ compose ProfileBar+ClockPage แบบ
+ * lazy — ดู `app/AttendanceRoute.tsx`)
  * `createBrowserRouter` (History API — ข้อกำหนด LIFF, §11) + `errorElement` ทุก route
  *
  * route ที่ต้อง auth (ทุกอันยกเว้น `/register*`) อยู่ใต้ layout route ปลาย `AuthGate` (§13.1-13.3)
@@ -8,6 +10,7 @@
  */
 import { createBrowserRouter } from 'react-router-dom'
 import { AuthGate, OtpPage, RegisterPage, RegisterSuccessPage } from '@/features/auth'
+import { AttendanceRoute } from './AttendanceRoute'
 import { HomePage } from './HomePage'
 import { NotFoundPage } from './NotFoundPage'
 import { PlaceholderPage } from './PlaceholderPage'
@@ -25,7 +28,7 @@ export const router = createBrowserRouter([
       },
       {
         path: '/attendance',
-        element: <PlaceholderPage title="ลงเวลาทำงาน" />,
+        element: <AttendanceRoute />,
         errorElement: <RouteErrorBoundary />,
       },
       {

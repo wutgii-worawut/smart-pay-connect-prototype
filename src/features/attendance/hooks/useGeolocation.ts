@@ -90,27 +90,43 @@ export interface GeolocationState {
 
 const IDLE_STATE: GeolocationState = { status: 'idle', position: null, accuracy: null, error: null }
 
+/** ผลลัพธ์ที่ `request()` คืนตรง ๆ (เพิ่มจาก P11 — P12 ต้องใช้ค่าทันทีในฟังก์ชันเดียวกันที่กด
+ * ลงเวลา ก่อน state ด้านล่างจะ re-render มาถึง — ดู handleClockIn ตัวอย่างใน §15) */
+export interface GeolocationFix {
+  position: LatLng
+  accuracy: number
+}
+
 export interface UseGeolocationResult extends GeolocationState {
-  /** เรียกจาก onClick ของปุ่มเท่านั้น (user action ตามกฎ LIFF §15) — ห้ามเรียกตอน mount */
-  request: () => Promise<void>
+  /** เรียกจาก onClick ของปุ่มเท่านั้น (user action ตามกฎ LIFF §15) — ห้ามเรียกตอน mount
+   * คืนพิกัดที่ได้ (หรือ `null` ถ้าเจอ error — error message อ่านจาก state.error ต่อได้ทันที) */
+  request: () => Promise<GeolocationFix | null>
 }
 
 /** hook ขอพิกัด GPS — ไม่ auto-request ตอน mount, เรียก `request()` จาก user action เท่านั้น */
 export function useGeolocation(): UseGeolocationResult {
   const [state, setState] = useState<GeolocationState>(IDLE_STATE)
 
-  const request = useCallback(async () => {
-    setState({ status: 'loading', position: null, accuracy: null, error: null })
+  const request = useCallback(async (): Promise<GeolocationFix | null> => {
+    // คง position/accuracy เดิม (last-known) ไว้ระหว่าง loading/error — กัน UI (หมุด/pill) เด้งหาย
+    // ทุกครั้งที่ขอ GPS รอบใหม่ ก่อนหน้านี้ set เป็น null ทันทีทำให้จอกระพริบโดยไม่จำเป็น
+    setState((prev) => ({ status: 'loading', position: prev.position, accuracy: prev.accuracy, error: null }))
     try {
       const pos = await getPositionWithRetry()
-      setState({
-        status: 'success',
+      const fix: GeolocationFix = {
         position: { lat: pos.coords.latitude, lng: pos.coords.longitude },
         accuracy: pos.coords.accuracy,
-        error: null,
-      })
+      }
+      setState({ status: 'success', position: fix.position, accuracy: fix.accuracy, error: null })
+      return fix
     } catch (error) {
-      setState({ status: 'error', position: null, accuracy: null, error: describeGeolocationError(error) })
+      setState((prev) => ({
+        status: 'error',
+        position: prev.position,
+        accuracy: prev.accuracy,
+        error: describeGeolocationError(error),
+      }))
+      return null
     }
   }, [])
 

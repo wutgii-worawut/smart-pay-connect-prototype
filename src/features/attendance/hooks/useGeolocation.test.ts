@@ -252,4 +252,73 @@ describe('useGeolocation', () => {
     expect(getCurrentPosition).toHaveBeenCalledTimes(2)
     expect(result.current.error).toContain('กดลงเวลาอีกครั้ง')
   })
+
+  it('request() สำเร็จ → คืนค่า GeolocationFix ตรงในฟังก์ชันเดียวกัน (P12 ใช้ตัดสิน geofence ทันที ไม่ต้องรอ re-render)', async () => {
+    getCurrentPosition.mockImplementation((onSuccess: (p: GeolocationPosition) => void) => {
+      onSuccess(makePosition({ latitude: 13.7, longitude: 100.5, accuracy: 25 }))
+    })
+
+    const { result } = renderHook(() => useGeolocation())
+
+    let fix: Awaited<ReturnType<typeof result.current.request>> = null
+    await act(async () => {
+      fix = await result.current.request()
+    })
+
+    expect(fix).toEqual({ position: { lat: 13.7, lng: 100.5 }, accuracy: 25 })
+  })
+
+  it('request() ล้มเหลว → คืน null (ไม่ throw) เผื่อ caller เช็ค falsy แล้วหยุด flow ต่อได้ทันที', async () => {
+    getCurrentPosition.mockImplementation(
+      (
+        _onSuccess: (p: GeolocationPosition) => void,
+        onError: (e: GeolocationPositionError) => void,
+      ) => {
+        onError(makeError(1))
+      },
+    )
+
+    const { result } = renderHook(() => useGeolocation())
+
+    let fix: Awaited<ReturnType<typeof result.current.request>> = null
+    await act(async () => {
+      fix = await result.current.request()
+    })
+
+    expect(fix).toBeNull()
+  })
+
+  it('request() รอบสองล้มเหลว → คง position/accuracy รอบแรก (last-known) ไว้ ไม่เด้งเป็น null (F4)', async () => {
+    let callCount = 0
+    getCurrentPosition.mockImplementation(
+      (
+        onSuccess: (p: GeolocationPosition) => void,
+        onError: (e: GeolocationPositionError) => void,
+      ) => {
+        callCount += 1
+        if (callCount === 1) {
+          onSuccess(makePosition({ latitude: 13.7, longitude: 100.5, accuracy: 20 }))
+        } else {
+          onError(makeError(2))
+        }
+      },
+    )
+
+    const { result } = renderHook(() => useGeolocation())
+
+    await act(async () => {
+      await result.current.request()
+    })
+    expect(result.current.position).toEqual({ lat: 13.7, lng: 100.5 })
+
+    await act(async () => {
+      await result.current.request()
+    })
+
+    await waitFor(() => {
+      expect(result.current.status).toBe('error')
+    })
+    expect(result.current.position).toEqual({ lat: 13.7, lng: 100.5 })
+    expect(result.current.accuracy).toBe(20)
+  })
 })

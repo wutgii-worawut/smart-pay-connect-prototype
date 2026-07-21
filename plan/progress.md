@@ -4,7 +4,8 @@
 
 ### 1.1 สถานะปัจจุบัน
 - **2026-07-21** — **P0 ✅** · **P1 ✅** · **P2 ✅** · **P3 ✅ (consultant 2 รอบ + ผู้ใช้เคาะ+commit)** · **P4 เริ่มแล้ว (🔄)**.
-- **P10 ✅ — จบ flow register P8-P10** · **P11 ทำเสร็จ+consultant loop ผ่าน (รวม move) รอผู้ใช้เคาะ (🔍)**.
+- **P11 ✅** · **P12 ทำเสร็จ+consultant loop ผ่าน รอผู้ใช้เคาะ (🔍)**.
+- **P12 — ClockPage state machine**: worker → consultant (core ผ่าน + F1-F9) → worker แก้ F1-F8 → main verify (`lint` 0·`tsc` ✓·`test` **273**·`build` ✓ maplibre แยก chunk) → consultant ตรวจ fixes: **ผ่าน**. contract flags + N1-N3 จดในบันทึกแก้แผน P12. *(วันที่ 2026-07-22)*
 - **P11 — Attendance foundation**: worker → consultant (ผ่าน + decision placement) → ผู้ใช้เคาะ (ข) ย้าย geolocation/haversine → feature → worker move → main verify → consultant ตรวจ move: **ผ่าน**. geolocation retry §15 ถูกครบ, haversine, MapView init-once+cleanup, ไม่ log พิกัด, OSM tile ฟรีไม่ผูก key. `lint` 0·`tsc` ✓·`test` **232**·`build` ✓.
 - **P10 — OTP + Complete**: worker → consultant (core ผ่าน + F1 UX bug + F2 guard) → worker แก้ F1/F2/nicety → main verify (`lint` 0·`tsc` ✓·`test` **214**·`build` ✓) → consultant ตรวจ fixes: **ผ่าน**. contract flags (verify-otp invented) + notes จดในบันทึกแก้แผน P10.
 - **P9 — Register form**: worker → consultant: **ผ่านแบบมี follow-up ไม่มี must-fix** (checksum ถูก, formatted→digits, Open Q §23 อ้อมถูก, security สะอาด). ไม่มี fix code บังคับ (follow-up = doc/contract/Figma/P22 จดแล้ว). `lint` 0·`tsc` ✓·`test` **186**·`build` ✓.
@@ -26,7 +27,7 @@
   - ✅ ยืนยันแล้ว: envelope `{error:{code,message}}` ไทย, ไม่มี `/api` prefix, `POST /auth/login` รับ `idToken`, protected routes (holidays/attendance/leave/payroll) = 401
 
 ### 1.2 งานถัดไป
-- **P12 — ClockPage state machine** (plan.md §3 → P12). เริ่มเมื่อผู้ใช้เคาะ P11. 6 state + clock in/out onsite + remote flow + success (จอ 0-9). ⚠️ remote clock policy = open Q §23.1#4 (ตาม design + flag `canRemoteClock`, ห้ามทำ flow แจ้งเตือน/รับทราบหัวหน้า); geofence = server verdict.
+- **P13 — Attendance history** (plan.md §3 → P13). เริ่มเมื่อผู้ใช้เคาะ P12. `/attendance/history`: DropdownFilter ปี/เดือน + ListCard ต่อวัน (เข้า-ออก, onsite/remote, ปกติ/มาสาย) + Empty/Error; MSW history. ⚠️ ป้าย "มาสาย" จาก server ไม่คำนวณเอง (จอ 10.History).
 
 ### 1.3 session ใหม่ทำแบบนี้
 1. อ่านไฟล์นี้ทั้งไฟล์ + "บันทึกแก้แผน" ท้ายไฟล์
@@ -58,8 +59,8 @@
 | P8 | Auth core | ✅ | consultant loop ผ่าน + เคาะ+commit 2026-07-21 · ⚠️ 3 contract flags (noted) |
 | P9 | Register form | ✅ | consultant ผ่าน + เคาะ+commit 2026-07-21 · ⚠️ ThaID/email domain = open Q |
 | P10 | OTP + Complete | ✅ | consultant loop ผ่าน + เคาะ+commit 2026-07-21 |
-| P11 | Attendance foundation | 🔍 | เสร็จ+consultant loop ผ่าน (ย้าย→feature, 232 tests) รอผู้ใช้เคาะ · ⚠️ map provider = open Q |
-| P12 | ClockPage state machine | ⬜ | ⚠️ remote policy = open Q |
+| P11 | Attendance foundation | ✅ | consultant loop ผ่าน + เคาะ+commit 2026-07-21 · ⚠️ map provider = open Q |
+| P12 | ClockPage state machine | 🔍 | เสร็จ+consultant loop ผ่าน (273 tests) รอผู้ใช้เคาะ · ⚠️ remote policy = open Q |
 | P13 | Attendance history | ⬜ | |
 | P14 | Leave list shell | ⬜ | |
 | P15 | Leave detail + cancel | ⬜ | ⚠️ ห้ามทำแก้ไขใบลา (23.1#5) |
@@ -180,3 +181,11 @@
   4. **[Figma/designer]** วงรัศมีในรูปดูเกาะหมุดผู้ใช้ vs โค้ดวาดรอบออฟฟิศ (จงใจ — semantics ถูกกว่า §16.3 "จุดทำงาน+รัศมี") → ถาม designer
   5. **[§21.4 manual]** MapView ไม่มีเทสต์ (jsdom WebGL ไม่ได้ — testing.md ข้อ 4 อนุญาต) → เพิ่ม checklist เครื่องจริง (map โหลด/หมุด/วง/retry หลังปิดเน็ต)
   6. **[ก่อน UAT §23.2#3]** OSM tile มาตรฐาน**ไม่เหมาะ production** (usage policy) — เคาะ provider ที่มี SLA ก่อน UAT (MapView interface พร้อมสลับ)
+
+- **2026-07-22 (P12 — ClockPage state machine จอ 0-9)** — `features/attendance/` deriveAttendanceState (pure 6 state) + api/hooks clock-in/out (retry:0, payload `{lat,lng,accuracy,type,remoteReason?}` **ไม่มี client timestamp**) + ClockButton/Dock/RangeStatusPill/RemoteModePill/RemoteReasonSheet/ClockSuccessOverlay + ClockPage + `app/AttendanceRoute.tsx` (compose ProfileBar(auth)+**React.lazy(ClockPage)** — maplibre 314KB gzip แยก chunk ออก initial). MSW clock-in/out. 273 tests. consultant: **core ผ่านหมด** (geofence=server verdict client preview เท่านั้น, server timestamps, retry:0+disabled, remote ไม่เกิน §23.1#4, compose ถูกกฎ, GPS user-action, ไม่ log พิกัด). review 2 รอบ (F1-F8 แก้แล้ว):
+  - **[✅ decision — F4]** `useGeolocation.request()` **คง last-known position** ระหว่าง loading/error (main เคาะ — กัน state เด้งตอนกดโหลดใหม่)
+  - **[แก้แล้ว]** F1 marker anchor:'bottom' · F2 ปุ่ม disabled ระหว่างรอ GPS (กัน double-submit ~25s window) · F3 accuracyGuard (§15 เตือน accuracy แย่) + toast แทน silent return · F5 gate remote pill ด้วย canRemoteClock · F6 MSW stateful (POST flip today scenario) · F7 overlay ไม่ทับ ProfileBar · F8 ลบ dead branch + Zod แทน `as`
+  - **[decision ทำตาม doc เหนือ PNG]** RemoteModePill โชว์จอ 0 (feature-plans/02 สั่ง แม้ PNG ไม่มี); clock-out ใช้ type เดิม session ไม่ขอเหตุผลใหม่ (§16.3 "โครงเดียว clock-in")
+  - **[🔴 CONTRACT flags — invented รอ swagger]** `GET /attendance/today`: `office.name/address?`, `canRemoteClock`, `date`, `clockInType`; `POST clock-in/out` response `{date,time,type}` — ยังไม่ probe จริง; **Employee ไม่มี email** → ProfileBar จอ attendance ไม่มี subtitle (design มี)
+  - **[follow-up จิ๋ว P22/ครั้งหน้า]** N1 accuracy warning มีเฉพาะ clock-in (ไม่มี clock-out/remote); N2 ปุ่ม "โหลดแผนที่ใหม่" ไม่ disabled ตอน isPending; N3 mock time overlay vs timeline ไม่ตรง (cosmetic dev)
+  - **[§21.4 manual]** เดิน 6 state เครื่องจริง, กดตอน GPS ช้า (Android) ไม่ยิงซ้ำ, ปลายหมุดชี้พิกัดจริง, accuracy แย่ในอาคาร→เห็นคำเตือน

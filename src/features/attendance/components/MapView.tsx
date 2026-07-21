@@ -157,7 +157,10 @@ export function MapView({ userPos, officePos, radiusMeters, className }: MapView
         },
       })
 
-      officeMarkerRef.current = new Marker({ element: createMarkerElement(gpsOfficeIcon, 'ตำแหน่งสถานที่ทำงาน') })
+      officeMarkerRef.current = new Marker({
+        element: createMarkerElement(gpsOfficeIcon, 'ตำแหน่งสถานที่ทำงาน'),
+        anchor: 'bottom',
+      })
         .setLngLat([officePos.lng, officePos.lat])
         .addTo(map)
 
@@ -204,7 +207,10 @@ export function MapView({ userPos, officePos, radiusMeters, className }: MapView
     if (userMarkerRef.current) {
       userMarkerRef.current.setLngLat([userPos.lng, userPos.lat])
     } else {
-      userMarkerRef.current = new Marker({ element: createMarkerElement(gpsPinIcon, 'ตำแหน่งของคุณ') })
+      userMarkerRef.current = new Marker({
+        element: createMarkerElement(gpsPinIcon, 'ตำแหน่งของคุณ'),
+        anchor: 'bottom',
+      })
         .setLngLat([userPos.lng, userPos.lat])
         .addTo(map)
     }
