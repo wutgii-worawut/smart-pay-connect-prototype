@@ -96,7 +96,11 @@ export function RegisterForm() {
       { citizenId: extractCitizenIdDigits(values.citizenId), email: values.email },
       {
         onSuccess: (result) => {
-          setPendingOtp({ email: result.email, refCode: result.refCode })
+          setPendingOtp({
+            email: result.email,
+            refCode: result.refCode,
+            citizenId: extractCitizenIdDigits(values.citizenId),
+          })
           navigate('/register/otp')
         },
         onError: (error) => {

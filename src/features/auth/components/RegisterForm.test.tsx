@@ -132,6 +132,7 @@ describe('RegisterForm', () => {
     expect(useRegisterStore.getState().pendingOtp).toEqual({
       email: 'spuser@sp.go.th',
       refCode: 'REF-1234',
+      citizenId: VALID_CITIZEN_ID_DIGITS,
     })
   })
 

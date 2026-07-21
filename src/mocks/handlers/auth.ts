@@ -1,14 +1,15 @@
 /**
  * MSW handler — feature: auth (§13, §16.2, §16.3) — POST /auth/login (P8) +
- * POST /auth/register/request-otp (P9; verify-otp เต็มใน P10)
+ * POST /auth/register/request-otp (P9) + POST /auth/register/verify-otp (P10)
  *
  * scenario สลับได้ผ่าน `setAuthScenario()` (dev console หรือเทสต์) — default 'authenticated'
  * เพราะ mock service จริงที่ probe แล้ว (2026-07-21) ตอบ 200 authenticated เสมอไม่ว่า idToken
  * จะเป็นอะไร (รวม liff-mock default `'id_token'`) — ไม่เคยเจอ NEED_REGISTER จริงให้ยืนยัน shape
  * จึงทำ shape ฝั่งเราแบบ envelope-consistent (ดูรายละเอียด/คำเตือนเต็มใน features/auth/api/login.ts)
  *
- * `/auth/register/request-otp` จริงตอบ 404 ตอน probe (plan/progress.md บันทึกแก้แผน P8 ข้อ 3) —
- * shape/error code ทั้งหมดด้านล่างเป็นการออกแบบฝั่งเรา รอ backend/swagger ยืนยัน
+ * `/auth/register/request-otp` + `/auth/register/verify-otp` จริงตอบ 404 ตอน probe
+ * (plan/progress.md บันทึกแก้แผน P8 ข้อ 3 / P9 ข้อ 2) — shape/error code ทั้งหมดด้านล่างเป็นการ
+ * ออกแบบฝั่งเรา รอ backend/swagger ยืนยัน
  */
 import { http, HttpResponse } from 'msw'
 import { z } from 'zod'
@@ -39,6 +40,15 @@ export function setRegisterOtpScenario(next: RegisterOtpScenario): void {
 }
 
 const requestOtpBodySchema = z.object({ citizenId: z.string(), email: z.string() })
+
+export type VerifyOtpScenario = 'success' | 'otp_invalid' | 'otp_expired' | 'otp_rate_limited'
+
+let verifyOtpScenario: VerifyOtpScenario = 'success'
+
+/** สลับ scenario ของ POST /auth/register/verify-otp (เทสต์ หรือ dev console) */
+export function setVerifyOtpScenario(next: VerifyOtpScenario): void {
+  verifyOtpScenario = next
+}
 
 export const authHandlers = [
   http.post(`${BASE_URL}/auth/login`, () => {
@@ -114,6 +124,44 @@ export const authHandlers = [
       case 'success':
       default:
         return HttpResponse.json({ data: { refCode: 'REF-1234', email } })
+    }
+  }),
+
+  http.post(`${BASE_URL}/auth/register/verify-otp`, () => {
+    switch (verifyOtpScenario) {
+      case 'otp_invalid':
+        return HttpResponse.json(
+          { error: { code: 'OTP_INVALID', message: 'รหัส OTP ไม่ถูกต้อง กรุณาตรวจสอบอีกครั้ง' } },
+          { status: 400 },
+        )
+
+      case 'otp_expired':
+        return HttpResponse.json(
+          {
+            error: {
+              code: 'OTP_EXPIRED',
+              message: 'รหัส OTP หมดอายุแล้ว กรุณาขอรหัสใหม่',
+            },
+          },
+          { status: 400 },
+        )
+
+      case 'otp_rate_limited':
+        return HttpResponse.json(
+          {
+            error: {
+              code: 'OTP_RATE_LIMITED',
+              message: 'ยืนยัน OTP ผิดบ่อยเกินไป กรุณารออีก 5 นาทีแล้วลองใหม่',
+            },
+          },
+          { status: 429 },
+        )
+
+      case 'success':
+      default:
+        return HttpResponse.json({
+          data: { token: 'mock-jwt-token-register', employee: MOCK_EMPLOYEE },
+        })
     }
   }),
 ]

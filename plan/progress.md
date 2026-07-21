@@ -4,7 +4,8 @@
 
 ### 1.1 สถานะปัจจุบัน
 - **2026-07-21** — **P0 ✅** · **P1 ✅** · **P2 ✅** · **P3 ✅ (consultant 2 รอบ + ผู้ใช้เคาะ+commit)** · **P4 เริ่มแล้ว (🔄)**.
-- **P8 ✅** · **P9 ทำเสร็จ+consultant ผ่าน (ไม่มี must-fix) รอผู้ใช้เคาะ (🔍)**.
+- **P9 ✅** · **P10 ทำเสร็จ+consultant loop ผ่าน รอผู้ใช้เคาะ (🔍) — จบ flow register (P8-P10)**.
+- **P10 — OTP + Complete**: worker → consultant (core ผ่าน + F1 UX bug + F2 guard) → worker แก้ F1/F2/nicety → main verify (`lint` 0·`tsc` ✓·`test` **214**·`build` ✓) → consultant ตรวจ fixes: **ผ่าน**. contract flags (verify-otp invented) + notes จดในบันทึกแก้แผน P10.
 - **P9 — Register form**: worker → consultant: **ผ่านแบบมี follow-up ไม่มี must-fix** (checksum ถูก, formatted→digits, Open Q §23 อ้อมถูก, security สะอาด). ไม่มี fix code บังคับ (follow-up = doc/contract/Figma/P22 จดแล้ว). `lint` 0·`tsc` ✓·`test` **186**·`build` ✓.
 - **P8 — Auth core**: worker → consultant (security core ผ่าน + F1 must-fix) → worker แก้ F1/F2/F3 → main verify (`lint` 0·`tsc` ✓·`test` **154** ×2 ไม่ flaky·`build` ✓) → consultant ตรวจ fixes: **ผ่าน**. **⚠️ 3 contract flags ต้องแจ้ง backend/เคาะผู้ใช้** (ดูบันทึกแก้แผน P8).
 - **P7 — Shared Calendar + DateRangeField**: worker (react-day-picker@10 + Calendar/DateRangeField/dateRange utils, 135 tests) → consultant: **ผ่านแบบมี follow-up ไม่มี must-fix** (v10 API ยืนยันตรง, วันที่ string ไม่ off-by-one, พ.ศ. ที่เดียว). ไม่มี fix code ต้องแก้ (follow-up = design fidelity Figma + P18 traps จดแล้ว). base calendar เสร็จ — P18 reuse.
@@ -24,7 +25,7 @@
   - ✅ ยืนยันแล้ว: envelope `{error:{code,message}}` ไทย, ไม่มี `/api` prefix, `POST /auth/login` รับ `idToken`, protected routes (holidays/attendance/leave/payroll) = 401
 
 ### 1.2 งานถัดไป
-- **P10 — OTP + Complete** (plan.md §3 → P10). เริ่มเมื่อผู้ใช้เคาะ P9. OtpPage (OTPInput 6 ช่อง, **ครบ=regex `/^[A-Z0-9]{6}$/` ห้าม length**, chip email, ref code, countdown ส่งซ้ำ) + RegisterSuccessPage → `setSession()` + navigate('/',{replace}). ⚠️ verify-otp endpoint 404 → MSW.
+- **P11 — Attendance foundation** (plan.md §3 → P11). เริ่มเมื่อผู้ใช้เคาะ P10. `useGeolocation`/`getPositionWithRetry` (§15, retry+3 error), `haversine` (preview), `MapView` (MapLibre/tile ฟรีก่อน — map provider = open Q §23.2#3), MSW `GET /attendance/today`. ⚠️ ห้ามผูก Google key.
 
 ### 1.3 session ใหม่ทำแบบนี้
 1. อ่านไฟล์นี้ทั้งไฟล์ + "บันทึกแก้แผน" ท้ายไฟล์
@@ -54,8 +55,8 @@
 | P6 | Shared: form controls + base | ✅ | consultant loop ผ่าน + เคาะ+commit 2026-07-21 |
 | P7 | Shared: Calendar + DateRangeField | ✅ | consultant ผ่าน + เคาะ+commit 2026-07-21 |
 | P8 | Auth core | ✅ | consultant loop ผ่าน + เคาะ+commit 2026-07-21 · ⚠️ 3 contract flags (noted) |
-| P9 | Register form | 🔍 | เสร็จ+consultant ผ่าน (186 tests) รอผู้ใช้เคาะ · ⚠️ ThaID/email domain = open Q |
-| P10 | OTP + Complete | ⬜ | |
+| P9 | Register form | ✅ | consultant ผ่าน + เคาะ+commit 2026-07-21 · ⚠️ ThaID/email domain = open Q |
+| P10 | OTP + Complete | 🔍 | เสร็จ+consultant loop ผ่าน (214 tests) รอผู้ใช้เคาะ |
 | P11 | Attendance foundation | ⬜ | ⚠️ map provider = open Q |
 | P12 | ClockPage state machine | ⬜ | ⚠️ remote policy = open Q |
 | P13 | Attendance history | ⬜ | |
@@ -163,3 +164,10 @@
   3. **[กับดัก config]** `VITE_REGISTER_MODE=thaid` = จอตัน (ฟอร์มหาย + ThaID แค่ toast) → **ห้ามตั้ง `thaid` ใน env จริงจนกว่า ThaID OAuth เคาะ+ทำ** (dev preview เท่านั้น); email domain ยังไม่ตั้ง — ตอนเคาะโดเมนจริงต้องตัดสิน subdomain (`endsWith('@'+domain)` ตอนนี้ตัด subdomain) + strip `@` นำหน้า
   4. **[follow-up เล็ก P22/ครั้งหน้า]** F3 ZodError → fallback ข้อความไทยกลาง (ตอนนี้ dump อังกฤษถ้า backend shape เพี้ยน); F4 เทสต์ retry ใช้ default จริง; F7 Figma pass (gradient กลับทิศ from-primary/10→white vs design เข้มลงล่าง, label ชิดซ้าย vs design กึ่งกลาง, ThaID pill justify-center)
   5. **[กับดัก P10 พร้อมใช้]** guard `pendingOtp===null`→เด้ง /register (จดใน registerStore แล้ว); OTP ครบ=regex ไม่ใช่ length (P6 ข้อ 2.1)
+
+- **2026-07-21 (P10 — OTP + Complete จอ 1.3/1.4)** — `features/auth/` OtpPage(guard pendingOtp null, chip email/ref code, OTPInput, countdown resend 60s, ปุ่มยืนยัน enable ผ่าน **regex `/^[A-Z0-9]{6}$/` (useWatch) ไม่ใช่ length**) + RegisterSuccessPage(SuccessScreen → setSession ก่อน navigate('/',{replace}) + เคลียร์ pendingOtp) + verifyOtp(MSW) + useResendCountdown. registerStore +citizenId (resend). 212 tests. consultant: **ผ่าน — core ถูก** (regex completeness, setSession→navigate order §13.1, guard, security สะอาด, no log OTP/token). review เจอ+แก้ (loop): F1 = ลบ `mode:'onChange'` (error แดงโผล่ตั้งแต่พิมพ์ตัวแรก), F2 = guard `/register/success` (!isAuthenticated→/register), +navigate replace. **notes:**
+  1. **[CONTRACT — ซ้อนหนี้ P8/P9]** `POST /auth/register/verify-otp` path (probe 404) + request `{otp,refCode}` + response `{token,employee{role}}` + error codes = invented ทั้งหมด รอ swagger. schema `Employee` คัดลอกระหว่าง login.ts/verifyOtp.ts (ไม่ export ข้าม) → contract จริงมาต้องแก้ 2 จุด (`satisfies Employee` ดัก field ขาด compile-time)
+  2. **[รอเคาะ policy]** countdown resend **60 วิ = นอก spec** (มี comment); OTP อายุ 15 นาที + rate limit/ชม. ยังไม่เคาะ (feature-plans/01 ท้ายไฟล์)
+  3. **[Figma pass — F3]** จอ Complete ต่างจาก `3.Complete.png` (design มี gradient+โลโก้+หัวข้อ+ปุ่ม pill ขาวน้ำเงิน; เราใช้ SuccessScreen S17 เรียบ + PrimaryButton น้ำเงินทึบ) — S17 เป็น shared ใช้ร่วม clock/leave success ด้วย → เก็บ Figma pass (ขยาย SuccessScreen header slot/variant ทีเดียว); OtpPage gradient ทิศเดียวกับ P9 F7 (หนี้เดิม); ลิงก์ส่งซ้ำเป็นสีแดงหลัง OTP_EXPIRED (invent, harmless)
+  4. **[follow-up เล็ก P22]** F4 เทสต์ retry ใช้ default จริง (ซ้ำ P9 F4); F5 assert payload otp สะอาดใน MSW; F6 verify-otp handler ไม่ validate body (mirror ไม่ครบ)
+  5. **[fixes ผ่าน consultant รอบสอง]** F1 (ลบ mode:onChange) + F2 (guard /success) + navigate replace → 214 tests. obs minor (จด, ไม่ block): O2 = `RegisterSuccessPage` useEffect `clearPendingOtp` รันแม้ตอน guard เด้ง → deep-link /success กลาง OTP flow จะล้าง pendingOtp (ใน LIFF ไม่มี address bar โอกาสแทบศูนย์ — gate effect หลัง guard ตอนแตะไฟล์ครั้งหน้า)

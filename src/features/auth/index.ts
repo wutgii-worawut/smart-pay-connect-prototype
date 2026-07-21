@@ -11,6 +11,8 @@ registerAuthCallbacks()
 
 export { AuthGate } from './components/AuthGate'
 export { ProtectedRoute } from './components/ProtectedRoute'
+export { OtpPage } from './pages/OtpPage'
 export { RegisterPage } from './pages/RegisterPage'
+export { RegisterSuccessPage } from './pages/RegisterSuccessPage'
 export { useAuthStore } from './stores/authStore'
 export type { Employee, EmployeeRole } from './types/auth'
