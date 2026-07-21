@@ -115,7 +115,7 @@
 
 ### 3.5 ปฏิทินวันหยุด (กลุ่ม 6)
 - หน้าวันหยุดบริษัท/นักขัตฤกษ์ + รายละเอียด → ต้องมี **holiday master** จากระบบ admin เดิม (`GET /holidays?year=`)
-- กระทบ `countLeaveDays` (4.1): ต้องหัก**วันหยุดบริษัท**ด้วย ไม่ใช่แค่เสาร์อาทิตย์ — ปรับ signature เป็น `countLeaveDays(startStr, endStr, holidays: string[])` โดย frontend ดึง holidays จาก API (cache ด้วย TanStack Query ทั้งปี) และ server คำนวณซ้ำด้วยชุดวันหยุดเดียวกัน
+- กระทบ leave-days (4.1): ต้องหัก**วันหยุดบริษัท**ด้วย ไม่ใช่แค่เสาร์อาทิตย์ — ใช้ `listLeaveWorkingDays(startStr, endStr, holidays: string[]): string[]` + `sumLeaveDays(days: LeaveDayEntry[]): number` โดย frontend ดึง holidays จาก API (cache ด้วย TanStack Query ทั้งปี) และ server คำนวณซ้ำด้วยชุดวันหยุดเดียวกัน
 
 ### 3.6 อัปเดตโครง features/ (รวมของใหม่)
 
@@ -174,21 +174,34 @@ export function formatThaiDate(date: Date): string {
   return format(date, `d MMMM '${be}'`, { locale: th });
 }
 
-// นับวันลา: ตัดเสาร์อาทิตย์ + หักวันหยุดบริษัท (3.5) — signature เดียวทั้งระบบ
+// วันลาแบบ period รายวัน (full/am/pm) — design 6.1 (วันเดียว) / 6.2 (หลายวัน รวมได้ 2.5)
+// แยกเป็น 2 pure function: (1) หา "วันทำงาน" ในช่วง (2) รวมยอดจาก period ต่อวัน
 // (preview ฝั่ง frontend — ตัวเลขที่ตัดโควตาจริง server คำนวณซ้ำด้วยชุดวันหยุดเดียวกัน)
-export function countLeaveDays(
+// type LeaveDayPeriod / LeaveDayEntry อยู่ที่ src/types/leave.ts (contract primitive ใช้ร่วมฟอร์ม+POST+GET)
+export type LeaveDayPeriod = 'full' | 'am' | 'pm';
+export interface LeaveDayEntry { date: string; period: LeaveDayPeriod } // date = 'YYYY-MM-DD'
+
+// คืนรายการ "วันทำงาน" (YYYY-MM-DD) ในช่วง [start,end] inclusive — ตัดเสาร์อาทิตย์ + วันหยุดบริษัท (3.5)
+export function listLeaveWorkingDays(
   startStr: string,           // 'YYYY-MM-DD'
   endStr: string,             // 'YYYY-MM-DD'
   holidays: string[],         // จาก GET /holidays?year= เช่น ['2026-07-28']
-): number {
+): string[] {
+  if (endStr < startStr) return []; // guard ช่วงกลับด้าน (เทียบ string ได้ตรง) — Zod ที่ฟอร์ม validate/โชว์ error
   // parse เป็น local date — ห้ามใช้ new Date(str) (กติกา 4.2)
   const start = parse(startStr, 'yyyy-MM-dd', new Date());
   const end = parse(endStr, 'yyyy-MM-dd', new Date());
-  return eachDayOfInterval({ start, end }).filter(
-    (d) => !isWeekend(d) && !holidays.includes(format(d, 'yyyy-MM-dd')),
-  ).length;
+  return eachDayOfInterval({ start, end })
+    .filter((d) => !isWeekend(d) && !holidays.includes(format(d, 'yyyy-MM-dd')))
+    .map((d) => format(d, 'yyyy-MM-dd'));
 }
-// หมายเหตุ: ครึ่งวัน (เช้า/บ่าย = 0.5) จัดการที่ชั้นฟอร์มโดยคูณ/ปรับจากผลลัพธ์นี้
+
+// รวมจำนวนวันลาจาก period ต่อวัน: full=1, am/pm=0.5 (จอ 6.2: [full,am,full] = 2.5)
+export function sumLeaveDays(days: LeaveDayEntry[]): number {
+  return days.reduce((sum, d) => sum + (d.period === 'full' ? 1 : 0.5), 0);
+}
+// ฟอร์ม (P16): วันเดียว = toggle เดียว (6.1); หลายวัน = render แถวต่อวันจาก listLeaveWorkingDays
+// แล้วโชว์ยอดรวมจาก sumLeaveDays (6.2). วันเสาร์อาทิตย์/วันหยุดในช่วง = แถว disabled label "วันหยุด" ไม่นับ
 ```
 
 ### 4.2 กติกาเรื่อง Timezone — แยกข้อมูลเวลาเป็น 2 ชนิด ห้ามปนกัน
@@ -351,17 +364,17 @@ src/
 
 | ชนิด logic | เก็บที่ | ตัวอย่าง | เหตุผล |
 |---|---|---|---|
-| **ไม่แตะ React** (pure function: รับ input คืน output, ไม่มี state/effect) | ไฟล์ `.ts` ธรรมดาใน `utils/` | แปลงวันที่เป็น พ.ศ., format เงินบาท, `countLeaveDays(start, end, holidays)` ตัดเสาร์อาทิตย์, ตัดสิน "มาสาย" จากเวลาเข้า+เวลากะ | test ง่ายสุดในระบบ (ยัด input เช็ค output ไม่ต้อง render), reuse ได้ทุกที่แม้นอก component |
+| **ไม่แตะ React** (pure function: รับ input คืน output, ไม่มี state/effect) | ไฟล์ `.ts` ธรรมดาใน `utils/` | แปลงวันที่เป็น พ.ศ., format เงินบาท, `listLeaveWorkingDays`/`sumLeaveDays` ตัดเสาร์อาทิตย์+วันหยุด, ตัดสิน "มาสาย" จากเวลาเข้า+เวลากะ | test ง่ายสุดในระบบ (ยัด input เช็ค output ไม่ต้อง render), reuse ได้ทุกที่แม้นอก component |
 | **แตะ React** (ใช้ useState/useEffect/useQuery/context) | custom hook ใน `hooks/` | `useLeaveBalance()` (ห่อ TanStack Query), `useGeolocation()` (permission + loading), `useAuth()` | hook คือ "กาว" เชื่อมโลก React เข้ากับข้อมูล/พฤติกรรม |
 
 ### 7.2 โครงชั้นของหนึ่งหน้า (ตัวอย่างฟอร์มลา)
 
 ```
 features/leave/
-├── utils/leave-days.ts        # pure: countLeaveDays(...)
-│                              #   test ด้วย vitest ตรง ๆ ไม่ต้องมี React
+│  (day-count utils เป็น shared: src/utils/date.ts — listLeaveWorkingDays + sumLeaveDays)
+│                              #   pure — test ด้วย vitest ตรง ๆ ไม่ต้องมี React
 ├── hooks/useSubmitLeave.ts    # hook: useMutation + invalidate balance
-│                              #   + เรียก countLeaveDays มาใช้
+│                              #   + เรียก listLeaveWorkingDays/sumLeaveDays มาใช้
 ├── components/LeaveForm.tsx   # UI: RHF + Zod + เรียก useSubmitLeave()
 └── pages/LeavePage.tsx        # ประกอบร่าง แทบไม่มี logic
 ```
@@ -380,7 +393,7 @@ features/leave/
 
 - **อย่าสร้าง hook ห่อของที่ไม่มี React ข้างใน** — เช่น `useFormatCurrency()` ที่ข้างในไม่มี state เลย ควรเป็น `formatCurrency()` ใน `.ts` เฉย ๆ เพราะพอเป็น hook จะติดกฎ Rules of Hooks ทันที (เรียกใน loop ไม่ได้, เรียกนอก component ไม่ได้) เสียความยืดหยุ่นฟรี
 - **อย่าแยก hook ทั้งที่ใช้ที่เดียวและมี 5 บรรทัด** — abstraction ที่มาก่อนความจำเป็นคือหนี้
-- **Logic การตัดสินที่มีผลจริง (คำนวณเงิน, ตัดโควตา, geofence) ฝั่ง frontend เป็นแค่ preview** — แยก `countLeaveDays` ไว้เพื่อโชว์ผู้ใช้ทันทีว่า "ลาครั้งนี้กิน 3 วัน" แต่ตัวเลขที่ตัดโควตาจริงมาจาก server คำนวณซ้ำเสมอ (กฎเหล็กข้อ 5 หัวข้อ 6)
+- **Logic การตัดสินที่มีผลจริง (คำนวณเงิน, ตัดโควตา, geofence) ฝั่ง frontend เป็นแค่ preview** — แยก `listLeaveWorkingDays`/`sumLeaveDays` ไว้เพื่อโชว์ผู้ใช้ทันทีว่า "ลาครั้งนี้กิน 3 วัน" แต่ตัวเลขที่ตัดโควตาจริงมาจาก server คำนวณซ้ำเสมอ (กฎเหล็กข้อ 5 หัวข้อ 6)
 - **สื่อสารสถานะ "ตัวเลขคาดการณ์" ใน UI ให้ชัด** — ยอดวันลาคงเหลือที่แสดงในฟอร์มคือ snapshot ณ ตอน query อาจมีใบลาอื่นถูกอนุมัติแทรกระหว่างกรอก (race condition) ทำให้ยอดจริงตอน server ตัดไม่พอ:
   - ฝั่ง UI: label ตัวเลขว่า "คงเหลือ (โดยประมาณ)" + ข้อความเล็กใน `LeaveForm` ว่า *"ยอดวันลาจะถูกหักอย่างเป็นทางการเมื่อคำขอได้รับการอนุมัติ"* — ป้องกันข้อพิพาทเมื่อ backend ปฏิเสธเพราะโควตาชนกัน
   - ฝั่ง backend (ตัวกันจริง): ตัดโควตาแบบ **atomic** — เช็คยอดและตัดใน database transaction เดียว (หรือ conditional update เช่น `UPDATE ... WHERE remaining >= days`) ห้ามเช็คแล้วค่อยตัดแยกคนละ query ไม่งั้นโควตาติดลบได้เมื่อสองคำขอเข้าพร้อมกัน — ข้อความกำกับช่วยเรื่องความคาดหวังผู้ใช้ แต่ตัวกันโควตาติดลบอยู่ที่ database
@@ -1159,14 +1172,14 @@ export class ApiError extends Error {
 | **leave** | | |
 | `GET /leave/types` | ประเภทลา + กติกา | cache ยาวได้ |
 | `GET /leave/balance` | โควตาคงเหลือต่อประเภท | label "โดยประมาณ" (7.4) |
-| `POST /leave/requests` | ยื่นใบลา (multipart รองรับไฟล์แนบ) | validate สองฝั่ง |
+| `POST /leave/requests` | ยื่นใบลา (multipart) body: `{leaveType, days:[{date,period}], reason, substituteId?, +ไฟล์แนบ}` | validate สองฝั่ง (ดูใต้ตาราง) |
 | `GET /leave/requests?status=&year=&month=` | ใบลาของฉัน (history + pending) | |
 | `GET /leave/requests/{id}` | รายละเอียดใบลาของฉัน | เจ้าของเท่านั้น |
 | `POST /leave/requests/{id}/cancel` | ยกเลิกใบที่ยัง PENDING | 3.2, `REQUEST_NOT_PENDING` |
 | **calendar** | | |
 | `GET /leave/calendar?month=` | จุดต่อวัน `[{date, types[]}]` | 10.3 ชั้นปฏิทิน |
 | `GET /leave/calendar/{date}` | รายละเอียดคนลาวันนั้น | กรองตาม role/PDPA (10.3) |
-| `GET /holidays?year=` | วันหยุดบริษัท/นักขัตฤกษ์ | 3.5 — ใช้ใน countLeaveDays ด้วย |
+| `GET /holidays?year=` | วันหยุดบริษัท/นักขัตฤกษ์ | 3.5 — ใช้ใน listLeaveWorkingDays ด้วย |
 | **payroll** | | |
 | `GET /payroll/payslips?year=` | รายการสลิปของตัวเอง | |
 | `GET /payroll/payslips/{id}` | รายละเอียดสลิป | audit `PAYSLIP_VIEW` |
@@ -1179,6 +1192,12 @@ export class ApiError extends Error {
 | `GET /approval/history?year=&month=` | ที่ตัวเองเคยอนุมัติ/ปฏิเสธ | |
 
 > frontend เริ่มเขียน `features/*/api/` ตาม contract นี้ได้เลยโดย mock response ระหว่างรอ backend จริง
+
+**Leave request body — `days:[{date, period}]` (period = `'full'|'am'|'pm'`):**
+- ใบ**วันเดียว**ก็ใช้รูปแบบเดียวกัน — `days` ยาว 1 แถว (จอ 6.1) → endpoint มี shape เดียวทั้งวันเดียว/หลายวัน; จอ History Details ที่แสดงรายวันดึงข้อมูลรูปนี้จาก `GET /leave/requests/{id}` โดยตรง
+- **แบ่งชั้น validation ให้ถูกที่** (เผื่อฟีเจอร์อนาคต "ลบวันรายแถว" — ยังไม่ทำ):
+  - **Zod ฝั่งฟอร์ม = ด่านเข้มงวด**: `days` ต้องครบทุกวันทำงานในช่วงที่เลือก ต่อเนื่อง ไม่ขาด (สร้างจาก `listLeaveWorkingDays`)
+  - **Backend/mock = เช็คระดับรายการเท่านั้น**: ทุก entry เป็นวันทำงานจริง (ไม่ใช่เสาร์อาทิตย์/วันหยุด), ไม่มีวันซ้ำ, `period` ถูกต้อง — **ไม่บังคับว่าต้องต่อเนื่องครบช่วง** (โครง `days[]` รองรับการลบวันรายแถวในอนาคตโดยไม่ต้องแตะ contract)
 
 ### 16.4 แนวทาง Backend เมื่อเป็น Java EE (Jakarta EE)
 
@@ -1470,7 +1489,7 @@ export const queryClient = new QueryClient({
 
 | ชั้น | ระดับ | เหตุผล |
 |---|---|---|
-| **`utils/` pure functions** | ✅ **ภาคบังคับ ทุกตัว** — โดยเฉพาะ `countLeaveDays` (รวมเคสวันหยุด 3.5, คร่อมเสาร์อาทิตย์, วันเดียว, ข้ามเดือน/ปี) และ logic ที่แตะเงิน/โควตา | test ง่ายสุด (input→output) แต่ผิดแล้วเจ็บสุด — เป็นเหตุผลที่แยกออกมาตั้งแต่หัวข้อ 7 |
+| **`utils/` pure functions** | ✅ **ภาคบังคับ ทุกตัว** — โดยเฉพาะ `listLeaveWorkingDays` (วันหยุด 3.5, คร่อมเสาร์อาทิตย์, วันเดียว, ข้ามเดือน/ปี, end<start) + `sumLeaveDays` (0.5/เต็มวัน/ผสม) และ logic ที่แตะเงิน/โควตา | test ง่ายสุด (input→output) แต่ผิดแล้วเจ็บสุด — เป็นเหตุผลที่แยกออกมาตั้งแต่หัวข้อ 7 |
 | **Custom hooks ที่มี logic** | เลือกเฉพาะตัวที่มีเงื่อนไข เช่น `useGeolocation` (retry/error code 9), flow `useSubmitLeave` | test ผ่าน component หรือ `renderHook` + MSW |
 | **Components critical** | เลือกเฉพาะ: `LeaveForm` (validation + `QUOTA_EXCEEDED` โชว์ถูกที่), `ClockButton` (สถานะ ใน/นอกรัศมี/remote/isPending disabled), `ApprovalActionSheet` (reject บังคับเหตุผล) | จุดที่พังแล้วกระทบเงิน/เวลา/การอนุมัติ |
 | Pages / layout / component แสดงผลล้วน | ❌ ข้าม | ต้นทุนสูง ผลตอบแทนต่ำ เปลี่ยนบ่อยตาม design |
@@ -1479,22 +1498,34 @@ export const queryClient = new QueryClient({
 ### 21.3 ตัวอย่างเทสต์ภาคบังคับ
 
 ```ts
-// features/leave/utils/leave-days.test.ts
+// src/utils/date.test.ts
 import { describe, it, expect } from 'vitest';
-import { countLeaveDays } from './leave-days';
+import { listLeaveWorkingDays, sumLeaveDays } from './date';
 
-describe('countLeaveDays', () => {
-  it('วันเดียว = 1', () =>
-    expect(countLeaveDays('2026-07-08', '2026-07-08', [])).toBe(1));
+describe('listLeaveWorkingDays', () => {
+  it('วันเดียว (วันทำงาน) = 1 รายการ', () =>
+    expect(listLeaveWorkingDays('2026-07-08', '2026-07-08', [])).toHaveLength(1));
 
   it('คร่อมเสาร์อาทิตย์ ไม่นับ', () =>
-    // ศ. 10 → จ. 13 = 2 วันทำงาน
-    expect(countLeaveDays('2026-07-10', '2026-07-13', [])).toBe(2));
+    // ศ. 10 → จ. 13 = 2 วันทำงาน (ศ. + จ.)
+    expect(listLeaveWorkingDays('2026-07-10', '2026-07-13', [])).toEqual(['2026-07-10', '2026-07-13']));
 
   it('หักวันหยุดบริษัท (3.5)', () =>
     expect(
-      countLeaveDays('2026-07-27', '2026-07-29', ['2026-07-28']) // วันเฉลิมฯ
-    ).toBe(2));
+      listLeaveWorkingDays('2026-07-27', '2026-07-29', ['2026-07-28']) // วันเฉลิมฯ
+    ).toHaveLength(2));
+
+  it('ช่วงกลับด้าน end < start → []', () =>
+    expect(listLeaveWorkingDays('2026-07-13', '2026-07-10', [])).toEqual([]));
+});
+
+describe('sumLeaveDays', () => {
+  it('ครึ่งวัน (0.5) + full = 2.5 (จอ 6.2)', () =>
+    expect(sumLeaveDays([
+      { date: '2026-06-18', period: 'full' },
+      { date: '2026-06-19', period: 'am' },
+      { date: '2026-06-22', period: 'full' },
+    ])).toBe(2.5));
 });
 ```
 

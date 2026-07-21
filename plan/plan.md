@@ -29,7 +29,7 @@ Repo = **Vite starter เปล่า** — ยังไม่มี dependency 
 | D2 | `LeaveRequestCard` + `LeaveRequestDetailCard` | ยกไป `src/components/` (shared, presentational, prop-driven) | ใช้ร่วม leave + approval; ป้องกัน cross-feature import (กฎเหล็กข้อ 1) |
 
 **เงื่อนไขบังคับ (ผู้ใช้ยืนยัน 2026-07-21) — ห้ามละเมิด:**
-- **D1:** `countLeaveDays` **ยังเป็น pure function** รับ `holidays[]` เป็น param (อยู่ `utils/date.ts` — testable, ไม่แตะ React). `useHolidays` เป็น **แค่ตัวห่อ** `useQuery(['holidays', year], ...)` staleTime ยาว (วันหยุดเปลี่ยนน้อย) — **ห้ามใส่ logic นับวันใน hook**
+- **D1:** day-count เป็น **pure functions** อยู่ `utils/date.ts` (testable, ไม่แตะ React): `listLeaveWorkingDays(start,end,holidays[])` + `sumLeaveDays(days[])` — ดู "บันทึกแก้แผน P1 (leave-days redesign)". `useHolidays` เป็น **แค่ตัวห่อ** `useQuery(['holidays', year], ...)` staleTime ยาว — **ห้ามใส่ logic นับวันใน hook**
 - **D2:** การ์ดทั้งสอง **presentational ล้วน** — รับ `data` + `callbacks` ผ่าน props เท่านั้น. **ห้ามมี `useQuery`/`useMutation`/navigation ข้างในการ์ด** (data-fetching + mutation + `navigate` อยู่ที่ page/feature ที่ compose การ์ด). Type `LeaveRequest` **ย้ายไป `src/types/`** (shared type — การ์ด shared ต้อง import ได้โดยไม่พึ่ง feature)
 | D3 | ฟอนต์ไทย | **Kanit อย่างเดียวทั้งระบบ** — self-host woff2 ใน `src/assets/fonts/` + `@font-face` ใน globals.css (ยืนยันโดยผู้ใช้ 2026-07-21) | LINE in-app browser เน็ตวูบบ่อย — เลี่ยง CDN dependency, FOUT |
 
@@ -80,7 +80,7 @@ Repo = **Vite starter เปล่า** — ยังไม่มี dependency 
 | P13 | Attendance history | จอ 10.History | P5,P12 |
 | P14 | Leave list shell | LeaveShellPage, balance, list PENDING/history + filters, MSW leave | P5,P8 |
 | P15 | Leave detail + cancel | DetailCard `owner-view`, cancel flow | P14 |
-| P16 | Leave create form | LeaveForm + countLeaveDays + holidays hook + success | P7,P14 |
+| P16 | Leave create form | LeaveForm (period รายวัน 6.1/6.2) + listLeaveWorkingDays/sumLeaveDays + holidays hook + success | P7,P14 |
 | P17 | Calendar: Holidays | NextHolidayHero, list, details | P5 |
 | P18 | Calendar: LeaveCalendar | custom DayButton/MonthCaption + DayDetailSheet | P7,P17 |
 | P19 | Approval list | ManagerBanner, ApprovalTabs, pending+history list, role gating | P14 |
@@ -102,7 +102,7 @@ Repo = **Vite starter เปล่า** — ยังไม่มี dependency 
 
 ### P1 — Design tokens + globals + utils กลาง
 - **เป้าหมาย:** `styles/globals.css` + pure utils ที่ทุก feature ใช้
-- **ทำ:** `@theme` tokens ตาม feature-plans/00 §3 (primary, success, warning, danger, leave-*, holiday-*, surface, radius-card, shadow-card) **คอมเมนต์ว่า placeholder รอดูด Figma**; ฟอนต์ **Kanit อย่างเดียว** self-host woff2 (D3); safe-area utilities; `utils/date.ts` (`formatThaiDate`, `countLeaveDays(start, end, holidays)` — **pure function รับ `holidays[]` เป็น param ตาม D1**, ตาม §4.1) + `utils/currency.ts` (`formatBaht`) + **เทสต์ภาคบังคับครบเคส** (วันเดียว/คร่อมเสาร์อาทิตย์/หักวันหยุด/ข้ามเดือนปี — ครึ่งวันจัดการชั้นฟอร์ม)
+- **ทำ:** `@theme` tokens ตาม feature-plans/00 §3 (primary, success, warning, danger, leave-*, holiday-*, surface, radius-card, shadow-card) **คอมเมนต์ว่า placeholder รอดูด Figma**; ฟอนต์ **Kanit อย่างเดียว** self-host woff2 (D3); safe-area utilities; `utils/date.ts` (`formatThaiDate`, **`listLeaveWorkingDays(start,end,holidays)` + `sumLeaveDays(days)`** — pure, ตาม §4.1 + บันทึกแก้แผน) + `src/types/leave.ts` (`LeaveDayPeriod`/`LeaveDayEntry`) + `utils/currency.ts` (`formatBaht`) + **เทสต์ภาคบังคับครบเคส** (listLeaveWorkingDays: วันเดียว/คร่อมเสาร์อาทิตย์/หักวันหยุด/ข้ามเดือนปี/end<start; sumLeaveDays: 0.5/เต็มวัน/ผสม 2.5)
 - **ไฟล์:** `src/styles/globals.css`, `src/assets/fonts/**`, `src/utils/date.ts|.test.ts`, `src/utils/currency.ts|.test.ts`
 - **อิง:** §4.1-4.2, §9.3; feature-plans/00 §3; testing.md ข้อ 1
 - **DoD:** เทสต์ utils ผ่านครบ + build ผ่าน + สีเทียบ PNG ≥2 จอ (`3.Leave/1.Balance.png`, `5.Payroll/2.Payslip Details.png`)
@@ -134,8 +134,8 @@ Repo = **Vite starter เปล่า** — ยังไม่มี dependency 
 - **DoD:** มาตรฐาน + สี StatusBadge/LeaveTypeIcon จาก token ชุดเดียว (`--color-leave-*`)
 
 ### P6 — Shared: form controls + shadcn base
-- **ทำ:** `npx shadcn add drawer dialog select` (เช็ค peer dep React 19); form controls: `TextInput` (รองรับ mask เลขบัตร), `Textarea`, `SelectField`, `OTPInput` (6 ช่อง อักษร+เลข), `ToggleFullHalfDay` (เต็มวัน/เช้า/บ่าย) — RHF-compatible
-- **อิง:** feature-plans/00 §1 S16; §10.1-10.2; รูป `1.LINEOA-Registration.png`, `2...OTP.png`, `3.Leave/6.Create Request.png`
+- **ทำ:** `npx shadcn add drawer dialog select` (เช็ค peer dep React 19); form controls: `TextInput` (รองรับ mask เลขบัตร), `Textarea`, `SelectField`, `OTPInput` (6 ช่อง อักษร+เลข), `PeriodToggle` (เต็มวัน/เช้า/บ่าย — ใช้ทั้ง toggle เดียว 6.1 และแถวรายวัน 6.2) — RHF-compatible
+- **อิง:** feature-plans/00 §1 S16; §10.1-10.2; รูป `1.LINEOA-Registration.png`, `2...OTP.png`, `3.Leave/6.1.Create Request (1 day).png` / `6.2.Create Request (more 1 days).png`
 - **DoD:** มาตรฐาน + Drawer มี `pb-[calc(1.5rem+env(safe-area-inset-bottom))]` + ปุ่มปิด
 
 ### P7 — Shared: Calendar + DateRangeField
@@ -190,8 +190,9 @@ Repo = **Vite starter เปล่า** — ยังไม่มี dependency 
 - **ระวัง §23:** **จอ 3.5 Editable = open question 23.1#5 — ห้ามทำปุ่ม/flow แก้ไขใบลา** ทำเฉพาะยกเลิก (จดถามผู้ใช้)
 
 ### P16 — Leave create form (จอ 3.6-3.7 + variant 6.1/6.2)
-- **ทำ:** `LeaveForm` (RHF+Zod v4): เลือกประเภท (การ์ด 3 ใบ) → DateRangeField → ToggleFullHalfDay (ครึ่งวัน=0.5) → จำนวนวัน preview จาก `countLeaveDays(start, end, holidays)` (pure, รับ holidays param) → เหตุผล → แนบไฟล์ (multipart) → ผู้ปฏิบัติงานแทน → ผู้อนุมัติ auto; `QUOTA_EXCEEDED` โชว์ที่ช่องวันที่; holidays ผ่าน `src/hooks/useHolidays.ts` (D1 — **แค่ห่อ `useQuery(['holidays', year])` staleTime ยาว, ไม่มี logic นับวัน**)
-- **รูป:** `3.Leave/6.Create Request.png`, `6.1`, `6.2`, `7.Create Request - Success.png`
+- **ทำ:** `LeaveForm` (RHF+Zod v4): เลือกประเภท (การ์ด 3 ใบ) → DateRangeField → **ช่วงเวลา period รายวัน (6.1/6.2):** วันเดียว = toggle เดียว (เต็มวัน/เช้า/บ่าย); หลายวัน = render แถวต่อวันจาก `listLeaveWorkingDays(start,end,holidays)` (วันเสาร์อาทิตย์/วันหยุด = แถว disabled "วันหยุด" ไม่นับ) → รวมวัน preview จาก `sumLeaveDays(days)` → เหตุผล → แนบไฟล์ (multipart) → ผู้ปฏิบัติงานแทน → ผู้อนุมัติ auto; ส่ง `days:[{date,period}]`; Zod = ด่านเข้ม (days ครบทุกวันทำงาน); `QUOTA_EXCEEDED` โชว์ที่ช่องวันที่; holidays ผ่าน `src/hooks/useHolidays.ts` (D1 — แค่ห่อ `useQuery(['holidays', year])`)
+- 🔮 **ห้ามทำดักไว้:** ฟีเจอร์ "ลบวันรายแถว" (โครง days[] รองรับแล้ว รอนโยบาย+design — ดู architecture §16.3)
+- **รูป:** `3.Leave/6.1.Create Request (1 day).png`, `6.2.Create Request (more 1 days).png`, `7.Create Request - Success.png`
 - **DoD:** เทสต์ LeaveForm validation + QUOTA_EXCEEDED ถูกช่อง; วันที่ใน payload เป็น string `YYYY-MM-DD`
 - **ระวัง §23:** **"ผู้ปฏิบัติงานแทน" ไม่มี endpoint ใน contract** (plan 03 คำถาม 2) — mock `GET /employees/teammates` + จดเป็นงานเคาะ contract; อย่าตัดสินเองว่าเลือกได้ทั้งบริษัท
 

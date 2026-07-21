@@ -13,7 +13,7 @@ UI language is **Thai**, mobile-first (LINE in-app browser). Buddhist Era (พ.�
 |---|---|
 | `auth` | LIFF login → exchange ID token → app JWT; first-time register (form + **email OTP**) |
 | `attendance` | clock in/out with GPS + geofence, **remote clock** (นอกสถานที่ + เหตุผล), history |
-| `leave` | balance, create request (date range, half-day, แนบไฟล์, ผู้ปฏิบัติงานแทน), cancel PENDING, history |
+| `leave` | balance, create request (date range + period รายวัน เต็ม/เช้า/บ่าย, แนบไฟล์, ผู้ปฏิบัติงานแทน), cancel PENDING, history |
 | `approval` | manager only: pending list, approve/reject (+comment), approval history |
 | `payroll` | payslip list/detail (read-only), send to registered email |
 | `calendar` | leave calendar (dots by type) + company holidays |
@@ -60,7 +60,7 @@ src/
   hooks/          # shared hooks
   lib/            # liff/ (LiffProvider, useLiff), api-client.ts, query-client.ts
   assets/         # shared images (logo, leave-type icons) — always import via '@/assets/...'; public/ = favicon only
-  config/  stores/  types/  utils/   # utils: date.ts (formatThaiDate, countLeaveDays), currency
+  config/  stores/  types/  utils/   # utils: date.ts (formatThaiDate, listLeaveWorkingDays, sumLeaveDays), currency
   mocks/          # MSW handlers per feature (mirror API contract §16.3)
 ```
 
@@ -93,7 +93,7 @@ src/
 
 - ลงเวลา = clock in/out. **Server timestamps only** (client clock untrusted). Send `{lat,lng,accuracy,type:'onsite'|'remote',remoteReason?}`. Geofence verdict = server; client check is UX only
 - การลา = leave. Types: ลาป่วย/ลากิจ/ลาพักร้อน. States: `PENDING → APPROVED | REJECTED | CANCELLED` (manager revoke of approved = open question §23, don't implement without asking)
-- Half-day (เช้า/บ่าย) counts 0.5 day. `countLeaveDays` subtracts weekends **and company holidays** (from `GET /holidays`)
+- วันลาเป็น **period รายวัน** `days:[{date, period:'full'|'am'|'pm'}]` (full=1, am/บ่าย=0.5). `listLeaveWorkingDays(start,end,holidays)` คืนวันทำงานในช่วง (ตัดเสาร์อาทิตย์ **+ วันหยุดบริษัท** จาก `GET /holidays`); `sumLeaveDays(days)` รวมยอด. ฟอร์มวันเดียว=toggle เดียว (6.1) / หลายวัน=แถวต่อวัน (6.2)
 - หัวหน้า = manager (`role: 'manager'` in JWT). Sees only own team's leave requests; **never** team payslips/attendance. UI hides by role; backend 403 is the real guard
 - สลิปเงินเดือน = payslip, read-only. Email button sends to registered email only — no email input field ever
 - **Dates (§4.2):** calendar dates travel as `'YYYY-MM-DD'` strings end-to-end (parse with date-fns `parse`, never `new Date(str)`); instants are server-stamped UTC. Display via `formatThaiDate` — never scatter `+543` around the codebase

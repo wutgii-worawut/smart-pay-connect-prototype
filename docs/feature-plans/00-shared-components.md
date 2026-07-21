@@ -35,7 +35,7 @@
 | S13 | `GhostButton` | ขาวขอบเทา (ปิด) | | | ✔ | ✔ | ✔ | |
 | S14 | `BottomActionBar` | แถบปุ่ม 1-2 ปุ่มติดขอบล่าง (+safe-area) | | | ✔ | ✔ | ✔ | |
 | S15 | `ProfileBar` | แถบ ชื่อ + อีเมล + kebab ⋮ ใต้ header | | ✔ | | | ✔ | |
-| S16 | Form controls: `TextInput` `Textarea` `SelectField` `DateRangeField` `OTPInput` `ToggleFullHalfDay` | ช่องกรอกมุมมนพื้นขาว | ✔ | ✔ remote reason | ✔ ฟอร์มลา | ✔ ความเห็น | | |
+| S16 | Form controls: `TextInput` `Textarea` `SelectField` `DateRangeField` `OTPInput` `PeriodToggle` (เต็ม/เช้า/บ่าย) | ช่องกรอกมุมมนพื้นขาว | ✔ | ✔ remote reason | ✔ ฟอร์มลา | ✔ ความเห็น | | |
 | S17 | `SuccessScreen` | จอเขียว/เช็คถูก + ข้อความ + ปุ่ม | ✔ Complete | ✔ clock success | ✔ create success | | | |
 | S18 | `ErrorState` / `EmptyState` | (จากarchitecture.md 20.4) | ✔ | ✔ | ✔ | ✔ | ✔ | ✔ |
 

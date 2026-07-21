@@ -1,0 +1,123 @@
+/* src/styles/globals.css
+ * CSS global ไฟล์เดียวที่อนุญาต (architecture.md §9.3-9.4)
+ * เก็บเฉพาะ: @theme tokens, ฟอนต์ไทย, safe-area utilities, reset พื้นฐาน
+ * ห้ามเพิ่ม class เฉพาะ feature ที่นี่ — สไตล์ของ feature อยู่ใน JSX ของ component นั้น
+ */
+
+@import 'tailwindcss';
+
+/* ============================================================
+ * Design tokens (architecture.md §9.3, feature-plans/00 §3)
+ * ⚠️ ค่าสีทั้งหมดด้านล่างเป็น "placeholder — รอค่าจริงจาก Figma (architecture §9.5)"
+ * อ่านจากภาพ design SME-PAYROLL เท่านั้น ยังไม่ได้ดูดค่าจริงจาก Figma Design panel/Dev Mode
+ * ============================================================ */
+@theme {
+  /* สีหลัก — ปุ่มหลัก, segment active, hero payslip */
+  --color-primary: #1b6bb8; /* placeholder — รอค่าจริงจาก Figma (architecture §9.5); design อ่านได้ช่วง #1B6BB8~#0D6EBD */
+  --color-primary-dark: #16335b; /* placeholder — รอค่าจริงจาก Figma (architecture §9.5); ตัวหนังสือหัวข้อ */
+
+  /* สีสถานะ — ใช้กับ StatusBadge, Toast icon, pill ในรัศมี GPS ฯลฯ */
+  --color-success: #24a148; /* placeholder — รอค่าจริงจาก Figma (architecture §9.5); badge อนุมัติ/ในรัศมี/toast เขียว */
+  --color-warning: #e8a33d; /* placeholder — รอค่าจริงจาก Figma (architecture §9.5); badge รออนุมัติ, TypeBanner */
+  --color-danger: #d64545; /* placeholder — รอค่าจริงจาก Figma (architecture §9.5); ไม่อนุมัติ/นอกรัศมี/ยกเลิก */
+
+  /* สีประเภทลา — ชุดเดียวใช้ทั้ง LeaveTypeIcon, จุดปฏิทิน, legend (code-style.md) */
+  --color-leave-vacation: #2fa84f; /* placeholder — รอค่าจริงจาก Figma (architecture §9.5); ลาพักร้อน (เขียว) */
+  --color-leave-sick: #e07a5f; /* placeholder — รอค่าจริงจาก Figma (architecture §9.5); ลาป่วย (ส้มอิฐ) */
+  --color-leave-personal: #6b8cae; /* placeholder — รอค่าจริงจาก Figma (architecture §9.5); ลากิจ (ฟ้าเทา) */
+
+  /* สีวันหยุดบริษัท — ใช้ P17 calendar (feature-plans/06-calendar.md) */
+  --color-holiday-government: #3dbe7b; /* placeholder — รอค่าจริงจาก Figma (architecture §9.5); วันหยุดราชการ (เขียว) */
+  --color-holiday-religious: #f2c94c; /* placeholder — รอค่าจริงจาก Figma (architecture §9.5); วันหยุดศาสนา (เหลือง) */
+  --color-holiday-royal: #8b6fce; /* placeholder — รอค่าจริงจาก Figma (architecture §9.5); วันหยุดราชวงศ์ (ม่วง/ฟ้า) */
+
+  /* พื้นหลัง/พื้นผิว */
+  --color-surface: #eaf3fb; /* placeholder — รอค่าจริงจาก Figma (architecture §9.5); พื้นหลังทุกหน้า (ฟ้าอ่อนมาก) */
+  --color-text-secondary: #8b95a1; /* placeholder — รอค่าจริงจาก Figma (architecture §9.5); ตัวหนังสือรอง/label */
+
+  /* Radius / shadow ของการ์ด-ปุ่ม-ช่องกรอกทั้งหมด */
+  --radius-card: 16px; /* placeholder — รอค่าจริงจาก Figma (architecture §9.5); design อ่านได้ช่วง ~16-20px */
+  --shadow-card: 0 2px 8px rgb(0 0 0 / 0.06); /* placeholder — รอค่าจริงจาก Figma (architecture §9.5) */
+
+  /* ฟอนต์ — Kanit อย่างเดียวทั้งระบบ (D1 plan.md §1)
+   * ⚠️ ยังไม่มีไฟล์ woff2 ใน src/assets/fonts/ (list โฟลเดอร์แล้วไม่พบ, ยังไม่มีโฟลเดอร์ด้วยซ้ำ)
+   * ใช้ fallback system-ui/sans-serif ชั่วคราวจนกว่าจะได้ไฟล์ฟอนต์จริง — ดู @font-face ที่คอมเมนต์ไว้ด้านล่าง
+   */
+  --font-sans:
+    'Kanit', system-ui, -apple-system, 'Segoe UI', sans-serif; /* fallback ชั่วคราว — รอไฟล์ Kanit woff2 */
+}
+
+/* ============================================================
+ * ฟอนต์ Kanit (self-host, D1 plan.md §1) — โครง @font-face ไว้ก่อน
+ * ⚠️ ขาดไฟล์จริง: src/assets/fonts/Kanit-{Regular(400),Medium(500),SemiBold(600),Bold(700)}.woff2
+ * เมื่อได้ไฟล์แล้ว: วางไฟล์ตาม path ด้านล่าง แล้วลบคอมเมนต์ปิด (/* ... * /) ออกเพื่อเปิดใช้งาน
+ * ============================================================ */
+/*
+@font-face {
+  font-family: 'Kanit';
+  src: url('../assets/fonts/Kanit-Regular.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Kanit';
+  src: url('../assets/fonts/Kanit-Medium.woff2') format('woff2');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Kanit';
+  src: url('../assets/fonts/Kanit-SemiBold.woff2') format('woff2');
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Kanit';
+  src: url('../assets/fonts/Kanit-Bold.woff2') format('woff2');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+*/
+
+/* ============================================================
+ * Reset พื้นฐาน (Tailwind preflight คุมส่วนใหญ่แล้วผ่าน @import 'tailwindcss' ด้านบน)
+ * ============================================================ */
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  font-family: var(--font-sans);
+  background-color: var(--color-surface);
+  color: var(--color-primary-dark);
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* ============================================================
+ * Safe-area utilities — สำหรับ LIFF ในมือถือที่มี notch/home indicator (§10.2)
+ * ใช้ประกอบ padding เอง เช่น bottom sheet: pb-[calc(1.5rem+env(safe-area-inset-bottom))]
+ * ตัว class .pt-safe/.pb-safe ด้านล่างสำหรับกรณีไม่ต้องบวกกับ spacing อื่น
+ * ============================================================ */
+@layer utilities {
+  .pt-safe {
+    padding-top: env(safe-area-inset-top, 0px);
+  }
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  .pl-safe {
+    padding-left: env(safe-area-inset-left, 0px);
+  }
+  .pr-safe {
+    padding-right: env(safe-area-inset-right, 0px);
+  }
+}

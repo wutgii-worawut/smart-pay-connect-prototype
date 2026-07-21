@@ -28,9 +28,15 @@
 - ใบที่ยังแก้ได้ (PENDING): DetailCard เดิม + ปุ่มแก้ไข/ยกเลิก
 - ⚠️ **"แก้ไขใบลา" เป็น flow ที่ contract ยังไม่มี endpoint** (`PUT /leave/requests/{id}`?) — ต้องเคาะ: แก้ได้จริง หรือให้ยกเลิกแล้วยื่นใหม่? (เพิ่มเข้า Open Questions 23)
 
-### 3.6 Create Request — `6.Create Request.png` (หน้าที่หนักสุดของ feature)
-- ฟอร์ม: เลือกประเภทลา → `DateRangeField` (S16 — เปิด shadcn Calendar range) → toggle เต็มวัน/ครึ่งวัน → แสดง "จำนวนวันที่ลา" (คำนวณจาก `countLeaveDays` — เอกสารหลัก 4.1 หักวันหยุดด้วย) + "วันลาคงเหลือ (โดยประมาณ)" → เหตุผล `Textarea` → แนบไฟล์ `AttachmentItem` (S10) → **ผู้ปฏิบัติงานแทน** (Select รายชื่อเพื่อนร่วมทีม) → ผู้อนุมัติ (แสดงอัตโนมัติจาก manager_id) → ปุ่มส่งคำขอ
+### 3.6 Create Request — `6.1.Create Request (1 day).png` (วันเดียว) / `6.2.Create Request (more 1 days).png` (หลายวัน) (หน้าที่หนักสุดของ feature)
+- ฟอร์ม: เลือกประเภทลา → `DateRangeField` (S16 — วันที่เริ่ม/ถึงวันที่) → **ช่วงเวลา (period รายวัน):**
+  - **วันเดียว** (start===end, จอ 6.1): toggle เดียว **เต็มวัน / เช้า / บ่าย**
+  - **หลายวัน** (จอ 6.2): render **แถวต่อวัน** จาก `listLeaveWorkingDays(start, end, holidays)` — แต่ละแถว = วันที่ + toggle เต็มวัน/เช้า/บ่าย; **วันเสาร์อาทิตย์/วันหยุดในช่วง = แถว disabled label "วันหยุด" ไม่มี toggle และไม่นับ**; แถวรายวันต้องแสดง**ครบทุกวันทำงานรวมวันเริ่ม** (Figma ตัวอย่างตกวันเริ่มไป — ยึดกติกาวันทำงาน 4.1)
+  - "รวมจำนวนวันลา" = `sumLeaveDays(days)` (full=1, am/pm=0.5 → จอ 6.2 = 2.5) + "วันลาคงเหลือ (โดยประมาณ)"
+  - → เหตุผล `Textarea` → แนบไฟล์ `AttachmentItem` (S10) → **ผู้ปฏิบัติงานแทน** (Select) → ผู้อนุมัติ (auto จาก manager_id) → ปุ่มส่งคำขอ
+- **Contract:** `POST /leave/requests` body `days:[{date, period}]` — วันเดียวก็ `days` ยาว 1 (shape เดียว). Zod ฝั่งฟอร์ม = ด่านเข้ม (days ครบทุกวันทำงานในช่วง); backend เช็คระดับรายการ (ดู architecture §16.3)
 - ⚠️ **"ผู้ปฏิบัติงานแทน" ต้องมี endpoint รายชื่อเพื่อนร่วมทีม** — contract ยังไม่มี → เพิ่ม `GET /employees/teammates` (Open Questions/contract update)
+- 🔮 **ฟีเจอร์อนาคต (ห้ามทำดักไว้):** "ลบวันรายแถว" ออกจากฟอร์มหลายวัน — โครง `days[]` รองรับแล้ว รอนโยบาย + design ยืนยันก่อน
 - RHF + Zod ทั้งฟอร์ม; multipart upload; วันที่ส่งเป็น `YYYY-MM-DD` string (กติกา 4.2)
 - Error: `QUOTA_EXCEEDED` โชว์ตรงช่องวันที่, `VALIDATION_ERROR` ต่อ field
 
@@ -56,7 +62,7 @@ features/leave/
 ├── components/   # LeaveBalanceCard, LeaveForm, LeaveRequestCard,
 │                 # LeaveRequestDetailCard, CancelConfirmSheet
 ├── hooks/        # useLeaveBalance(), useLeaveRequests(), useSubmitLeave(), useCancelLeave()
-├── utils/        # leave-days.ts (countLeaveDays — เทสต์ภาคบังคับ 21.2)
+├── utils/        # (day-count utils เป็น shared: src/utils/date.ts — listLeaveWorkingDays + sumLeaveDays, เทสต์ภาคบังคับ 21.2)
 ├── pages/        # LeaveShellPage (segmented + สลับ list/approval),
 │                 # LeaveFormPage, LeaveDetailPage, LeaveSuccessPage
 └── index.ts
@@ -65,4 +71,4 @@ features/leave/
 ## คำถามค้างที่เกิดจาก design กลุ่มนี้
 1. ใบลา PENDING **แก้ไข**ได้จริงไหม (จอ 3.5) หรือใช้ยกเลิก+ยื่นใหม่ → กำหนด endpoint
 2. รายชื่อ "ผู้ปฏิบัติงานแทน" มาจากไหน (ทีมเดียวกัน? เลือกใครก็ได้?) → endpoint teammates
-3. ครึ่งวัน (เช้า/บ่าย) นับโควตา 0.5 วัน — ตรวจว่า `countLeaveDays` และ backend รองรับทศนิยม
+3. ~~ครึ่งวัน (เช้า/บ่าย) นับโควตา 0.5 วัน~~ ✅ **เคาะแล้ว 2026-07-21:** ใช้ period รายวัน (`days:[{date,period}]`) — `sumLeaveDays` full=1/am/pm=0.5, backend รองรับทศนิยม (ดู §3.6 + architecture §4.1/§16.3)

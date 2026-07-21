@@ -3,12 +3,12 @@
 ## 1. สำหรับ session ใหม่: เริ่มตรงนี้ก่อน
 
 ### 1.1 สถานะปัจจุบัน
-- **2026-07-21** — `/kickoff` เสร็จ + **P0 ทำเสร็จ รอผู้ใช้เคาะ (🔍)**.
-- **P0 — Project scaffold + tooling**: worker implement → consultant review (เจอ 1 blocker + 2 งานเล็ก) → worker แก้ → main agent verify เอง ผ่านครบ. รายละเอียด deviation/กับดักอยู่ "บันทึกแก้แผน" ท้ายไฟล์.
-- ผล verify (main agent รันเอง): `lint` clean · `tsc -b` exit 0 · `test` passWithNoTests · `build` ✓ · **ESLint zone จับ `@/features/*` cross-feature import ได้จริง (exit 1)**.
-- ยังไม่ commit (อยู่ `main`, ไฟล์ใหม่ยัง untracked) — รอผู้ใช้สั่ง.
+- **2026-07-21** — **P0 ✅ (เคาะ+commit แล้ว)** · **P1 ทำเสร็จ+redesign รอผู้ใช้เคาะ (🔍)**.
+- **P1 — Design tokens + globals + utils**: worker → consultant (รอบแรกเจอ guard end<start + halfDay ขัดเอกสาร) → **ผู้ใช้เปลี่ยนโจทย์เป็น period รายวัน** (design 6.1/6.2) → worker แก้ code (2 pure functions + `src/types/leave.ts`) → main agent แก้เอกสารครบ + ลบรูปเก่า → consultant รอบสองผ่าน (logic+เทสต์ถูกตรงปฏิทินจริง). ดู entry "P1 — leave-days redesign" ในบันทึกแก้แผน.
+- ผล verify (main agent รันเอง): `lint` clean · `tsc -b` exit 0 · `test` **26 passed** (รวม mixed [full,am,full]→2.5) · `build` ✓.
+- **P0 commit แล้ว**; ไฟล์ P1 + doc edits ยัง untracked/modified — รอผู้ใช้เคาะ P1 ก่อน commit.
 - การตัดสินใจสถาปัตยกรรม D1-D3 (plan.md §1) **ผู้ใช้ยืนยันแล้ว 2026-07-21 พร้อมเงื่อนไข**:
-  - **D1** shared `useHolidays` ✅ — เงื่อนไข: `countLeaveDays` ยังเป็น **pure function รับ `holidays[]` param** (อยู่ utils/date.ts); `useHolidays` = **แค่ห่อ `useQuery(['holidays', year])` staleTime ยาว** ไม่มี logic นับวัน
+  - **D1** shared `useHolidays` ✅ — เงื่อนไข: day-count เป็น **pure function รับ `holidays[]` param** (อยู่ utils/date.ts); `useHolidays` = **แค่ห่อ `useQuery(['holidays', year])` staleTime ยาว** ไม่มี logic นับวัน *(หมายเหตุ: `countLeaveDays` ถูกแทนด้วย `listLeaveWorkingDays`+`sumLeaveDays` — ดู entry "P1 leave-days redesign")*
   - **D2** ยก card ไป `src/components/` ✅ — เงื่อนไข: การ์ดทั้งสอง **presentational ล้วน** รับ data+callbacks props เท่านั้น **ห้าม useQuery/useMutation/navigate ในการ์ด**; type `LeaveRequest` **ย้ายไป `src/types/`**
   - **D3** ฟอนต์ **Kanit อย่างเดียวทั้งระบบ** self-host ✅
 - **Mock service + swagger** (plan.md §1.5): host `https://infeasible-subcandidly-judie.ngrok-free.dev/`, swagger `/docs/`. กติกา: ถ้า API ขาด/ติด **แจ้งผู้ใช้** ให้แก้ backend.
@@ -17,7 +17,7 @@
   - ✅ ยืนยันแล้ว: envelope `{error:{code,message}}` ไทย, ไม่มี `/api` prefix, `POST /auth/login` รับ `idToken`, protected routes (holidays/attendance/leave/payroll) = 401
 
 ### 1.2 งานถัดไป
-- **P1 — Design tokens + globals + utils กลาง** (plan.md §3 → P1). เริ่มเมื่อผู้ใช้เคาะ P0. อย่าลืม: `countLeaveDays` pure รับ `holidays[]` param (D1), ฟอนต์ Kanit อย่างเดียว (D3), ถอด `passWithNoTests` เมื่อมีเทสต์ utils, ค่าสี tokens = placeholder รอ Figma.
+- **P2 — lib ชั้น API** (plan.md §3 → P2). เริ่มเมื่อผู้ใช้เคาะ P1. ทำ `api-client.ts` (ApiError/interceptor + `setAuthToken` + `NETWORK_ERROR`), `query-client.ts` (query retry ไม่เอา 4xx, mutations retry:0), โครง MSW ต่อ feature. **ย้ำ:** MSW handlers ต้อง mirror path จริง (ไม่มี `/api` prefix) + envelope + Thai message ตามที่ probe เจอ (plan §1.5); axios แนบ `ngrok-skip-browser-warning: 1` เมื่อ base URL เป็น ngrok.
 
 ### 1.3 session ใหม่ทำแบบนี้
 1. อ่านไฟล์นี้ทั้งไฟล์ + "บันทึกแก้แผน" ท้ายไฟล์
@@ -38,8 +38,8 @@
 
 | เฟส | ชื่อ | สถานะ | หมายเหตุ |
 |---|---|---|---|
-| P0 | Project scaffold + tooling | 🔍 | เสร็จ+verify แล้ว รอผู้ใช้เคาะ (ดู deviation ในบันทึกแก้แผน) |
-| P1 | Tokens + globals.css + utils กลาง | ⬜ | สีเป็น placeholder รอ Figma |
+| P0 | Project scaffold + tooling | ✅ | ผู้ใช้เคาะ+commit แล้ว 2026-07-21 (ดู deviation ในบันทึกแก้แผน) |
+| P1 | Tokens + globals.css + utils กลาง | 🔍 | เสร็จ+redesign (period รายวัน) รอผู้ใช้เคาะ · สีเป็น placeholder รอ Figma |
 | P2 | lib ชั้น API | ⬜ | |
 | P3 | LIFF shell | ⬜ | |
 | P4 | Shared: ปุ่ม + feedback | ⬜ | |
@@ -78,3 +78,15 @@
   1. **ESLint: ใช้ `eslint-plugin-import-x@4.17.x` แทน `eslint-plugin-import`** — ตัวจริงประกาศ peer dep แค่ ESLint ≤9 ชนกับ ESLint 10 ในโปรเจกต์ (ยืนยันจาก upstream). rule namespace เปลี่ยน `import/no-restricted-paths` → **`import-x/no-restricted-paths`**. ทุกที่ในเอกสาร/CI เฟสหลังที่อ้าง rule นี้ต้องใช้ชื่อใหม่. **✅ แก้ข้อความแล้ว (ผู้ใช้เคาะ 2026-07-21):** CLAUDE.md, plan.md, docs/architecture.md §6 (ตัวอย่าง config อัปเดตครบ 6 features + stores/config + note resolver)
   2. **กับดัก resolver (สำคัญ):** `no-restricted-paths` จะ **เงียบ (ไม่ error)** กับ import ที่ resolver resolve ไม่ได้. โปรเจกต์ใช้ alias `@/` เป็นหลัก → ต้องมี resolver ที่อ่าน tsconfig `paths` (`eslint-import-resolver-typescript`) ไม่งั้นกฎเหล็กเป็นเสือกระดาษ. **เพิ่มโฟลเดอร์ shared ใหม่ในอนาคตต้องเติมเข้า zone target ด้วย** (ล่าสุดเพิ่ม `src/stores`, `src/config`)
   3. **งานค้างเฟสหลัง:** `App.tsx` ยังอยู่ `src/` root → **P3 ย้ายเข้า `src/app/`**; ถอด `passWithNoTests:true` (vitest.config.ts) ตอน **P1** เมื่อมีเทสต์ utils แล้ว; `index.html` title ยังเป็นอังกฤษ (usePageTitle ทับตอน P3)
+
+- **2026-07-21 (P1 — leave-days redesign, ผู้ใช้สั่ง)** — เปลี่ยนโมเดลวันลาเป็น **period รายวัน** (มี design ฟอร์มใหม่ 6.1 วันเดียว / 6.2 หลายวัน รวมได้ 2.5):
+  1. **ยกเลิก `countLeaveDays` + param `halfDay` ทั้งหมด** → แทนด้วย 2 pure functions ใน `src/utils/date.ts`:
+     - `listLeaveWorkingDays(start,end,holidays[]): string[]` — วันทำงานในช่วง (ตัดเสาร์อาทิตย์+วันหยุด); **end<start → [] ไม่ throw** (Zod ฟอร์ม validate เอง)
+     - `sumLeaveDays(days: LeaveDayEntry[]): number` — full=1, am/pm=0.5 (เทสต์ 0.5 ตาม testing.md ชี้ที่ตัวนี้)
+  2. **type กลาง `src/types/leave.ts`:** `LeaveDayPeriod` ('full'|'am'|'pm') + `LeaveDayEntry` ({date, period}) — contract primitive ใช้ร่วม ฟอร์ม+POST+GET (ตาม D2)
+  3. **Contract เปลี่ยน:** `POST /leave/requests` body → `days:[{date,period}]` (ใบวันเดียวก็ days ยาว 1 — shape เดียว). Validation แบ่งชั้น: **Zod ฟอร์ม = ด่านเข้ม** (days ครบทุกวันทำงานต่อเนื่อง) / **backend = เช็คระดับรายการ** (แต่ละ entry เป็นวันทำงานจริง, ไม่ซ้ำ, period ถูก — ไม่บังคับต่อเนื่องครบช่วง)
+  4. **[กับดัก P16]** ฟอร์มหลายวัน: render แถวต่อวันจาก listLeaveWorkingDays; **วันเสาร์อาทิตย์/วันหยุด = แถว disabled label "วันหยุด" ไม่มี toggle ไม่นับ**; ต้องแสดงครบทุกวันทำงาน**รวมวันเริ่ม** (Figma ตัวอย่างตกวันเริ่ม 18 ไป — ยืนยัน designer แล้ว, ยึดกติกาวันทำงาน §4.1 ไม่ยึดวันที่ใน mockup)
+  5. **🔮 ฟีเจอร์อนาคต — ห้ามทำดักไว้ก่อน:** "ลบวันรายแถว" ในฟอร์มหลายวัน (รอนโยบาย+design ยืนยัน) — โครง `days[]` รองรับแล้ว วันนั้นแก้แค่ UI ฟอร์ม + ผ่อน Zod ไม่ต้องแตะ backend/contract
+  5.1 **[กับดัก P16 เพิ่ม]** Zod ฟอร์มควรมี **เพดานความยาวช่วง** (เช่น ≤31 วัน) — `listLeaveWorkingDays` ไม่ cap ถ้าเลือกช่วงข้ามปีจะ render แถวเป็นพัน (UX/perf มือถือ)
+  6. **✅ เอกสารอัปเดตแล้ว (main agent):** architecture §4.1 (code block ใหม่), §16.3 (POST body days[] + validation layering), §21.3 (test example), §7 mentions; feature-plans/03 §3.6 (form redesign + filename → 6.1/6.2) + คำถามค้างข้อ 3 (เคาะแล้ว); testing.md (เป้าเทสต์ 0.5 → sumLeaveDays); plan.md (P1/P6/P16/D1)
+  7. **🗑️ ลบรูป** `docs/design/SME-PAYROLL/3.Leave/6.Create Request.png` (เดิม — ถูกแทนด้วย 6.1/6.2); ตอนนี้ design เหลือ 39 PNG
