@@ -3,7 +3,7 @@
 ## 1. สำหรับ session ใหม่: เริ่มตรงนี้ก่อน
 
 ### 1.1 สถานะปัจจุบัน
-- **2026-07-21** — **P0 ✅** · **P1 ✅** · **P2 ✅ (consultant รีวิว 2 รอบ + ผู้ใช้เคาะ)** · **P3 เริ่มแล้ว (🔄)**.
+- **2026-07-21** — **P0 ✅** · **P1 ✅** · **P2 ✅** · **P3 ทำเสร็จ+consultant รีวิว 2 รอบ ผ่าน รอผู้ใช้เคาะ (🔍)**.
 - **P2 — lib ชั้น API**: worker → consultant (เจอ `as` cast + token codes + BASE_URL) → worker แก้ → main verify → **consultant รีวิวรอบสอง: ผ่าน**. `lint` 0 · `tsc` ✓ · `test` **35** · `build` ✓. P8 traps จดในบันทึกแก้แผน.
 - **P1 — Design tokens + globals + utils**: worker → consultant → ผู้ใช้เปลี่ยนโจทย์เป็น period รายวัน → worker แก้ + main แก้เอกสาร → consultant ผ่าน → ผู้ใช้วางฟอนต์ Kanit woff2 (main เปิด @font-face + ลบ 15 ไฟล์ไม่ใช้) → **เคาะปิด**. ดู entry "P1 leave-days redesign" + D3 ในบันทึกแก้แผน.
 - ผล verify P1: `lint` clean · `tsc -b` exit 0 · `test` **26 passed** · `build` ✓ (Kanit woff2 4 น้ำหนัก bundle เข้า dist).
@@ -42,7 +42,7 @@
 | P0 | Project scaffold + tooling | ✅ | ผู้ใช้เคาะ+commit แล้ว 2026-07-21 (ดู deviation ในบันทึกแก้แผน) |
 | P1 | Tokens + globals.css + utils กลาง | ✅ | เคาะแล้ว 2026-07-21 · สียัง placeholder รอ Figma (ใช้ตามนี้ก่อน) |
 | P2 | lib ชั้น API | ✅ | consultant 2 รอบ + เคาะแล้ว 2026-07-21 |
-| P3 | LIFF shell | 🔄 | worker กำลังทำ (เริ่ม 2026-07-21) |
+| P3 | LIFF shell | 🔍 | เสร็จ+consultant 2 รอบ (41 tests) รอผู้ใช้เคาะ |
 | P4 | Shared: ปุ่ม + feedback | ⬜ | |
 | P5 | Shared: list/display | ⬜ | |
 | P6 | Shared: form controls + shadcn base | ⬜ | |
@@ -98,3 +98,11 @@
   3. **[🔴 กับดัก P8 — ต้องเคาะกับผู้ใช้ + probe]** `NEED_REGISTER` มากับ **HTTP 200** (§16.2) แต่ §14 pseudocode ตอบ `{code:'NEED_REGISTER'}` **ไม่มี envelope** → success interceptor (คืน `res.data.data`) จะกลืนเป็น `undefined` เงียบ. ต้อง probe mock service จริง + เคาะ shape ก่อนเขียน login (ทางที่เข้ากับ interceptor = `{data:{status:'NEED_REGISTER'}}`) — ห้ามดัด frontend เลี่ยง (plan §1.5)
   4. **login success shape** ใน MSW auth handler (`{token, employee{id,name,role}}`) เดาเอง — probe ยืนยันแค่ endpoint มี ยังไม่ยืนยัน shape สำเร็จ → เทียบ swagger จริงเมื่อผู้ใช้ config `/docs/` (blocker §1.5 ยังค้าง)
   5. **(review รอบสอง — ผ่าน, follow-up ต่ำ)** (ก) เพิ่มเทสต์ callback routing (onUnauthorized/onIdTokenExpired) ตอน P8; (ข) **[watch P21]** success interceptor คืน `res.data.data` — ถ้า backend ตอบ **204/body ว่าง** (เช่น POST ส่งสลิปเข้าอีเมล) จะได้ undefined/TypeError ดิบ ไม่ใช่ ApiError (contract §16.1 บอกทุก response มี envelope — ระวังตอนต่อ endpoint จริง); (ค) ngrok header เช็คแค่ `.ngrok-free.dev` — ถ้า tunnel ใหม่ได้ `.ngrok-free.app` header จะหยุดส่ง (เติม suffix ถ้าเจอ)
+
+- **2026-07-21 (P3 — LIFF shell)** — LiffProvider/LiffGate(3 สถานะ)/router(13 routes+errorElement)/HomePage(?target= whitelist)/usePageTitle/ErrorBoundary. review เจอ + แก้: ยุบ branch mock/real (`$mock.set isLoggedIn:true` → code path เดียว), init guard กัน StrictMode, ลบ `as` cast ใน HomePage, เพิ่ม catch-all `*` route, `index.html` title → "SmartPay Connect". main แก้เอกสาร §20.1 (อนุญาต class ErrorBoundary) + §12.3 (catch-all route). **กับดัก/ข้อเท็จจริงที่เฟสหลังต้องรู้:**
+  1. **P8:** โหมด mock ตอนนี้ set `isLoggedIn:true` แล้ว → gate ด้วย `liff.isLoggedIn()` ได้ทั้ง mock/real (ยุบ branch แล้ว ไม่มีกับดักเดิม)
+  2. **P8:** liff-mock คืน `getIDToken()='id_token'` (default) โดยไม่สน login state → MSW `auth.ts` handler ต้องยอมรับค่านี้
+  3. **placeholder:** `VITE_LIFF_ID=2000000000-devMock` ใน `.env.development` (mock only — LIFF ID จริงต่อ env รอผู้ใช้; ต่อ DEV/UAT/PRD แต่ละ env มี id แยก §18)
+  4. **โหมดจริง (ไม่ mock) ยังไม่เคยรันจริง** — branch `!isMock`/`liff.login()` redirect พิสูจน์ได้ครั้งแรกเมื่อมี LIFF DEV + Vercel (§19.3); ก่อนหน้านั้นเทสต์ในเครื่องไม่ครอบ path นี้
+  5. title placeholder ต่อ route (เช่น "รายละเอียดใบลา") ยังไม่ยืนยัน 1:1 กับ design ทุกจอ — finalize ตอนเพจจริง P8+
+  6. **[เทสต์ P8]** `LiffProvider` ใช้ module-level memoized promise (`liffInitPromise`) → เทสต์ **init-reject → error state ต้องอยู่คนละไฟล์** กับเทสต์ ready (Vitest isolate module state ต่อไฟล์) หรือ export reset helper — กันคนเขียนเทสต์งงว่าทำไม memoize กินข้ามเคส

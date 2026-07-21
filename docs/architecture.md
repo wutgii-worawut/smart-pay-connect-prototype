@@ -803,6 +803,7 @@ export const router = createBrowserRouter([
 | `/payroll` | รายการสลิป (plan 05) | Rich Menu `?target=payroll` |
 | `/payroll/:id` | รายละเอียดสลิป | กดการ์ดเดือน |
 | `/calendar` | CalendarShellPage — segment ปฏิทินการลา\|วันหยุด (plan 06) | Rich Menu `?target=calendar` |
+| `*` | NotFound — "ไม่พบหน้าที่ต้องการ" + กลับหน้าแรก (P3) | URL/`target=` เพี้ยน |
 
 > อย่าลืมเพิ่ม `'calendar'` ใน whitelist ของโค้ดดัก `?target=` (12.1) และเพิ่มปุ่ม "ดูวันหยุด" ใน Rich Menu — design มีกลุ่ม Calendar เป็นทางเข้าของตัวเอง
 
@@ -1387,9 +1388,9 @@ src/mocks/
 
 ### 20.1 ชั้น 1: Error Boundary (กัน crash จอขาว)
 
-ใช้ `react-error-boundary` ครอบ 2 ระดับ:
-- **ระดับแอป** (ใน providers ใต้ LiffGate) — ตาข่ายสุดท้าย: หน้า "เกิดข้อผิดพลาด" + ปุ่มโหลดใหม่
-- **ระดับ route** — `errorElement` ของ React Router ต่อเพจ: พังแค่หน้าเดียว ไม่ล้มทั้งแอป
+Error Boundary ครอบ 2 ระดับ:
+- **ระดับแอป** (ใน providers ใต้ LiffGate) — ตาข่ายสุดท้าย: หน้า "เกิดข้อผิดพลาด" + ปุ่มโหลดใหม่. ใช้ **class component เขียนเอง** (`getDerivedStateFromError` + `componentDidCatch`) หรือ `react-error-boundary` ก็ได้ — P3 เลือก class เอง (ไม่เพิ่ม dependency, ระดับแอปใช้ reload ไม่ต้องใช้ resetKeys)
+- **ระดับ route** — `errorElement` ของ React Router ต่อเพจ: พังแค่หน้าเดียว ไม่ล้มทั้งแอป. **catch-all `path: '*'`** → หน้า "ไม่พบหน้าที่ต้องการ" (กัน URL/`target=` เพี้ยนไปเจอจอ default ของ React Router)
 
 เหตุผล: บนมือถือหลากรุ่นใน in-app browser มีทางพังที่คาดไม่ถึงเสมอ — จอขาวเงียบ ๆ คือ UX ที่แย่ที่สุด
 
