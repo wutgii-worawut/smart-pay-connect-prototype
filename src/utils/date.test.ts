@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { formatThaiDate, listLeaveWorkingDays, sumLeaveDays } from './date'
+import { formatThaiDate, formatThaiMonthCaption, listLeaveWorkingDays, sumLeaveDays } from './date'
 import type { LeaveDayEntry } from '@/types/leave'
 
 describe('formatThaiDate', () => {
@@ -23,6 +23,26 @@ describe('formatThaiDate', () => {
   it('ปีข้ามเหลื่อม (ธ.ค. -> ม.ค.) คำนวณ พ.ศ. ถูกต้อง', () => {
     expect(formatThaiDate('2026-12-31')).toBe('31 ธ.ค. 2569')
     expect(formatThaiDate('2027-01-01')).toBe('1 ม.ค. 2570')
+  })
+})
+
+describe('formatThaiMonthCaption', () => {
+  it('มิถุนายน 2026 (ค.ศ.) → เดือน "มิถุนายน" + ปี "พ.ศ. 2569" (DoD: หัวปฏิทิน)', () => {
+    expect(formatThaiMonthCaption(new Date(2026, 5, 1))).toEqual({
+      month: 'มิถุนายน',
+      yearBe: 'พ.ศ. 2569',
+    })
+  })
+
+  it('ธันวาคม → มกราคมปีถัดไป คำนวณ พ.ศ. ข้ามปีถูกต้อง', () => {
+    expect(formatThaiMonthCaption(new Date(2026, 11, 1))).toEqual({
+      month: 'ธันวาคม',
+      yearBe: 'พ.ศ. 2569',
+    })
+    expect(formatThaiMonthCaption(new Date(2027, 0, 1))).toEqual({
+      month: 'มกราคม',
+      yearBe: 'พ.ศ. 2570',
+    })
   })
 })
 

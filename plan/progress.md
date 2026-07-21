@@ -4,7 +4,8 @@
 
 ### 1.1 สถานะปัจจุบัน
 - **2026-07-21** — **P0 ✅** · **P1 ✅** · **P2 ✅** · **P3 ✅ (consultant 2 รอบ + ผู้ใช้เคาะ+commit)** · **P4 เริ่มแล้ว (🔄)**.
-- **P5 ✅** · **P6 ทำเสร็จ+consultant loop ผ่าน รอผู้ใช้เคาะ (🔍)**.
+- **P6 ✅** · **P7 ทำเสร็จ+consultant loop ผ่าน รอผู้ใช้เคาะ (🔍)**.
+- **P7 — Shared Calendar + DateRangeField**: worker (react-day-picker@10 + Calendar/DateRangeField/dateRange utils, 135 tests) → consultant: **ผ่านแบบมี follow-up ไม่มี must-fix** (v10 API ยืนยันตรง, วันที่ string ไม่ off-by-one, พ.ศ. ที่เดียว). ไม่มี fix code ต้องแก้ (follow-up = design fidelity Figma + P18 traps จดแล้ว). base calendar เสร็จ — P18 reuse.
 - **P6 — Shared form controls + base**: worker (hand-vendor vaul/Radix + 8 form controls, 97 tests) → consultant (F1-F8; OTP design-vs-plan) → **ผู้ใช้เคาะ OTP=6 ช่อง** → worker แก้ (PeriodToggle compact, ลบ `as` OTP, OTP edge, citizenId doc) → main verify (`lint` 0·`tsc` ✓·`test` **99**·`build` ✓) → consultant ตรวจ fixes: ผ่าน (เงื่อนไข: จดสัญญา OTP completeness ให้ P10 — จดแล้ว). notes ในบันทึกแก้แผน P6.
 - **P4 — Shared ปุ่ม+feedback**: worker → consultant (เจอ mobileOffset bug + button radius 2 ทรง + shadcn CLI ชน) → ผู้ใช้เคาะ (shape prop + hand-vendor) → worker แก้ → main verify (`lint` 0 · `tsc` ✓ · `test` **60** · `build` ✓) → **consultant รีวิวรอบสอง fixes: ผ่าน**. เอกสารอัปเดต (plan P4/P6/P7 hand-vendor, CLAUDE.md, progress). *(§1.4 อัปเดต: ทุกครั้งที่แก้ code จาก follow-up ต้องส่ง consultant ตรวจเสมอ เป็น loop จนผ่าน)*
 - **P2 — lib ชั้น API**: worker → consultant (เจอ `as` cast + token codes + BASE_URL) → worker แก้ → main verify → **consultant รีวิวรอบสอง: ผ่าน**. `lint` 0 · `tsc` ✓ · `test` **35** · `build` ✓. P8 traps จดในบันทึกแก้แผน.
@@ -21,7 +22,7 @@
   - ✅ ยืนยันแล้ว: envelope `{error:{code,message}}` ไทย, ไม่มี `/api` prefix, `POST /auth/login` รับ `idToken`, protected routes (holidays/attendance/leave/payroll) = 401
 
 ### 1.2 งานถัดไป
-- **P7 — Shared: Calendar + DateRangeField** (plan.md §3 → P7). เริ่มเมื่อผู้ใช้เคาะ P6. **hand-vendor calendar (react-day-picker)** + custom MonthCaption พ.ศ. + DateRangeField (ส่งค่า 'YYYY-MM-DD' string). §10.1 ระบุ "ยากสุดในแอปนี้".
+- **P8 — Auth core (silent login)** (plan.md §3 → P8). เริ่มเมื่อผู้ใช้เคาะ P7. auth store, `login()`, setAuthToken, NEED_REGISTER→/register, ID_TOKEN_EXPIRED→liff.logout+login, EMPLOYEE_INACTIVE, ProtectedRoute, MSW auth. **ย้ำ traps P2/P3:** NEED_REGISTER shape (probe+เคาะ), register callbacks, liff-mock idToken='id_token', isLoggedIn() ได้ทั้ง 2 โหมดแล้ว.
 
 ### 1.3 session ใหม่ทำแบบนี้
 1. อ่านไฟล์นี้ทั้งไฟล์ + "บันทึกแก้แผน" ท้ายไฟล์
@@ -48,8 +49,8 @@
 | P3 | LIFF shell | ✅ | consultant 2 รอบ + เคาะ+commit แล้ว 2026-07-21 |
 | P4 | Shared: ปุ่ม + feedback | ✅ | consultant loop ผ่าน + เคาะ+commit 2026-07-21 |
 | P5 | Shared: list/display | ✅ | consultant loop ผ่าน + เคาะ+commit 2026-07-21 |
-| P6 | Shared: form controls + base | 🔍 | เสร็จ+consultant loop ผ่าน (99 tests) รอผู้ใช้เคาะ |
-| P7 | Shared: Calendar + DateRangeField | ⬜ | ยากสุด §10.1 |
+| P6 | Shared: form controls + base | ✅ | consultant loop ผ่าน + เคาะ+commit 2026-07-21 |
+| P7 | Shared: Calendar + DateRangeField | 🔍 | เสร็จ+consultant ผ่าน (135 tests) รอผู้ใช้เคาะ |
 | P8 | Auth core | ⬜ | |
 | P9 | Register form | ⬜ | ⚠️ ThaID/email domain = open Q |
 | P10 | OTP + Complete | ⬜ | |
@@ -135,3 +136,11 @@
   5. **[Figma pass]** PeriodToggle track ในรูปเทาอ่อน vs `bg-surface` ฟ้าอ่อน
   6. **[P22]** vaul+Radix เพิ่ม bundle >500KB warning — พิจารณา route-level code splitting
   7. **[manual checklist §21.4]** เพิ่ม "focus input ใน LINE iOS ต้องไม่ zoom" (implement ครบแล้ว รอ verify เครื่องจริง)
+
+- **2026-07-21 (P7 — Shared Calendar + DateRangeField)** — hand-vendor **react-day-picker@10.0.1** (restyle token, ไม่ import style.css) + `Calendar`(custom MonthCaption พ.ศ. + CalendarDayButton ห่อ DayButton เดิม, merge components/classNames ให้ caller override) + `DateRangeField`(2 ช่อง+Drawer, mode range, ปุ่ม +/−) + `utils/dateRange.ts`(pure) + `formatThaiMonthCaption` ใน utils/date.ts (additive). 135 tests. วันที่ string ไม่ off-by-one, พ.ศ. ที่เดียว. consultant ยืนยัน v10 API ตรง §10.3. **กับดัก/หนี้เฟสหลัง:**
+  1. **[🔴 กับดัก P18]** ห้ามส่ง `components={{ DayButton: (props)=>... inline arrow }}` (ตัวอย่าง §10.3 เขียนแบบนี้!) — identity ไม่นิ่ง → React remount ทั้ง grid ทุก render (focus หลุด + perf). ต้อง memo/component นอก render + leaveMap ผ่าน context/closure นิ่ง
+  2. **[กับดัก P18]** เลขวันเสาร์-อาทิตย์สีเทา (ตาม `6.Calendar/1`) base ยังไม่ทำ — P18 ทำผ่าน modifiers/custom DayButton; `showOutsideDays` ส่งผ่าน rest ได้
+  3. **[P18 override contract]** `components.DayButton`/`classNames` ที่ caller ส่ง มา ชนะ default (spread ทีหลัง) — P18 ใส่จุดสีประเภทลาได้โดยไม่ reimplement (มีเทสต์ยืนยัน)
+  4. **[Figma pass]** range-selection style (วง `bg-primary` หัวท้าย + แถบ `bg-primary/10` กลาง) = invent (ไม่มี PNG ปฏิทินเปิด range); ปุ่ม −/+ ควรอยู่ในการ์ดเดียวกับช่อง "ถึงวันที่"; nav button 36px→40px + ลูกศร ← ; a11y label ปุ่มวันยังเป็น ค.ศ. (rdp default) ควรทำ พ.ศ. ผ่าน `labels.labelDayButton`
+  5. **[rdp v10]** ชื่อ package แนะนำใหม่ = `@daypicker/react` (ชื่อเดิม `react-day-picker` ยัง publish v10) — เฝ้าดู v11; rdp พก date-fns ^4.1 เป็น dep ของตัวเอง dedupe กับ ^4.4 ของเรา
+  6. **[follow-up โค้ดเล็ก — เก็บทีหลัง]** `as Date`/`as DateRange` ใน `Calendar.test.tsx` (test-only, avoidable ด้วย typed `vi.fn`) — consultant ประเมินไม่คุ้ม loop เดี่ยว; เก็บรวมตอนแตะไฟล์นั้นครั้งหน้า/P22

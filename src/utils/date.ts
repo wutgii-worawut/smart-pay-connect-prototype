@@ -79,3 +79,16 @@ export function listLeaveWorkingDays(
 export function sumLeaveDays(days: LeaveDayEntry[]): number {
   return days.reduce((sum, day) => sum + (day.period === 'full' ? 1 : 0.5), 0)
 }
+
+/**
+ * แยกชื่อเดือนไทย + "พ.ศ. YYYY" คนละบรรทัด — ใช้กับหัวปฏิทิน (`Calendar` MonthCaption, P7/architecture §10.3)
+ * ที่ดีไซน์วางเป็น 2 บรรทัด (เดือนตัวหนาบรรทัดบน / "พ.ศ. 2569" ตัวเล็กสีรองบรรทัดล่าง) — ใช้สูตร +543
+ * เดียวกับ formatThaiDate (จุดที่ 2 ในไฟล์นี้เท่านั้น ไม่กระจายไปหน้าอื่น — ไฟล์นี้คือ "จุดเดียว" ตามกติกา §4.1)
+ */
+export function formatThaiMonthCaption(date: Date): { month: string; yearBe: string } {
+  const be = date.getFullYear() + 543
+  return {
+    month: format(date, 'MMMM', { locale: th }),
+    yearBe: `พ.ศ. ${be}`,
+  }
+}
