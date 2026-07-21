@@ -4,7 +4,8 @@
 
 ### 1.1 สถานะปัจจุบัน
 - **2026-07-21** — **P0 ✅** · **P1 ✅** · **P2 ✅** · **P3 ✅ (consultant 2 รอบ + ผู้ใช้เคาะ+commit)** · **P4 เริ่มแล้ว (🔄)**.
-- **P9 ✅** · **P10 ทำเสร็จ+consultant loop ผ่าน รอผู้ใช้เคาะ (🔍) — จบ flow register (P8-P10)**.
+- **P10 ✅ — จบ flow register P8-P10** · **P11 ทำเสร็จ+consultant loop ผ่าน (รวม move) รอผู้ใช้เคาะ (🔍)**.
+- **P11 — Attendance foundation**: worker → consultant (ผ่าน + decision placement) → ผู้ใช้เคาะ (ข) ย้าย geolocation/haversine → feature → worker move → main verify → consultant ตรวจ move: **ผ่าน**. geolocation retry §15 ถูกครบ, haversine, MapView init-once+cleanup, ไม่ log พิกัด, OSM tile ฟรีไม่ผูก key. `lint` 0·`tsc` ✓·`test` **232**·`build` ✓.
 - **P10 — OTP + Complete**: worker → consultant (core ผ่าน + F1 UX bug + F2 guard) → worker แก้ F1/F2/nicety → main verify (`lint` 0·`tsc` ✓·`test` **214**·`build` ✓) → consultant ตรวจ fixes: **ผ่าน**. contract flags (verify-otp invented) + notes จดในบันทึกแก้แผน P10.
 - **P9 — Register form**: worker → consultant: **ผ่านแบบมี follow-up ไม่มี must-fix** (checksum ถูก, formatted→digits, Open Q §23 อ้อมถูก, security สะอาด). ไม่มี fix code บังคับ (follow-up = doc/contract/Figma/P22 จดแล้ว). `lint` 0·`tsc` ✓·`test` **186**·`build` ✓.
 - **P8 — Auth core**: worker → consultant (security core ผ่าน + F1 must-fix) → worker แก้ F1/F2/F3 → main verify (`lint` 0·`tsc` ✓·`test` **154** ×2 ไม่ flaky·`build` ✓) → consultant ตรวจ fixes: **ผ่าน**. **⚠️ 3 contract flags ต้องแจ้ง backend/เคาะผู้ใช้** (ดูบันทึกแก้แผน P8).
@@ -25,7 +26,7 @@
   - ✅ ยืนยันแล้ว: envelope `{error:{code,message}}` ไทย, ไม่มี `/api` prefix, `POST /auth/login` รับ `idToken`, protected routes (holidays/attendance/leave/payroll) = 401
 
 ### 1.2 งานถัดไป
-- **P11 — Attendance foundation** (plan.md §3 → P11). เริ่มเมื่อผู้ใช้เคาะ P10. `useGeolocation`/`getPositionWithRetry` (§15, retry+3 error), `haversine` (preview), `MapView` (MapLibre/tile ฟรีก่อน — map provider = open Q §23.2#3), MSW `GET /attendance/today`. ⚠️ ห้ามผูก Google key.
+- **P12 — ClockPage state machine** (plan.md §3 → P12). เริ่มเมื่อผู้ใช้เคาะ P11. 6 state + clock in/out onsite + remote flow + success (จอ 0-9). ⚠️ remote clock policy = open Q §23.1#4 (ตาม design + flag `canRemoteClock`, ห้ามทำ flow แจ้งเตือน/รับทราบหัวหน้า); geofence = server verdict.
 
 ### 1.3 session ใหม่ทำแบบนี้
 1. อ่านไฟล์นี้ทั้งไฟล์ + "บันทึกแก้แผน" ท้ายไฟล์
@@ -56,8 +57,8 @@
 | P7 | Shared: Calendar + DateRangeField | ✅ | consultant ผ่าน + เคาะ+commit 2026-07-21 |
 | P8 | Auth core | ✅ | consultant loop ผ่าน + เคาะ+commit 2026-07-21 · ⚠️ 3 contract flags (noted) |
 | P9 | Register form | ✅ | consultant ผ่าน + เคาะ+commit 2026-07-21 · ⚠️ ThaID/email domain = open Q |
-| P10 | OTP + Complete | 🔍 | เสร็จ+consultant loop ผ่าน (214 tests) รอผู้ใช้เคาะ |
-| P11 | Attendance foundation | ⬜ | ⚠️ map provider = open Q |
+| P10 | OTP + Complete | ✅ | consultant loop ผ่าน + เคาะ+commit 2026-07-21 |
+| P11 | Attendance foundation | 🔍 | เสร็จ+consultant loop ผ่าน (ย้าย→feature, 232 tests) รอผู้ใช้เคาะ · ⚠️ map provider = open Q |
 | P12 | ClockPage state machine | ⬜ | ⚠️ remote policy = open Q |
 | P13 | Attendance history | ⬜ | |
 | P14 | Leave list shell | ⬜ | |
@@ -171,3 +172,11 @@
   3. **[Figma pass — F3]** จอ Complete ต่างจาก `3.Complete.png` (design มี gradient+โลโก้+หัวข้อ+ปุ่ม pill ขาวน้ำเงิน; เราใช้ SuccessScreen S17 เรียบ + PrimaryButton น้ำเงินทึบ) — S17 เป็น shared ใช้ร่วม clock/leave success ด้วย → เก็บ Figma pass (ขยาย SuccessScreen header slot/variant ทีเดียว); OtpPage gradient ทิศเดียวกับ P9 F7 (หนี้เดิม); ลิงก์ส่งซ้ำเป็นสีแดงหลัง OTP_EXPIRED (invent, harmless)
   4. **[follow-up เล็ก P22]** F4 เทสต์ retry ใช้ default จริง (ซ้ำ P9 F4); F5 assert payload otp สะอาดใน MSW; F6 verify-otp handler ไม่ validate body (mirror ไม่ครบ)
   5. **[fixes ผ่าน consultant รอบสอง]** F1 (ลบ mode:onChange) + F2 (guard /success) + navigate replace → 214 tests. obs minor (จด, ไม่ block): O2 = `RegisterSuccessPage` useEffect `clearPendingOtp` รันแม้ตอน guard เด้ง → deep-link /success กลาง OTP flow จะล้าง pendingOtp (ใน LIFF ไม่มี address bar โอกาสแทบศูนย์ — gate effect หลัง guard ตอนแตะไฟล์ครั้งหน้า)
+
+- **2026-07-21 (P11 — Attendance foundation GPS+Map)** — `src/hooks/useGeolocation.ts` (`getPositionWithRetry` §15: maximumAge:0, highAccuracy:true→retry false ตอน TIMEOUT/POSITION_UNAVAILABLE, PERMISSION_DENIED ไม่ retry, 3 error→ไทย, **user-action ไม่ auto**) + `src/utils/haversine.ts` (pure preview, "โดยประมาณ") + `features/attendance/components/MapView.tsx` (maplibre-gl@5.24 + **OSM raster tile ฟรีไม่ต้อง key** §23.2#3, init ครั้งเดียว+panTo, circle รัศมีรอบออฟฟิศ, cleanup ครบ, loading/error กันจอขาว, สีจาก token var) + MSW `/attendance/today`. 232 tests. consultant: **ผ่าน ไม่มี must-fix** (core §15 ถูกครบ; ใช้ type guard แทน `as` ที่ pseudocode §15 เขียนผิดกฎ). **decision/กับดัก:**
+  1. **[✅ เคาะแล้ว — ย้ายกลับ feature]** `useGeolocation`/`haversine` **ย้ายจาก shared → `features/attendance/hooks|utils/`** (ผู้ใช้เคาะ ข 2026-07-21). เหตุ: error copy "กดลงเวลา" + `isWithinRadius(user,office)` ผูก business attendance (§6); ไม่มี feature อื่นใช้ GPS (§7.3); ตรง §15/feature-plans/02 อยู่แล้ว (ไม่ต้องแก้ doc). **ไม่ export ออก index** (encapsulation — กันคน feature อื่น import เจอ copy "กดลงเวลา" ผิดบริบท). consultant ตรวจ move: ผ่าน 232 tests คงเดิม. *(ถ้าอนาคตมี feature อื่นใช้ GPS ค่อย promote ขึ้น shared พร้อมถอน copy ลงเวลาเป็น param)* · minor: `src/utils/.gitkeep` ซ้ำซ้อน ลบได้โอกาสหน้า
+  2. **[P12 traps]** F1 marker `anchor:'bottom'` (หมุดหยดน้ำ ปลายชี้พิกัด — เช็ค asset ตอน wire); F5 **ClockPage ห้ามส่ง userPos inline object** (panTo เด้งทุก render — ส่ง position จาก useGeolocation state ตรง); F6 `request()` fail ล้าง position เดิม → P12 เคาะคง last-known ไหม; **React.lazy ClockPage** (maplibre ~275KB gzip — ออกจาก initial bundle, รวมกับ P22 code-split)
+  3. **[CONTRACT]** `/attendance/today` shape invented: `clockInTime` เป็น display string (§4.2 instant ควร UTC), ไม่มี "กะ", **ไม่มี `canRemoteClock`** (feature-plans/02 สั่งเผื่อ — P12 ต้องเติม + ใช้คุม pill remote, open Q 23.1#4) → probe swagger เมื่อพร้อม
+  4. **[Figma/designer]** วงรัศมีในรูปดูเกาะหมุดผู้ใช้ vs โค้ดวาดรอบออฟฟิศ (จงใจ — semantics ถูกกว่า §16.3 "จุดทำงาน+รัศมี") → ถาม designer
+  5. **[§21.4 manual]** MapView ไม่มีเทสต์ (jsdom WebGL ไม่ได้ — testing.md ข้อ 4 อนุญาต) → เพิ่ม checklist เครื่องจริง (map โหลด/หมุด/วง/retry หลังปิดเน็ต)
+  6. **[ก่อน UAT §23.2#3]** OSM tile มาตรฐาน**ไม่เหมาะ production** (usage policy) — เคาะ provider ที่มี SLA ก่อน UAT (MapView interface พร้อมสลับ)
