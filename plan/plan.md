@@ -70,8 +70,8 @@ Repo = **Vite starter เปล่า** — ยังไม่มี dependency 
 | P3 | LIFF shell | LiffProvider+LiffGate+liff-mock, providers, router skeleton, `?target=`, usePageTitle | P2 |
 | P4 | Shared: ปุ่ม + feedback | S11-S14, S7 (sonner), S17, S18 | P1,P3 |
 | P5 | Shared: list/display | S1-S6, S8-S10, S15 | P4 |
-| P6 | Shared: form controls + shadcn base | shadcn drawer/dialog/select/sonner, TextInput/Textarea/Select/OTPInput/Toggle | P4 |
-| P7 | Shared: Calendar + DateRangeField | shadcn calendar + พ.ศ. caption + range field | P6 |
+| P6 | Shared: form controls + base | hand-vendor drawer/dialog/select (vaul/Radix), TextInput/Textarea/Select/OTPInput/PeriodToggle | P4 |
+| P7 | Shared: Calendar + DateRangeField | hand-vendor calendar (react-day-picker) + พ.ศ. caption + range field | P6 |
 | P8 | Auth core | auth store, `login()`, setAuthToken, NEED_REGISTER/ID_TOKEN_EXPIRED, MSW auth | P3 |
 | P9 | Register form | จอ 1.1 (+1.2 config mode) | P6,P8 |
 | P10 | OTP + Complete | จอ 1.3, 1.4 | P9 |
@@ -122,7 +122,7 @@ Repo = **Vite starter เปล่า** — ยังไม่มี dependency 
 - **ระวัง:** ห้าม render router ก่อน init resolve (§12.1)
 
 ### P4 — Shared: ปุ่ม + feedback (S11-S14, S7, S17, S18)
-- **ทำ:** `PrimaryButton`, `DangerSoftButton`, `GhostButton`, `BottomActionBar` (safe-area pb), Toast ผ่าน sonner (`npx shadcn add sonner` — pill ดำตาม design), `SuccessScreen`, `ErrorState`/`EmptyState`
+- **ทำ:** `PrimaryButton`, `DangerSoftButton`, `GhostButton` (มี prop `shape:'card'|'pill'`), `BottomActionBar` (safe-area pb), Toast ผ่าน sonner (**`npm install sonner` ตรง ๆ + Toaster custom เอง — ไม่ใช้ shadcn CLI ที่ทับ @theme/Kanit**; pill ดำตาม design, `mobileOffset` safe-area), `SuccessScreen`, `ErrorState`/`EmptyState`
 - **ไฟล์:** `src/components/**`
 - **อิง:** feature-plans/00 §1 (S7, S11-S14, S17, S18), §10.2, §20.5
 - **รูป:** `1.Registration/1.LINEOA-Registration.png`, `4.Leave Approval/2.Pending Details.png`, success `1.Registration/3...Complete.png`
@@ -134,12 +134,12 @@ Repo = **Vite starter เปล่า** — ยังไม่มี dependency 
 - **DoD:** มาตรฐาน + สี StatusBadge/LeaveTypeIcon จาก token ชุดเดียว (`--color-leave-*`)
 
 ### P6 — Shared: form controls + shadcn base
-- **ทำ:** `npx shadcn add drawer dialog select` (เช็ค peer dep React 19); form controls: `TextInput` (รองรับ mask เลขบัตร), `Textarea`, `SelectField`, `OTPInput` (6 ช่อง อักษร+เลข), `PeriodToggle` (เต็มวัน/เช้า/บ่าย — ใช้ทั้ง toggle เดียว 6.1 และแถวรายวัน 6.2) — RHF-compatible
+- **ทำ:** **hand-vendor** drawer(vaul)/dialog+select(Radix) — copy source มา restyle ด้วย token เรา (**ห้าม `shadcn init/add` — ทับ @theme/Kanit; ผู้ใช้เคาะ P4**); form controls: `TextInput` (รองรับ mask เลขบัตร), `Textarea`, `SelectField`, `OTPInput` (6 ช่อง อักษร+เลข), `PeriodToggle` (เต็มวัน/เช้า/บ่าย — ใช้ทั้ง toggle เดียว 6.1 และแถวรายวัน 6.2) — RHF-compatible. **หมายเหตุ duality:** ช่องกรอกจอ Registration = pill, Textarea ความเห็น = rounded-rect (เหมือน button shape)
 - **อิง:** feature-plans/00 §1 S16; §10.1-10.2; รูป `1.LINEOA-Registration.png`, `2...OTP.png`, `3.Leave/6.1.Create Request (1 day).png` / `6.2.Create Request (more 1 days).png`
 - **DoD:** มาตรฐาน + Drawer มี `pb-[calc(1.5rem+env(safe-area-inset-bottom))]` + ปุ่มปิด
 
 ### P7 — Shared: Calendar + DateRangeField
-- **ทำ:** `npx shadcn add calendar`, custom `MonthCaption` แสดง พ.ศ. + locale th, `DateRangeField` (calendar range, ส่งค่าเป็น `'YYYY-MM-DD'` string §4.2) — แยกเฟสเพราะ §10.1 ระบุ "ยากสุดในแอปนี้"
+- **ทำ:** **hand-vendor calendar (react-day-picker)** — copy/restyle ด้วย token เรา (ห้าม shadcn CLI), custom `MonthCaption` แสดง พ.ศ. + locale th, `DateRangeField` (calendar range, ส่งค่าเป็น `'YYYY-MM-DD'` string §4.2) — แยกเฟสเพราะ §10.1 ระบุ "ยากสุดในแอปนี้"
 - **อิง:** §10.3 (DayButton/MonthCaption), §4.2; รูป `6.Calendar/1.Leave Calendar.png`, `3.Leave/6.1`/`6.2`
 - **DoD:** มาตรฐาน + แสดง "มิถุนายน พ.ศ. 2569" ตรงรูป + เทสต์ helper แปลง range→string
 

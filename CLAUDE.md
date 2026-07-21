@@ -34,7 +34,7 @@ When a task touches a feature, **read its plan file first, then open the PNG of 
 - **axios** — single instance in `lib/api-client.ts` (interceptors attach JWT, unwrap `{data}`, normalize `ApiError`)
 - **React Hook Form + Zod v4** (`z.email()` syntax, not v3) for forms
 - **date-fns + locale `th`** — never moment. BE year = CE + 543 via `utils/date.ts` helpers only
-- **Tailwind CSS v4** — tokens in `@theme` (styles/globals.css). **shadcn/ui selectively**: drawer, dialog, select, calendar, sonner only. Simple components (Button/Card/Badge) are hand-written from Figma
+- **Tailwind CSS v4** — tokens in `@theme` (styles/globals.css). **shadcn-derived primitives are hand-vendored, NOT via shadcn CLI** (CLI `init/add` overwrites our `@theme`/Kanit — ห้ามรัน): drawer(vaul), dialog/select(Radix), calendar(react-day-picker), toast(sonner) — copy source + restyle ด้วย token เรา. Simple components (Button/Card/Badge) are hand-written from Figma
 - **MSW** (`VITE_API_MOCK=true`) + **@line/liff-mock** (`VITE_LIFF_MOCK=true`) for local dev
 - Backend = separate **Java EE** service (not this repo). Contract: `docs/architecture.md` §16
 

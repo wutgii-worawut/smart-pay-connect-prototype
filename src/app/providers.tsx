@@ -8,6 +8,7 @@ import { RouterProvider } from 'react-router-dom'
 import { queryClient } from '@/lib/query-client'
 import { LiffProvider } from '@/lib/liff/LiffProvider'
 import { LiffGate } from '@/lib/liff/LiffGate'
+import { AppToaster } from '@/components/Toaster'
 import { ErrorBoundary } from './ErrorBoundary'
 import { router } from './router'
 
@@ -18,6 +19,7 @@ export function Providers() {
         <ErrorBoundary>
           <QueryClientProvider client={queryClient}>
             <RouterProvider router={router} />
+            <AppToaster />
           </QueryClientProvider>
         </ErrorBoundary>
       </LiffGate>
