@@ -4,7 +4,8 @@
 
 ### 1.1 สถานะปัจจุบัน
 - **2026-07-21** — **P0 ✅** · **P1 ✅** · **P2 ✅** · **P3 ✅ (consultant 2 รอบ + ผู้ใช้เคาะ+commit)** · **P4 เริ่มแล้ว (🔄)**.
-- **P6 ✅** · **P7 ทำเสร็จ+consultant loop ผ่าน รอผู้ใช้เคาะ (🔍)**.
+- **P7 ✅ — จบกลุ่ม shared P1-P7** · **P8 ทำเสร็จ+consultant loop ผ่าน รอผู้ใช้เคาะ (🔍)**.
+- **P8 — Auth core**: worker → consultant (security core ผ่าน + F1 must-fix) → worker แก้ F1/F2/F3 → main verify (`lint` 0·`tsc` ✓·`test` **154** ×2 ไม่ flaky·`build` ✓) → consultant ตรวจ fixes: **ผ่าน**. **⚠️ 3 contract flags ต้องแจ้ง backend/เคาะผู้ใช้** (ดูบันทึกแก้แผน P8).
 - **P7 — Shared Calendar + DateRangeField**: worker (react-day-picker@10 + Calendar/DateRangeField/dateRange utils, 135 tests) → consultant: **ผ่านแบบมี follow-up ไม่มี must-fix** (v10 API ยืนยันตรง, วันที่ string ไม่ off-by-one, พ.ศ. ที่เดียว). ไม่มี fix code ต้องแก้ (follow-up = design fidelity Figma + P18 traps จดแล้ว). base calendar เสร็จ — P18 reuse.
 - **P6 — Shared form controls + base**: worker (hand-vendor vaul/Radix + 8 form controls, 97 tests) → consultant (F1-F8; OTP design-vs-plan) → **ผู้ใช้เคาะ OTP=6 ช่อง** → worker แก้ (PeriodToggle compact, ลบ `as` OTP, OTP edge, citizenId doc) → main verify (`lint` 0·`tsc` ✓·`test` **99**·`build` ✓) → consultant ตรวจ fixes: ผ่าน (เงื่อนไข: จดสัญญา OTP completeness ให้ P10 — จดแล้ว). notes ในบันทึกแก้แผน P6.
 - **P4 — Shared ปุ่ม+feedback**: worker → consultant (เจอ mobileOffset bug + button radius 2 ทรง + shadcn CLI ชน) → ผู้ใช้เคาะ (shape prop + hand-vendor) → worker แก้ → main verify (`lint` 0 · `tsc` ✓ · `test` **60** · `build` ✓) → **consultant รีวิวรอบสอง fixes: ผ่าน**. เอกสารอัปเดต (plan P4/P6/P7 hand-vendor, CLAUDE.md, progress). *(§1.4 อัปเดต: ทุกครั้งที่แก้ code จาก follow-up ต้องส่ง consultant ตรวจเสมอ เป็น loop จนผ่าน)*
@@ -22,7 +23,7 @@
   - ✅ ยืนยันแล้ว: envelope `{error:{code,message}}` ไทย, ไม่มี `/api` prefix, `POST /auth/login` รับ `idToken`, protected routes (holidays/attendance/leave/payroll) = 401
 
 ### 1.2 งานถัดไป
-- **P8 — Auth core (silent login)** (plan.md §3 → P8). เริ่มเมื่อผู้ใช้เคาะ P7. auth store, `login()`, setAuthToken, NEED_REGISTER→/register, ID_TOKEN_EXPIRED→liff.logout+login, EMPLOYEE_INACTIVE, ProtectedRoute, MSW auth. **ย้ำ traps P2/P3:** NEED_REGISTER shape (probe+เคาะ), register callbacks, liff-mock idToken='id_token', isLoggedIn() ได้ทั้ง 2 โหมดแล้ว.
+- **P9 — Register form** (plan.md §3 → P9). เริ่มเมื่อผู้ใช้เคาะ P8. RegisterPage + RegisterForm (Zod เลขบัตร 13 หลัก+checksum ผ่าน `extractCitizenIdDigits`, email domain), ปุ่ม ThaID (GhostButton, ยังไม่ต่อ OAuth), error mapping. ⚠️ Open Q: ThaID phase, email domain, register/OTP path 404.
 
 ### 1.3 session ใหม่ทำแบบนี้
 1. อ่านไฟล์นี้ทั้งไฟล์ + "บันทึกแก้แผน" ท้ายไฟล์
@@ -50,8 +51,8 @@
 | P4 | Shared: ปุ่ม + feedback | ✅ | consultant loop ผ่าน + เคาะ+commit 2026-07-21 |
 | P5 | Shared: list/display | ✅ | consultant loop ผ่าน + เคาะ+commit 2026-07-21 |
 | P6 | Shared: form controls + base | ✅ | consultant loop ผ่าน + เคาะ+commit 2026-07-21 |
-| P7 | Shared: Calendar + DateRangeField | 🔍 | เสร็จ+consultant ผ่าน (135 tests) รอผู้ใช้เคาะ |
-| P8 | Auth core | ⬜ | |
+| P7 | Shared: Calendar + DateRangeField | ✅ | consultant ผ่าน + เคาะ+commit 2026-07-21 |
+| P8 | Auth core | 🔍 | เสร็จ+consultant loop ผ่าน (154 tests) รอผู้ใช้เคาะ · ⚠️ 3 contract flags |
 | P9 | Register form | ⬜ | ⚠️ ThaID/email domain = open Q |
 | P10 | OTP + Complete | ⬜ | |
 | P11 | Attendance foundation | ⬜ | ⚠️ map provider = open Q |
@@ -144,3 +145,13 @@
   4. **[Figma pass]** range-selection style (วง `bg-primary` หัวท้าย + แถบ `bg-primary/10` กลาง) = invent (ไม่มี PNG ปฏิทินเปิด range); ปุ่ม −/+ ควรอยู่ในการ์ดเดียวกับช่อง "ถึงวันที่"; nav button 36px→40px + ลูกศร ← ; a11y label ปุ่มวันยังเป็น ค.ศ. (rdp default) ควรทำ พ.ศ. ผ่าน `labels.labelDayButton`
   5. **[rdp v10]** ชื่อ package แนะนำใหม่ = `@daypicker/react` (ชื่อเดิม `react-day-picker` ยัง publish v10) — เฝ้าดู v11; rdp พก date-fns ^4.1 เป็น dep ของตัวเอง dedupe กับ ^4.4 ของเรา
   6. **[follow-up โค้ดเล็ก — เก็บทีหลัง]** `as Date`/`as DateRange` ใน `Calendar.test.tsx` (test-only, avoidable ด้วย typed `vi.fn`) — consultant ประเมินไม่คุ้ม loop เดี่ยว; เก็บรวมตอนแตะไฟล์นั้นครั้งหน้า/P22
+
+- **2026-07-21 (P8 — Auth core silent login)** — `features/auth/` (store Zustand ไม่ persist, api/login Zod boundary, useAuthBootstrap useMutation retry:0, AuthGate layout 4 สถานะ, ProtectedRoute +requireRole เผื่อ P19, registerAuthCallbacks module side-effect) + router ห่อ AuthGate + MSW `setAuthScenario`. 150 tests. **security core ผ่าน** (consultant ยืนยัน): exchange idToken→JWT ครั้งเดียวไม่ forward, role จาก login response (ไม่แตะ getProfile), ไม่ log token, token ไม่ persist. review เจอ **1 must-fix (worker แก้อยู่):** F1 = 401 กลางคัน → spinner ค้าง (reset startedRef re-login) + F2 error flash ID_TOKEN_EXPIRED + F3 pin tests.
+  - **🔴 CONTRACT FLAGS (ต้องแจ้ง backend + เคาะผู้ใช้ — mock ยังทดสอบจริงไม่ได้):**
+    1. **NEED_REGISTER shape:** frontend ต้องการ `{data:{status:'NEED_REGISTER'}}` (envelope §16.1) — แต่ §13.4 pseudocode เขียน bare `{code:'NEED_REGISTER'}` (ไม่มี envelope → interceptor กลืนเป็น undefined). backend จริงต้องตอบแบบ wrapped; ควรอัปเดต architecture §13.4/§16.3 (รอผู้ใช้เคาะ)
+    2. **employee.role:** frontend บังคับ `role` ใน login response (§17.2) แต่ §13.4 pseudocode `employee:{id,name}` ไม่มี role → backend จริงต้องมี role (mock probe มีแล้ว); ควรอัปเดต pseudocode
+    3. **mock service ตอบ authenticated เสมอ** (idToken อะไรก็ได้ → employee เดียว, ไม่เคย NEED_REGISTER) + `/auth/register`,`/auth/otp/*` = 404 + swagger ยัง petstore → **P9/P10 register/OTP ทดสอบ flow กับ service จริงไม่ได้ ต้องพึ่ง MSW ล้วน** จนกว่า backend/swagger พร้อม
+  - **กับดัก P10:** หลัง verify-otp ต้อง `setSession()`; `useAuthBootstrap` เช็ค `isAuthenticated` ก่อน `need_register` (ห้ามสลับลำดับ ไม่งั้นวนเด้ง /register)
+  - **กับดัก P9:** คน auth แล้วเปิด `/register` ตรง ๆ เห็นฟอร์มได้ → P9 ตัดสิน redirect '/' ถ้า authenticated
+  - **P19:** `requireRole="manager"` พร้อมใช้ที่ ProtectedRoute (ยังไม่มี route ใช้)
+  - **[fixes ผ่าน consultant รอบสอง]** F1/F2/F3 แก้แล้ว 154 tests (ไม่ flaky). minor เหลือ (ไม่ block): (ก) §21.4 checklist เพิ่มเคส "JWT/idToken หมดอายุกลางคัน → redirect กลับมาปกติ" บนเครื่องจริง; (ข) `useAuthBootstrap.test.tsx` listener ไม่ removeListener (cosmetic, เก็บทีหลัง)

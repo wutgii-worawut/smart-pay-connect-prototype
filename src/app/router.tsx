@@ -1,8 +1,12 @@
 /**
- * app/router.tsx — router skeleton (§12.3) ทุก route เป็น placeholder จนกว่าจะถึงเฟส feature
- * จริง (P8+) `createBrowserRouter` (History API — ข้อกำหนด LIFF, §11) + `errorElement` ทุก route
+ * app/router.tsx — router (§12.3) ทุก route ยัง placeholder จนกว่าจะถึงเฟส feature จริง ยกเว้น
+ * auth (P8) `createBrowserRouter` (History API — ข้อกำหนด LIFF, §11) + `errorElement` ทุก route
+ *
+ * route ที่ต้อง auth (ทุกอันยกเว้น `/register*`) อยู่ใต้ layout route ปลาย `AuthGate` (§13.1-13.3)
+ * — `AuthGate` เช็ค silent login ก่อนเสมอ ไม่ render route ลูกจนกว่าจะสำเร็จ (เทียบ LiffGate §20.2)
  */
 import { createBrowserRouter } from 'react-router-dom'
+import { AuthGate } from '@/features/auth'
 import { HomePage } from './HomePage'
 import { NotFoundPage } from './NotFoundPage'
 import { PlaceholderPage } from './PlaceholderPage'
@@ -10,9 +14,60 @@ import { RouteErrorBoundary } from './RouteErrorBoundary'
 
 export const router = createBrowserRouter([
   {
-    path: '/',
-    element: <HomePage />,
+    element: <AuthGate />,
     errorElement: <RouteErrorBoundary />,
+    children: [
+      {
+        path: '/',
+        element: <HomePage />,
+        errorElement: <RouteErrorBoundary />,
+      },
+      {
+        path: '/attendance',
+        element: <PlaceholderPage title="ลงเวลาทำงาน" />,
+        errorElement: <RouteErrorBoundary />,
+      },
+      {
+        path: '/attendance/history',
+        element: <PlaceholderPage title="ประวัติลงเวลา" />,
+        errorElement: <RouteErrorBoundary />,
+      },
+      {
+        path: '/leave',
+        element: <PlaceholderPage title="บันทึกการลา" />,
+        errorElement: <RouteErrorBoundary />,
+      },
+      {
+        path: '/leave/new',
+        element: <PlaceholderPage title="ยื่นใบลา" />,
+        errorElement: <RouteErrorBoundary />,
+      },
+      {
+        path: '/leave/:id',
+        element: <PlaceholderPage title="รายละเอียดใบลา" />,
+        errorElement: <RouteErrorBoundary />,
+      },
+      {
+        path: '/approval/:id',
+        element: <PlaceholderPage title="อนุมัติใบลา" />,
+        errorElement: <RouteErrorBoundary />,
+      },
+      {
+        path: '/payroll',
+        element: <PlaceholderPage title="ดูสลิปเงินเดือน" />,
+        errorElement: <RouteErrorBoundary />,
+      },
+      {
+        path: '/payroll/:id',
+        element: <PlaceholderPage title="รายละเอียดสลิปเงินเดือน" />,
+        errorElement: <RouteErrorBoundary />,
+      },
+      {
+        path: '/calendar',
+        element: <PlaceholderPage title="ดูวันหยุด" />,
+        errorElement: <RouteErrorBoundary />,
+      },
+    ],
   },
   {
     path: '/register',
@@ -27,51 +82,6 @@ export const router = createBrowserRouter([
   {
     path: '/register/success',
     element: <PlaceholderPage title="ลงทะเบียนสำเร็จ" />,
-    errorElement: <RouteErrorBoundary />,
-  },
-  {
-    path: '/attendance',
-    element: <PlaceholderPage title="ลงเวลาทำงาน" />,
-    errorElement: <RouteErrorBoundary />,
-  },
-  {
-    path: '/attendance/history',
-    element: <PlaceholderPage title="ประวัติลงเวลา" />,
-    errorElement: <RouteErrorBoundary />,
-  },
-  {
-    path: '/leave',
-    element: <PlaceholderPage title="บันทึกการลา" />,
-    errorElement: <RouteErrorBoundary />,
-  },
-  {
-    path: '/leave/new',
-    element: <PlaceholderPage title="ยื่นใบลา" />,
-    errorElement: <RouteErrorBoundary />,
-  },
-  {
-    path: '/leave/:id',
-    element: <PlaceholderPage title="รายละเอียดใบลา" />,
-    errorElement: <RouteErrorBoundary />,
-  },
-  {
-    path: '/approval/:id',
-    element: <PlaceholderPage title="อนุมัติใบลา" />,
-    errorElement: <RouteErrorBoundary />,
-  },
-  {
-    path: '/payroll',
-    element: <PlaceholderPage title="ดูสลิปเงินเดือน" />,
-    errorElement: <RouteErrorBoundary />,
-  },
-  {
-    path: '/payroll/:id',
-    element: <PlaceholderPage title="รายละเอียดสลิปเงินเดือน" />,
-    errorElement: <RouteErrorBoundary />,
-  },
-  {
-    path: '/calendar',
-    element: <PlaceholderPage title="ดูวันหยุด" />,
     errorElement: <RouteErrorBoundary />,
   },
   {
