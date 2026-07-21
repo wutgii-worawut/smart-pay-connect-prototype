@@ -315,21 +315,27 @@ src/
 4. **บังคับกฎด้วย ESLint** ตั้งแต่วันแรก:
 
 ```js
-// .eslintrc
-'import/no-restricted-paths': [
+// eslint.config.js (flat config)
+// NOTE: ใช้ eslint-plugin-import-x (fork) เพราะ eslint-plugin-import ตัวเดิม peer dep รองรับแค่ ESLint ≤9
+// namespace rule จึงเป็น 'import-x/no-restricted-paths'. ต้องตั้ง resolver ที่อ่าน tsconfig paths
+// (eslint-import-resolver-typescript ผ่าน settings['import-x/resolver-next']) ไม่งั้น rule จะ "เงียบ"
+// กับ import ผ่าน alias @/* (resolve ไม่ได้ = ข้ามเงียบ ไม่ error)
+'import-x/no-restricted-paths': [
   'error',
   {
     zones: [
-      // ห้าม cross-feature import (ทำ zone แบบนี้ให้ครบทุก feature)
+      // ห้าม cross-feature import — ต้องมีให้ครบทั้ง 6 feature
       { target: './src/features/payroll', from: './src/features', except: ['./payroll'] },
       { target: './src/features/leave', from: './src/features', except: ['./leave'] },
       { target: './src/features/attendance', from: './src/features', except: ['./attendance'] },
       { target: './src/features/auth', from: './src/features', except: ['./auth'] },
+      { target: './src/features/approval', from: './src/features', except: ['./approval'] },
+      { target: './src/features/calendar', from: './src/features', except: ['./calendar'] },
       // features ห้าม import จาก app
       { target: './src/features', from: './src/app' },
-      // shared ห้าม import จาก features/app
+      // shared ห้าม import จาก features/app (รวม stores/config ด้วย)
       {
-        target: ['./src/components', './src/hooks', './src/lib', './src/types', './src/utils'],
+        target: ['./src/components', './src/hooks', './src/lib', './src/types', './src/utils', './src/stores', './src/config'],
         from: ['./src/features', './src/app'],
       },
     ],

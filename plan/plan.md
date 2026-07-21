@@ -12,7 +12,7 @@ Repo = **Vite starter เปล่า** — ยังไม่มี dependency 
 
 จุดที่ต้องรู้ก่อนลงมือ:
 1. `tsconfig.app.json` **ยังไม่มี `strict: true`** และ **ไม่มี path alias `@/*`** → แก้ใน P0
-2. ESLint template default — **ยังไม่มี `import/no-restricted-paths`** (กฎเหล็ก §6 ยังไม่บังคับ) → ตั้งใน P0 และต้องมี zones ครบ **6 features** (ตัวอย่างใน §6 มีแค่ 4 — ต้องเติม approval, calendar)
+2. ESLint template default — **ยังไม่มี `import-x/no-restricted-paths`** (กฎเหล็ก §6 ยังไม่บังคับ) → ตั้งใน P0 และต้องมี zones ครบ **6 features** (ตัวอย่างใน §6 มีแค่ 4 — ต้องเติม approval, calendar) *(P0: ทำเสร็จแล้ว — ใช้ `eslint-plugin-import-x` + resolver typescript, ดูบันทึกแก้แผน)*
 3. **ไม่มี** `test` script (CLAUDE.md อ้าง `npm run test`) → เพิ่มใน P0
 4. Assets มีแล้วบางส่วน: `src/assets/logo-smartpay.svg`, `leave/leave-{vacation,sick,personal}.png`, `gps/gps-pin.png`, `gps/gps-checked-location.png`, `thai-id/thai-id-logo.png` — **ไอคอนประเภทลาเป็น `.png` ไม่ใช่ `.svg`** (list โฟลเดอร์ก่อน import เสมอ). มีขยะ starter ต้องลบ: `react.svg`, `vite.svg`, `hero.png`, `public/icons.svg`
 5. Design มี **40 PNG** (เอกสารบอก 37 — มี variant เพิ่ม: Leave `6.1`/`6.2` Create Request, Payroll `2.1` Payslip Details fullscreen)
@@ -94,7 +94,7 @@ Repo = **Vite starter เปล่า** — ยังไม่มี dependency 
 
 ### P0 — Project scaffold + tooling
 - **เป้าหมาย:** เปลี่ยน starter เป็นโครงตาม CLAUDE.md โดยยังไม่มี UI จริง
-- **ทำ:** ติดตั้ง deps: `react-router-dom@7, @tanstack/react-query@5, zustand@5, axios, react-hook-form, @hookform/resolvers, zod@4, date-fns, @line/liff, @line/liff-mock, tailwindcss@4 + @tailwindcss/vite, vitest, @testing-library/react, @testing-library/user-event, jsdom, msw, eslint-plugin-import` (เช็ค peer dep React 19/Vite 8 ทุกตัวก่อน); `tsconfig.app.json` เพิ่ม `"strict": true` + paths `@/*`; `vite.config.ts` alias + tailwind plugin; `eslint.config.js` เพิ่ม zones ครบ 6 features; เพิ่ม script `test`; สร้างโครง `src/app|features/{auth,attendance,leave,approval,payroll,calendar}|components|hooks|lib|config|stores|types|utils|mocks|styles`; ลบ starter (`App.css`, `index.css` เดิม, `react.svg`, `vite.svg`, `hero.png`, `public/icons.svg`); `index.html` → `lang="th"`, viewport `viewport-fit=cover`; สร้าง `.env.development` (`VITE_LIFF_ID`, `VITE_API_URL`, `VITE_LIFF_MOCK=true`, `VITE_API_MOCK=true`)
+- **ทำ:** ติดตั้ง deps: `react-router-dom@7, @tanstack/react-query@5, zustand@5, axios, react-hook-form, @hookform/resolvers, zod@4, date-fns, @line/liff, @line/liff-mock, tailwindcss@4 + @tailwindcss/vite, vitest, @testing-library/react, @testing-library/user-event, jsdom, msw, eslint-plugin-import-x + eslint-import-resolver-typescript` (แทน `eslint-plugin-import` ที่ peer dep รองรับแค่ ESLint ≤9 — เช็ค peer dep React 19/Vite 8 ทุกตัวก่อน); `tsconfig.app.json` เพิ่ม `"strict": true` + paths `@/*`; `vite.config.ts` alias + tailwind plugin; `eslint.config.js` เพิ่ม zones ครบ 6 features; เพิ่ม script `test`; สร้างโครง `src/app|features/{auth,attendance,leave,approval,payroll,calendar}|components|hooks|lib|config|stores|types|utils|mocks|styles`; ลบ starter (`App.css`, `index.css` เดิม, `react.svg`, `vite.svg`, `hero.png`, `public/icons.svg`); `index.html` → `lang="th"`, viewport `viewport-fit=cover`; สร้าง `.env.development` (`VITE_LIFF_ID`, `VITE_API_URL`, `VITE_LIFF_MOCK=true`, `VITE_API_MOCK=true`)
 - **ไฟล์:** ราก repo + `src/**` ทั้งโครง
 - **อิง:** §4-6, §18.3, §22 ขั้น 1; CLAUDE.md Commands/Architecture
 - **DoD:** `npm run lint` + `tsc -b` + `npm run build` + `vitest run` (0 test ผ่านได้) ผ่านหมด; ESLint จับ cross-feature import ได้จริง (ทดลอง import ผิดต้อง error)
@@ -244,7 +244,7 @@ Repo = **Vite starter เปล่า** — ยังไม่มี dependency 
 | Infra UAT/PRD (23.2#1-2) | P22 | DEV Vercel เท่านั้น |
 
 ## 5. Definition of Done มาตรฐาน (ทุกเฟส)
-- `npm run lint` ผ่าน (รวม `import/no-restricted-paths`)
+- `npm run lint` ผ่าน (รวม `import-x/no-restricted-paths`)
 - `tsc -b` / `tsc --noEmit` ผ่าน (strict, ไม่มี `any`)
 - `npm run test` (vitest) ผ่าน — utils ใหม่ทุกตัวมีเทสต์
 - `npm run build` ผ่าน

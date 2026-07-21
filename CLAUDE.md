@@ -43,7 +43,7 @@ When a task touches a feature, **read its plan file first, then open the PNG of 
 ```bash
 npm run dev       # Vite dev server (liff-mock + MSW via .env.development)
 npm run build     # tsc -b && vite build
-npm run lint      # ESLint (includes import/no-restricted-paths — see rules)
+npm run lint      # ESLint (includes import-x/no-restricted-paths — see rules)
 npm run test      # Vitest
 npm run preview
 ```
