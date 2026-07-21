@@ -156,7 +156,7 @@ Repo = **Vite starter เปล่า** — ยังไม่มี dependency 
 - **ระวัง §23:** **ThaID phase = open question** — ห้าม implement OAuth ThaID; **email domain จริง = คำถามค้าง plan 01**
 
 ### P10 — OTP + Complete (จอ 1.3-1.4)
-- **ทำ:** `OtpPage` (chip อีเมล, ref code, countdown ส่งซ้ำ, `OTP_INVALID/EXPIRED`), `RegisterSuccessPage` → `navigate('/', {replace:true})` เก็บ token จาก verify-otp ลง store
+- **ทำ:** `OtpPage` (chip อีเมล, ref code, countdown ส่งซ้ำ, `OTP_INVALID/EXPIRED`; ใช้ `OTPInput` 6 ช่องแยก — ผู้ใช้เคาะ deviation จาก PNG กล่องเดียว), `RegisterSuccessPage` → `navigate('/', {replace:true})` เก็บ token จาก verify-otp ลง store
 - **รูป:** `2.LINEOA-Registration-OTP.png`, `3.LINEOA-Registration-Complete.png`
 - **DoD:** flow ครบวงบน mock + เทสต์ error path 1 เคส (OTP ผิด) + mutation ไม่ auto-retry
 

@@ -4,8 +4,8 @@
 
 ### 1.1 สถานะปัจจุบัน
 - **2026-07-21** — **P0 ✅** · **P1 ✅** · **P2 ✅** · **P3 ✅ (consultant 2 รอบ + ผู้ใช้เคาะ+commit)** · **P4 เริ่มแล้ว (🔄)**.
-- **P4 ✅** · **P5 ทำเสร็จ+consultant loop ผ่าน รอผู้ใช้เคาะ (🔍)**.
-- **P5 — Shared list/display**: worker → consultant (F1-F7) → worker แก้ F1-F3+F6 → main verify (`lint` 0·`tsc` ✓·`test` **70**·`build` ✓) → consultant ตรวจ fixes: ผ่าน. notes จดในบันทึกแก้แผน P5.
+- **P5 ✅** · **P6 ทำเสร็จ+consultant loop ผ่าน รอผู้ใช้เคาะ (🔍)**.
+- **P6 — Shared form controls + base**: worker (hand-vendor vaul/Radix + 8 form controls, 97 tests) → consultant (F1-F8; OTP design-vs-plan) → **ผู้ใช้เคาะ OTP=6 ช่อง** → worker แก้ (PeriodToggle compact, ลบ `as` OTP, OTP edge, citizenId doc) → main verify (`lint` 0·`tsc` ✓·`test` **99**·`build` ✓) → consultant ตรวจ fixes: ผ่าน (เงื่อนไข: จดสัญญา OTP completeness ให้ P10 — จดแล้ว). notes ในบันทึกแก้แผน P6.
 - **P4 — Shared ปุ่ม+feedback**: worker → consultant (เจอ mobileOffset bug + button radius 2 ทรง + shadcn CLI ชน) → ผู้ใช้เคาะ (shape prop + hand-vendor) → worker แก้ → main verify (`lint` 0 · `tsc` ✓ · `test` **60** · `build` ✓) → **consultant รีวิวรอบสอง fixes: ผ่าน**. เอกสารอัปเดต (plan P4/P6/P7 hand-vendor, CLAUDE.md, progress). *(§1.4 อัปเดต: ทุกครั้งที่แก้ code จาก follow-up ต้องส่ง consultant ตรวจเสมอ เป็น loop จนผ่าน)*
 - **P2 — lib ชั้น API**: worker → consultant (เจอ `as` cast + token codes + BASE_URL) → worker แก้ → main verify → **consultant รีวิวรอบสอง: ผ่าน**. `lint` 0 · `tsc` ✓ · `test` **35** · `build` ✓. P8 traps จดในบันทึกแก้แผน.
 - **P1 — Design tokens + globals + utils**: worker → consultant → ผู้ใช้เปลี่ยนโจทย์เป็น period รายวัน → worker แก้ + main แก้เอกสาร → consultant ผ่าน → ผู้ใช้วางฟอนต์ Kanit woff2 (main เปิด @font-face + ลบ 15 ไฟล์ไม่ใช้) → **เคาะปิด**. ดู entry "P1 leave-days redesign" + D3 ในบันทึกแก้แผน.
@@ -21,7 +21,7 @@
   - ✅ ยืนยันแล้ว: envelope `{error:{code,message}}` ไทย, ไม่มี `/api` prefix, `POST /auth/login` รับ `idToken`, protected routes (holidays/attendance/leave/payroll) = 401
 
 ### 1.2 งานถัดไป
-- **P6 — Shared: form controls + base** (plan.md §3 → P6). เริ่มเมื่อผู้ใช้เคาะ P5. **hand-vendor** drawer(vaul)/dialog+select(Radix) (ห้าม shadcn CLI), TextInput/Textarea/SelectField/OTPInput/PeriodToggle. duality pill/card ในช่องกรอก (ช่อง Registration=pill, Textarea=rounded-rect).
+- **P7 — Shared: Calendar + DateRangeField** (plan.md §3 → P7). เริ่มเมื่อผู้ใช้เคาะ P6. **hand-vendor calendar (react-day-picker)** + custom MonthCaption พ.ศ. + DateRangeField (ส่งค่า 'YYYY-MM-DD' string). §10.1 ระบุ "ยากสุดในแอปนี้".
 
 ### 1.3 session ใหม่ทำแบบนี้
 1. อ่านไฟล์นี้ทั้งไฟล์ + "บันทึกแก้แผน" ท้ายไฟล์
@@ -47,8 +47,8 @@
 | P2 | lib ชั้น API | ✅ | consultant 2 รอบ + เคาะแล้ว 2026-07-21 |
 | P3 | LIFF shell | ✅ | consultant 2 รอบ + เคาะ+commit แล้ว 2026-07-21 |
 | P4 | Shared: ปุ่ม + feedback | ✅ | consultant loop ผ่าน + เคาะ+commit 2026-07-21 |
-| P5 | Shared: list/display | 🔍 | เสร็จ+consultant loop ผ่าน (70 tests) รอผู้ใช้เคาะ |
-| P6 | Shared: form controls + shadcn base | ⬜ | |
+| P5 | Shared: list/display | ✅ | consultant loop ผ่าน + เคาะ+commit 2026-07-21 |
+| P6 | Shared: form controls + base | 🔍 | เสร็จ+consultant loop ผ่าน (99 tests) รอผู้ใช้เคาะ |
 | P7 | Shared: Calendar + DateRangeField | ⬜ | ยากสุด §10.1 |
 | P8 | Auth core | ⬜ | |
 | P9 | Register form | ⬜ | ⚠️ ThaID/email domain = open Q |
@@ -125,3 +125,13 @@
   4. **[กับดัก P17]** SegmentedTabs ฝั่ง Calendar ต้องส่ง `shape="card"` (Leave/Approval ใช้ default pill)
   5. **[กับดัก P18]** จุดปฏิทินประเภทลา = ใช้ `bg-leave-*` **token** ไม่ใช่รูป PNG ของ LeaveTypeIcon (architecture §10.3); LeaveTypeIcon PNG พื้นตันไม่โปร่งใส (asset เดิม — ใช้ `rounded-card+object-cover` ครอบ)
   6. **[Figma pass — ต่อ list เดิม]** badge SegmentedTabs (เหลืองในรูป vs `--color-warning` ส้ม), FilterChips unselected (ขาวจาง), AttachmentItem พื้นแถว (เทาอ่อน vs `bg-surface`), ListCard chevron alignment, pill borders (แทบไม่เห็นขอบในรูป)
+
+- **2026-07-21 (P6 — Shared form controls + base)** — hand-vendor `vaul`(Drawer)/`@radix-ui/react-dialog`(Dialog)/`@radix-ui/react-select`(Select) restyle ด้วย token เรา (ไม่แตะ globals.css, ไม่ใช้ shadcn CLI) + TextInput(mask citizenId, shape pill)/Textarea/SelectField/OTPInput(6 ช่อง)/PeriodToggle(default+compact) + `utils/citizenId.ts`. font ≥16px ทุก input (กัน iOS zoom). setup.ts เพิ่ม polyfill pointer-capture (jsdom+vaul). 97 tests. review เจอ+แก้ (loop): PeriodToggle compact → mini-segmented ตาม design 6.2 (worker อ่านรูปผิดเป็นพื้นเขียว), ลบ `as` ใน OTPInput, OTP ลบช่องกลาง clear เฉพาะช่อง, doc comment citizenId. **การตัดสินใจ/กับดัก:**
+  1. **[✅ ผู้ใช้เคาะ — deviation]** `OTPInput` = **6 ช่องแยก** (auto-advance) แม้ PNG `2.OTP.png` วาดกล่องเดียว — เอกสารอัปเดตแล้ว (feature-plans/01 §1.3 + plan.md P10)
+  2. **[สัญญา P9]** TextInput mask citizenId ส่งค่า **formatted (มีขีด)** เข้า RHF → Zod ฟอร์มต้อง `extractCitizenIdDigits` ก่อน validate 13 หลัก+checksum; **payload API ส่ง digits ล้วน** (ไม่มีขีด)
+  2.1 **[สัญญา P10 — OTP completeness]** `OTPInput` ใช้ space `' '` เป็น placeholder ช่องว่างภายใน → **ค่ายาว 6 อาจมี space กลางได้** (กรอกครบแล้วย้อนลบตัวกลาง). **P10 ห้ามเช็คครบด้วย `length===6`** — ต้องใช้ Zod `z.string().regex(/^[A-Z0-9]{6}$/)` เป็นเงื่อนไข enable ปุ่ม + validate ก่อนส่ง verify-otp (กัน space หลุดเข้า payload)
+  3. **[กับดัก]** `Drawer dismissible={false}` — vaul อาจบล็อกปุ่มปิด (Drawer.Close) ด้วย ขัด §10.2 "ปุ่มปิดชัดเจนเสมอ" → ห้ามใช้ `dismissible={false}` จนกว่าจะมีเทสต์ยืนยันปุ่มปิดยังทำงาน
+  4. **[RHF pattern]** TextInput/Textarea = forwardRef ใช้ `register()` ตรง; SelectField/OTPInput = ต้องผ่าน `<Controller>` (มี doc comment ในไฟล์)
+  5. **[Figma pass]** PeriodToggle track ในรูปเทาอ่อน vs `bg-surface` ฟ้าอ่อน
+  6. **[P22]** vaul+Radix เพิ่ม bundle >500KB warning — พิจารณา route-level code splitting
+  7. **[manual checklist §21.4]** เพิ่ม "focus input ใน LINE iOS ต้องไม่ zoom" (implement ครบแล้ว รอ verify เครื่องจริง)

@@ -7,3 +7,12 @@ import { cleanup } from '@testing-library/react'
 afterEach(() => {
   cleanup()
 })
+
+// jsdom ยังไม่ implement Pointer Capture API — vaul (Drawer, P6) เรียก
+// setPointerCapture/releasePointerCapture/hasPointerCapture ตอน drag gesture ทำให้เทสต์ที่คลิก
+// ภายใน Drawer.Content (แม้แค่ปุ่มปิด) โยน "is not a function" — polyfill เป็น no-op เฉพาะใน jsdom
+if (typeof window !== 'undefined' && !window.HTMLElement.prototype.hasPointerCapture) {
+  window.HTMLElement.prototype.hasPointerCapture = () => false
+  window.HTMLElement.prototype.setPointerCapture = () => undefined
+  window.HTMLElement.prototype.releasePointerCapture = () => undefined
+}

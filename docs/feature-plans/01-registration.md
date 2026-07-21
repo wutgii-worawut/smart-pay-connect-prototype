@@ -20,7 +20,8 @@
 
 ### 1.3 OTP — `2.LINEOA-Registration-OTP.png`
 - Route: `/register/otp`
-- โครง: โลโก้ → คำอธิบาย "ส่งรหัส OTP ไปยังอีเมล... (อายุ 15 นาที)" → chip อีเมล (read-only) → label "รหัส OTP เลขอ้างอิง XXXX" → `OTPInput` (6 ตัว อักษร+เลข เช่น A1B2C3) → ลิงก์ "ส่งรหัสอีกครั้ง" ↻ → `PrimaryButton` ยืนยัน
+- โครง: โลโก้ → คำอธิบาย "ส่งรหัส OTP ไปยังอีเมล... (อายุ 15 นาที)" → chip อีเมล (read-only) → label "รหัส OTP เลขอ้างอิง XXXX" → `OTPInput` → ลิงก์ "ส่งรหัสอีกครั้ง" ↻ → `PrimaryButton` ยืนยัน
+- ⚠️ **OTPInput = 6 ช่องแยก (auto-advance/backspace/paste)** — ผู้ใช้เคาะ 2026-07-21 (deviation จาก PNG `2.OTP.png` ที่วาดเป็นกล่องเดียว "A1B2C3"; เลือก 6 ช่องตาม plan เพราะ UX auto-advance). ค่ารวม 6 ตัว อักษร+เลข
 - ✅ design ส่ง OTP ทาง**อีเมล** → backend ใช้ email service ไม่ต้องมี SMS provider (architecture.md §3.4 อัปเดตตรงกันแล้ว)
 - State: countdown ก่อนกดส่งซ้ำได้, แสดงเลขอ้างอิง (ref code) จาก response
 - API: `POST /auth/register/verify-otp` `{otp, refCode}` → `{token, employee}` → เก็บ Zustand → ไปหน้า Complete
