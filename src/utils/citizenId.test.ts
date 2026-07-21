@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { extractCitizenIdDigits, formatCitizenId } from './citizenId'
+import { extractCitizenIdDigits, formatCitizenId, isValidCitizenId } from './citizenId'
 
 describe('extractCitizenIdDigits', () => {
   it('ตัดอักขระที่ไม่ใช่ตัวเลขออก', () => {
@@ -42,5 +42,31 @@ describe('formatCitizenId', () => {
 
   it('เกิน 13 หลัก → ตัดทิ้งส่วนเกิน', () => {
     expect(formatCitizenId('12345678901239999')).toBe('1-2345-67890-12-3')
+  })
+})
+
+describe('isValidCitizenId', () => {
+  it('checksum ถูกต้อง → true (คำนวณด้วยสูตรกรมการปกครองมือ: sum=352, check=1)', () => {
+    expect(isValidCitizenId('1234567890121')).toBe(true)
+  })
+
+  it('checksum ผิด (หลักตรวจสอบไม่ตรง) → false', () => {
+    expect(isValidCitizenId('1234567890122')).toBe(false)
+  })
+
+  it('ความยาวไม่ครบ 13 หลัก → false', () => {
+    expect(isValidCitizenId('123456789012')).toBe(false)
+  })
+
+  it('ความยาวเกิน 13 หลัก → false', () => {
+    expect(isValidCitizenId('12345678901211')).toBe(false)
+  })
+
+  it('มีอักขระที่ไม่ใช่ตัวเลขปน → false', () => {
+    expect(isValidCitizenId('123456789012a')).toBe(false)
+  })
+
+  it('ค่าว่าง → false', () => {
+    expect(isValidCitizenId('')).toBe(false)
   })
 })

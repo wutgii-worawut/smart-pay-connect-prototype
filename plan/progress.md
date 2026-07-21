@@ -4,7 +4,8 @@
 
 ### 1.1 สถานะปัจจุบัน
 - **2026-07-21** — **P0 ✅** · **P1 ✅** · **P2 ✅** · **P3 ✅ (consultant 2 รอบ + ผู้ใช้เคาะ+commit)** · **P4 เริ่มแล้ว (🔄)**.
-- **P7 ✅ — จบกลุ่ม shared P1-P7** · **P8 ทำเสร็จ+consultant loop ผ่าน รอผู้ใช้เคาะ (🔍)**.
+- **P8 ✅** · **P9 ทำเสร็จ+consultant ผ่าน (ไม่มี must-fix) รอผู้ใช้เคาะ (🔍)**.
+- **P9 — Register form**: worker → consultant: **ผ่านแบบมี follow-up ไม่มี must-fix** (checksum ถูก, formatted→digits, Open Q §23 อ้อมถูก, security สะอาด). ไม่มี fix code บังคับ (follow-up = doc/contract/Figma/P22 จดแล้ว). `lint` 0·`tsc` ✓·`test` **186**·`build` ✓.
 - **P8 — Auth core**: worker → consultant (security core ผ่าน + F1 must-fix) → worker แก้ F1/F2/F3 → main verify (`lint` 0·`tsc` ✓·`test` **154** ×2 ไม่ flaky·`build` ✓) → consultant ตรวจ fixes: **ผ่าน**. **⚠️ 3 contract flags ต้องแจ้ง backend/เคาะผู้ใช้** (ดูบันทึกแก้แผน P8).
 - **P7 — Shared Calendar + DateRangeField**: worker (react-day-picker@10 + Calendar/DateRangeField/dateRange utils, 135 tests) → consultant: **ผ่านแบบมี follow-up ไม่มี must-fix** (v10 API ยืนยันตรง, วันที่ string ไม่ off-by-one, พ.ศ. ที่เดียว). ไม่มี fix code ต้องแก้ (follow-up = design fidelity Figma + P18 traps จดแล้ว). base calendar เสร็จ — P18 reuse.
 - **P6 — Shared form controls + base**: worker (hand-vendor vaul/Radix + 8 form controls, 97 tests) → consultant (F1-F8; OTP design-vs-plan) → **ผู้ใช้เคาะ OTP=6 ช่อง** → worker แก้ (PeriodToggle compact, ลบ `as` OTP, OTP edge, citizenId doc) → main verify (`lint` 0·`tsc` ✓·`test` **99**·`build` ✓) → consultant ตรวจ fixes: ผ่าน (เงื่อนไข: จดสัญญา OTP completeness ให้ P10 — จดแล้ว). notes ในบันทึกแก้แผน P6.
@@ -23,7 +24,7 @@
   - ✅ ยืนยันแล้ว: envelope `{error:{code,message}}` ไทย, ไม่มี `/api` prefix, `POST /auth/login` รับ `idToken`, protected routes (holidays/attendance/leave/payroll) = 401
 
 ### 1.2 งานถัดไป
-- **P9 — Register form** (plan.md §3 → P9). เริ่มเมื่อผู้ใช้เคาะ P8. RegisterPage + RegisterForm (Zod เลขบัตร 13 หลัก+checksum ผ่าน `extractCitizenIdDigits`, email domain), ปุ่ม ThaID (GhostButton, ยังไม่ต่อ OAuth), error mapping. ⚠️ Open Q: ThaID phase, email domain, register/OTP path 404.
+- **P10 — OTP + Complete** (plan.md §3 → P10). เริ่มเมื่อผู้ใช้เคาะ P9. OtpPage (OTPInput 6 ช่อง, **ครบ=regex `/^[A-Z0-9]{6}$/` ห้าม length**, chip email, ref code, countdown ส่งซ้ำ) + RegisterSuccessPage → `setSession()` + navigate('/',{replace}). ⚠️ verify-otp endpoint 404 → MSW.
 
 ### 1.3 session ใหม่ทำแบบนี้
 1. อ่านไฟล์นี้ทั้งไฟล์ + "บันทึกแก้แผน" ท้ายไฟล์
@@ -52,8 +53,8 @@
 | P5 | Shared: list/display | ✅ | consultant loop ผ่าน + เคาะ+commit 2026-07-21 |
 | P6 | Shared: form controls + base | ✅ | consultant loop ผ่าน + เคาะ+commit 2026-07-21 |
 | P7 | Shared: Calendar + DateRangeField | ✅ | consultant ผ่าน + เคาะ+commit 2026-07-21 |
-| P8 | Auth core | 🔍 | เสร็จ+consultant loop ผ่าน (154 tests) รอผู้ใช้เคาะ · ⚠️ 3 contract flags |
-| P9 | Register form | ⬜ | ⚠️ ThaID/email domain = open Q |
+| P8 | Auth core | ✅ | consultant loop ผ่าน + เคาะ+commit 2026-07-21 · ⚠️ 3 contract flags (noted) |
+| P9 | Register form | 🔍 | เสร็จ+consultant ผ่าน (186 tests) รอผู้ใช้เคาะ · ⚠️ ThaID/email domain = open Q |
 | P10 | OTP + Complete | ⬜ | |
 | P11 | Attendance foundation | ⬜ | ⚠️ map provider = open Q |
 | P12 | ClockPage state machine | ⬜ | ⚠️ remote policy = open Q |
@@ -155,3 +156,10 @@
   - **กับดัก P9:** คน auth แล้วเปิด `/register` ตรง ๆ เห็นฟอร์มได้ → P9 ตัดสิน redirect '/' ถ้า authenticated
   - **P19:** `requireRole="manager"` พร้อมใช้ที่ ProtectedRoute (ยังไม่มี route ใช้)
   - **[fixes ผ่าน consultant รอบสอง]** F1/F2/F3 แก้แล้ว 154 tests (ไม่ flaky). minor เหลือ (ไม่ block): (ก) §21.4 checklist เพิ่มเคส "JWT/idToken หมดอายุกลางคัน → redirect กลับมาปกติ" บนเครื่องจริง; (ข) `useAuthBootstrap.test.tsx` listener ไม่ removeListener (cosmetic, เก็บทีหลัง)
+
+- **2026-07-21 (P9 — Register form จอ 1.1/1.2)** — `features/auth/` RegisterPage(guard authenticated→'/', mode form|thaid|both) + RegisterForm(RHF+Zod v4: citizenId mask→extractDigits→13หลัก+**checksum mod11**, email z.email()+optional domain) + ThaidButton(pill/card, กด→toast **ไม่ต่อ OAuth** §23) + requestOtp(MSW) + registerStore(pendingOtp ส่งต่อ P10). 186 tests. consultant: **ผ่าน ไม่มี must-fix** (checksum algorithm ถูก, formatted→digits ครบวงจร, Open Q §23 เดินอ้อมถูก, security สะอาด). **notes/decisions:**
+  1. **[เคาะแล้ว — root error ไปก่อน]** error 2 ชั้น: (ก) **client/Zod = ใต้ช่อง** (field ผิด เช่นเลขบัตร/อีเมล — ทำได้อยู่แล้ว), (ข) **server error (VALIDATION_ERROR/EMPLOYEE_NOT_FOUND/OTP_RATE_LIMITED) = root error ใต้ฟอร์ม** เพราะ backend ตอบแค่ code+message ไม่บอก field. ผู้ใช้เคาะ 2026-07-21: **ใช้ root error ไปก่อน**; ตำแหน่งแสดง/ทำเป็น dialog **รอ design ค่อยว่ากัน**. **[CONTRACT flag]** ถ้าอยากได้ server error ใต้ช่องเจาะจง → backend ต้องเพิ่ม `field` ใน error response (เช่น `{code,field:'citizenId',message}`) — ตอนนี้ยังไม่มี. (feature-plans/01 บรรทัด 14 ยังเขียน "ใต้ช่อง" — คงไว้ตามที่ผู้ใช้แก้ doc เอง)
+  2. **[CONTRACT flags ต่อจาก P8 — invented ทั้งหมด รอ swagger]** `POST /auth/register/request-otp` (probe จริง 404), response `{refCode, email}`, error codes (`VALIDATION_ERROR/EMPLOYEE_NOT_FOUND/OTP_RATE_LIMITED`) + Thai messages = ออกแบบฝั่งเราทั้งหมด; **P10 verify-otp ซ้อนหนี้ก้อนเดียวกัน**
+  3. **[กับดัก config]** `VITE_REGISTER_MODE=thaid` = จอตัน (ฟอร์มหาย + ThaID แค่ toast) → **ห้ามตั้ง `thaid` ใน env จริงจนกว่า ThaID OAuth เคาะ+ทำ** (dev preview เท่านั้น); email domain ยังไม่ตั้ง — ตอนเคาะโดเมนจริงต้องตัดสิน subdomain (`endsWith('@'+domain)` ตอนนี้ตัด subdomain) + strip `@` นำหน้า
+  4. **[follow-up เล็ก P22/ครั้งหน้า]** F3 ZodError → fallback ข้อความไทยกลาง (ตอนนี้ dump อังกฤษถ้า backend shape เพี้ยน); F4 เทสต์ retry ใช้ default จริง; F7 Figma pass (gradient กลับทิศ from-primary/10→white vs design เข้มลงล่าง, label ชิดซ้าย vs design กึ่งกลาง, ThaID pill justify-center)
+  5. **[กับดัก P10 พร้อมใช้]** guard `pendingOtp===null`→เด้ง /register (จดใน registerStore แล้ว); OTP ครบ=regex ไม่ใช่ length (P6 ข้อ 2.1)

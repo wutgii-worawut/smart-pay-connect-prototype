@@ -11,5 +11,6 @@ registerAuthCallbacks()
 
 export { AuthGate } from './components/AuthGate'
 export { ProtectedRoute } from './components/ProtectedRoute'
+export { RegisterPage } from './pages/RegisterPage'
 export { useAuthStore } from './stores/authStore'
 export type { Employee, EmployeeRole } from './types/auth'

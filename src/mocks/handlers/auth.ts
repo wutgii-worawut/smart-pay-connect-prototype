@@ -1,13 +1,17 @@
 /**
- * MSW handler — feature: auth (§13, §16.2, §16.3) — POST /auth/login เท่านั้น (P8; OTP/register
- * เต็มใน P9-P10)
+ * MSW handler — feature: auth (§13, §16.2, §16.3) — POST /auth/login (P8) +
+ * POST /auth/register/request-otp (P9; verify-otp เต็มใน P10)
  *
  * scenario สลับได้ผ่าน `setAuthScenario()` (dev console หรือเทสต์) — default 'authenticated'
  * เพราะ mock service จริงที่ probe แล้ว (2026-07-21) ตอบ 200 authenticated เสมอไม่ว่า idToken
  * จะเป็นอะไร (รวม liff-mock default `'id_token'`) — ไม่เคยเจอ NEED_REGISTER จริงให้ยืนยัน shape
  * จึงทำ shape ฝั่งเราแบบ envelope-consistent (ดูรายละเอียด/คำเตือนเต็มใน features/auth/api/login.ts)
+ *
+ * `/auth/register/request-otp` จริงตอบ 404 ตอน probe (plan/progress.md บันทึกแก้แผน P8 ข้อ 3) —
+ * shape/error code ทั้งหมดด้านล่างเป็นการออกแบบฝั่งเรา รอ backend/swagger ยืนยัน
  */
 import { http, HttpResponse } from 'msw'
+import { z } from 'zod'
 import { BASE_URL } from '../base'
 
 export type AuthScenario = 'authenticated' | 'need_register' | 'employee_inactive' | 'id_token_expired'
@@ -20,6 +24,21 @@ export function setAuthScenario(next: AuthScenario): void {
 }
 
 const MOCK_EMPLOYEE = { id: 'EMP001', name: 'สมชาย ใจดี', role: 'employee' }
+
+export type RegisterOtpScenario =
+  | 'success'
+  | 'validation_error'
+  | 'employee_not_found'
+  | 'rate_limited'
+
+let registerOtpScenario: RegisterOtpScenario = 'success'
+
+/** สลับ scenario ของ POST /auth/register/request-otp (เทสต์ หรือ dev console) */
+export function setRegisterOtpScenario(next: RegisterOtpScenario): void {
+  registerOtpScenario = next
+}
+
+const requestOtpBodySchema = z.object({ citizenId: z.string(), email: z.string() })
 
 export const authHandlers = [
   http.post(`${BASE_URL}/auth/login`, () => {
@@ -51,6 +70,50 @@ export const authHandlers = [
         return HttpResponse.json({
           data: { token: 'mock-jwt-token', employee: MOCK_EMPLOYEE },
         })
+    }
+  }),
+
+  http.post(`${BASE_URL}/auth/register/request-otp`, async ({ request }) => {
+    const parsedBody = requestOtpBodySchema.safeParse(await request.json())
+    const email = parsedBody.success ? parsedBody.data.email : ''
+
+    switch (registerOtpScenario) {
+      case 'validation_error':
+        return HttpResponse.json(
+          {
+            error: {
+              code: 'VALIDATION_ERROR',
+              message: 'ข้อมูลไม่ถูกต้อง กรุณาตรวจสอบเลขประจำตัวประชาชนหรืออีเมลอีกครั้ง',
+            },
+          },
+          { status: 400 },
+        )
+
+      case 'employee_not_found':
+        return HttpResponse.json(
+          {
+            error: {
+              code: 'EMPLOYEE_NOT_FOUND',
+              message: 'ไม่พบข้อมูลพนักงาน กรุณาติดต่อฝ่ายบุคคล (HR)',
+            },
+          },
+          { status: 404 },
+        )
+
+      case 'rate_limited':
+        return HttpResponse.json(
+          {
+            error: {
+              code: 'OTP_RATE_LIMITED',
+              message: 'ขอรหัส OTP บ่อยเกินไป กรุณารออีก 5 นาทีแล้วลองใหม่',
+            },
+          },
+          { status: 429 },
+        )
+
+      case 'success':
+      default:
+        return HttpResponse.json({ data: { refCode: 'REF-1234', email } })
     }
   }),
 ]
