@@ -8,7 +8,7 @@ import { createTypeScriptImportResolver } from 'eslint-import-resolver-typescrip
 import { defineConfig, globalIgnores } from 'eslint/config'
 
 export default defineConfig([
-  globalIgnores(['dist']),
+  globalIgnores(['dist', 'public']), // public/mockServiceWorker.js = generated โดย msw init — ไม่ lint
   {
     files: ['**/*.{ts,tsx}'],
     extends: [

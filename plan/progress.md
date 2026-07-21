@@ -3,10 +3,11 @@
 ## 1. สำหรับ session ใหม่: เริ่มตรงนี้ก่อน
 
 ### 1.1 สถานะปัจจุบัน
-- **2026-07-21** — **P0 ✅ (เคาะ+commit แล้ว)** · **P1 ทำเสร็จ+redesign รอผู้ใช้เคาะ (🔍)**.
-- **P1 — Design tokens + globals + utils**: worker → consultant (รอบแรกเจอ guard end<start + halfDay ขัดเอกสาร) → **ผู้ใช้เปลี่ยนโจทย์เป็น period รายวัน** (design 6.1/6.2) → worker แก้ code (2 pure functions + `src/types/leave.ts`) → main agent แก้เอกสารครบ + ลบรูปเก่า → consultant รอบสองผ่าน (logic+เทสต์ถูกตรงปฏิทินจริง). ดู entry "P1 — leave-days redesign" ในบันทึกแก้แผน.
-- ผล verify (main agent รันเอง): `lint` clean · `tsc -b` exit 0 · `test` **26 passed** (รวม mixed [full,am,full]→2.5) · `build` ✓.
-- **P0 commit แล้ว**; ไฟล์ P1 + doc edits ยัง untracked/modified — รอผู้ใช้เคาะ P1 ก่อน commit.
+- **2026-07-21** — **P0 ✅** · **P1 ✅** · **P2 ✅ (consultant รีวิว 2 รอบ + ผู้ใช้เคาะ)** · **P3 เริ่มแล้ว (🔄)**.
+- **P2 — lib ชั้น API**: worker → consultant (เจอ `as` cast + token codes + BASE_URL) → worker แก้ → main verify → **consultant รีวิวรอบสอง: ผ่าน**. `lint` 0 · `tsc` ✓ · `test` **35** · `build` ✓. P8 traps จดในบันทึกแก้แผน.
+- **P1 — Design tokens + globals + utils**: worker → consultant → ผู้ใช้เปลี่ยนโจทย์เป็น period รายวัน → worker แก้ + main แก้เอกสาร → consultant ผ่าน → ผู้ใช้วางฟอนต์ Kanit woff2 (main เปิด @font-face + ลบ 15 ไฟล์ไม่ใช้) → **เคาะปิด**. ดู entry "P1 leave-days redesign" + D3 ในบันทึกแก้แผน.
+- ผล verify P1: `lint` clean · `tsc -b` exit 0 · `test` **26 passed** · `build` ✓ (Kanit woff2 4 น้ำหนัก bundle เข้า dist).
+- **ยังไม่ commit P1** (ผู้ใช้จัดการ commit เอง เหมือน P0) — ไฟล์ P1 + doc edits + fonts ยัง untracked/modified บน `main`.
 - การตัดสินใจสถาปัตยกรรม D1-D3 (plan.md §1) **ผู้ใช้ยืนยันแล้ว 2026-07-21 พร้อมเงื่อนไข**:
   - **D1** shared `useHolidays` ✅ — เงื่อนไข: day-count เป็น **pure function รับ `holidays[]` param** (อยู่ utils/date.ts); `useHolidays` = **แค่ห่อ `useQuery(['holidays', year])` staleTime ยาว** ไม่มี logic นับวัน *(หมายเหตุ: `countLeaveDays` ถูกแทนด้วย `listLeaveWorkingDays`+`sumLeaveDays` — ดู entry "P1 leave-days redesign")*
   - **D2** ยก card ไป `src/components/` ✅ — เงื่อนไข: การ์ดทั้งสอง **presentational ล้วน** รับ data+callbacks props เท่านั้น **ห้าม useQuery/useMutation/navigate ในการ์ด**; type `LeaveRequest` **ย้ายไป `src/types/`**
@@ -17,7 +18,7 @@
   - ✅ ยืนยันแล้ว: envelope `{error:{code,message}}` ไทย, ไม่มี `/api` prefix, `POST /auth/login` รับ `idToken`, protected routes (holidays/attendance/leave/payroll) = 401
 
 ### 1.2 งานถัดไป
-- **P2 — lib ชั้น API** (plan.md §3 → P2). เริ่มเมื่อผู้ใช้เคาะ P1. ทำ `api-client.ts` (ApiError/interceptor + `setAuthToken` + `NETWORK_ERROR`), `query-client.ts` (query retry ไม่เอา 4xx, mutations retry:0), โครง MSW ต่อ feature. **ย้ำ:** MSW handlers ต้อง mirror path จริง (ไม่มี `/api` prefix) + envelope + Thai message ตามที่ probe เจอ (plan §1.5); axios แนบ `ngrok-skip-browser-warning: 1` เมื่อ base URL เป็น ngrok.
+- **P4 — Shared: ปุ่ม + feedback** (plan.md §3 → P4). เริ่มเมื่อผู้ใช้เคาะ P3. S11-S14 (ปุ่ม), BottomActionBar (safe-area), Toast (sonner), SuccessScreen, ErrorState/EmptyState. เทียบรูปปุ่มใน design.
 
 ### 1.3 session ใหม่ทำแบบนี้
 1. อ่านไฟล์นี้ทั้งไฟล์ + "บันทึกแก้แผน" ท้ายไฟล์
@@ -39,9 +40,9 @@
 | เฟส | ชื่อ | สถานะ | หมายเหตุ |
 |---|---|---|---|
 | P0 | Project scaffold + tooling | ✅ | ผู้ใช้เคาะ+commit แล้ว 2026-07-21 (ดู deviation ในบันทึกแก้แผน) |
-| P1 | Tokens + globals.css + utils กลาง | 🔍 | เสร็จ+redesign (period รายวัน) รอผู้ใช้เคาะ · สีเป็น placeholder รอ Figma |
-| P2 | lib ชั้น API | ⬜ | |
-| P3 | LIFF shell | ⬜ | |
+| P1 | Tokens + globals.css + utils กลาง | ✅ | เคาะแล้ว 2026-07-21 · สียัง placeholder รอ Figma (ใช้ตามนี้ก่อน) |
+| P2 | lib ชั้น API | ✅ | consultant 2 รอบ + เคาะแล้ว 2026-07-21 |
+| P3 | LIFF shell | 🔄 | worker กำลังทำ (เริ่ม 2026-07-21) |
 | P4 | Shared: ปุ่ม + feedback | ⬜ | |
 | P5 | Shared: list/display | ⬜ | |
 | P6 | Shared: form controls + shadcn base | ⬜ | |
@@ -90,3 +91,10 @@
   5.1 **[กับดัก P16 เพิ่ม]** Zod ฟอร์มควรมี **เพดานความยาวช่วง** (เช่น ≤31 วัน) — `listLeaveWorkingDays` ไม่ cap ถ้าเลือกช่วงข้ามปีจะ render แถวเป็นพัน (UX/perf มือถือ)
   6. **✅ เอกสารอัปเดตแล้ว (main agent):** architecture §4.1 (code block ใหม่), §16.3 (POST body days[] + validation layering), §21.3 (test example), §7 mentions; feature-plans/03 §3.6 (form redesign + filename → 6.1/6.2) + คำถามค้างข้อ 3 (เคาะแล้ว); testing.md (เป้าเทสต์ 0.5 → sumLeaveDays); plan.md (P1/P6/P16/D1)
   7. **🗑️ ลบรูป** `docs/design/SME-PAYROLL/3.Leave/6.Create Request.png` (เดิม — ถูกแทนด้วย 6.1/6.2); ตอนนี้ design เหลือ 39 PNG
+
+- **2026-07-21 (P2 — lib ชั้น API)** — api-client + query-client + MSW skeleton. review เจอ + แก้แล้ว: (ก) เปลี่ยน `as unknown as ApiClient` → typed wrapper `api.get<T,T>` (0 cast), (ข) route `MISSING_TOKEN`/`INVALID_TOKEN` → onUnauthorized, (ค) `src/mocks/base.ts` BASE_URL `?? ''` fallback, (ง) main.tsx `.catch` + ngrok host เข้ม. eslint ignore `public/` (generated msw). **Pattern + กับดักที่เฟสหลังต้องรู้:**
+  1. **เรียก API จาก feature:** `features/*/api/` ใช้ `api.get<Payload>('/path')` ได้ payload ตรง ๆ (envelope แกะแล้ว) — **ห้ามแตะ `res.data` / ห้ามสร้าง axios instance ใหม่ / ห้าม `as`**. mutation ทุกตัว retry:0 (query-client default), errors เป็น `ApiError{code,message,status}` (message ไทยแสดงตรง)
+  2. **P8 auth ต้อง:** register `setOnIdTokenExpired`/`setOnUnauthorized` (callback ที่ lib เตรียมไว้ — ทำ liff.logout/login + ล้าง session ที่ฝั่ง feature); เพิ่มหน้า **`EMPLOYEE_INACTIVE`** (แจ้งติดต่อ HR §16.2 — ยังไม่ทำ); reuse `src/mocks/handlers/auth.ts` ในเทสต์
+  3. **[🔴 กับดัก P8 — ต้องเคาะกับผู้ใช้ + probe]** `NEED_REGISTER` มากับ **HTTP 200** (§16.2) แต่ §14 pseudocode ตอบ `{code:'NEED_REGISTER'}` **ไม่มี envelope** → success interceptor (คืน `res.data.data`) จะกลืนเป็น `undefined` เงียบ. ต้อง probe mock service จริง + เคาะ shape ก่อนเขียน login (ทางที่เข้ากับ interceptor = `{data:{status:'NEED_REGISTER'}}`) — ห้ามดัด frontend เลี่ยง (plan §1.5)
+  4. **login success shape** ใน MSW auth handler (`{token, employee{id,name,role}}`) เดาเอง — probe ยืนยันแค่ endpoint มี ยังไม่ยืนยัน shape สำเร็จ → เทียบ swagger จริงเมื่อผู้ใช้ config `/docs/` (blocker §1.5 ยังค้าง)
+  5. **(review รอบสอง — ผ่าน, follow-up ต่ำ)** (ก) เพิ่มเทสต์ callback routing (onUnauthorized/onIdTokenExpired) ตอน P8; (ข) **[watch P21]** success interceptor คืน `res.data.data` — ถ้า backend ตอบ **204/body ว่าง** (เช่น POST ส่งสลิปเข้าอีเมล) จะได้ undefined/TypeError ดิบ ไม่ใช่ ApiError (contract §16.1 บอกทุก response มี envelope — ระวังตอนต่อ endpoint จริง); (ค) ngrok header เช็คแค่ `.ngrok-free.dev` — ถ้า tunnel ใหม่ได้ `.ngrok-free.app` header จะหยุดส่ง (เติม suffix ถ้าเจอ)
