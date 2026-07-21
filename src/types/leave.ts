@@ -13,3 +13,15 @@ export interface LeaveDayEntry {
   date: string
   period: LeaveDayPeriod
 }
+
+/**
+ * ประเภทลา (feature-plans/00 §1 S5) — ใช้กับ LeaveTypeIcon, FilterChips ตัวเลือกประเภท,
+ * LeaveBalanceCard (P14), LeaveForm (P16) ฯลฯ ประกาศที่นี่เพราะเป็น primitive ข้าม feature (D2)
+ */
+export type LeaveType = 'vacation' | 'sick' | 'personal'
+
+/**
+ * สถานะคำขอลา (feature-plans/00 §1 S4) — ใช้กับ StatusBadge, LeaveRequestCard/DetailCard (P14-P15),
+ * ฝั่ง Approval ใช้ชุดเดียวกัน (feature-plans/00 §2 "สีและ state ชุดเดียวกัน")
+ */
+export type LeaveRequestStatus = 'PENDING' | 'APPROVED' | 'REJECTED' | 'CANCELLED'

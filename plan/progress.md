@@ -4,7 +4,8 @@
 
 ### 1.1 สถานะปัจจุบัน
 - **2026-07-21** — **P0 ✅** · **P1 ✅** · **P2 ✅** · **P3 ✅ (consultant 2 รอบ + ผู้ใช้เคาะ+commit)** · **P4 เริ่มแล้ว (🔄)**.
-- P3 commit แล้วโดยผู้ใช้. **P4 ทำเสร็จ+consultant รีวิว+แก้ follow-up+verify รอผู้ใช้เคาะ (🔍)**.
+- **P4 ✅** · **P5 ทำเสร็จ+consultant loop ผ่าน รอผู้ใช้เคาะ (🔍)**.
+- **P5 — Shared list/display**: worker → consultant (F1-F7) → worker แก้ F1-F3+F6 → main verify (`lint` 0·`tsc` ✓·`test` **70**·`build` ✓) → consultant ตรวจ fixes: ผ่าน. notes จดในบันทึกแก้แผน P5.
 - **P4 — Shared ปุ่ม+feedback**: worker → consultant (เจอ mobileOffset bug + button radius 2 ทรง + shadcn CLI ชน) → ผู้ใช้เคาะ (shape prop + hand-vendor) → worker แก้ → main verify (`lint` 0 · `tsc` ✓ · `test` **60** · `build` ✓) → **consultant รีวิวรอบสอง fixes: ผ่าน**. เอกสารอัปเดต (plan P4/P6/P7 hand-vendor, CLAUDE.md, progress). *(§1.4 อัปเดต: ทุกครั้งที่แก้ code จาก follow-up ต้องส่ง consultant ตรวจเสมอ เป็น loop จนผ่าน)*
 - **P2 — lib ชั้น API**: worker → consultant (เจอ `as` cast + token codes + BASE_URL) → worker แก้ → main verify → **consultant รีวิวรอบสอง: ผ่าน**. `lint` 0 · `tsc` ✓ · `test` **35** · `build` ✓. P8 traps จดในบันทึกแก้แผน.
 - **P1 — Design tokens + globals + utils**: worker → consultant → ผู้ใช้เปลี่ยนโจทย์เป็น period รายวัน → worker แก้ + main แก้เอกสาร → consultant ผ่าน → ผู้ใช้วางฟอนต์ Kanit woff2 (main เปิด @font-face + ลบ 15 ไฟล์ไม่ใช้) → **เคาะปิด**. ดู entry "P1 leave-days redesign" + D3 ในบันทึกแก้แผน.
@@ -20,7 +21,7 @@
   - ✅ ยืนยันแล้ว: envelope `{error:{code,message}}` ไทย, ไม่มี `/api` prefix, `POST /auth/login` รับ `idToken`, protected routes (holidays/attendance/leave/payroll) = 401
 
 ### 1.2 งานถัดไป
-- **P5 — Shared: list/display** (plan.md §3 → P5). เริ่มเมื่อผู้ใช้เคาะ P4. SegmentedTabs, FilterChips, DropdownFilter, StatusBadge, LeaveTypeIcon (PNG .png), ListCard, DetailField, TypeBanner, AttachmentItem, ProfileBar.
+- **P6 — Shared: form controls + base** (plan.md §3 → P6). เริ่มเมื่อผู้ใช้เคาะ P5. **hand-vendor** drawer(vaul)/dialog+select(Radix) (ห้าม shadcn CLI), TextInput/Textarea/SelectField/OTPInput/PeriodToggle. duality pill/card ในช่องกรอก (ช่อง Registration=pill, Textarea=rounded-rect).
 
 ### 1.3 session ใหม่ทำแบบนี้
 1. อ่านไฟล์นี้ทั้งไฟล์ + "บันทึกแก้แผน" ท้ายไฟล์
@@ -45,8 +46,8 @@
 | P1 | Tokens + globals.css + utils กลาง | ✅ | เคาะแล้ว 2026-07-21 · สียัง placeholder รอ Figma (ใช้ตามนี้ก่อน) |
 | P2 | lib ชั้น API | ✅ | consultant 2 รอบ + เคาะแล้ว 2026-07-21 |
 | P3 | LIFF shell | ✅ | consultant 2 รอบ + เคาะ+commit แล้ว 2026-07-21 |
-| P4 | Shared: ปุ่ม + feedback | 🔍 | เสร็จ+consultant+แก้ (60 tests) รอผู้ใช้เคาะ |
-| P5 | Shared: list/display | ⬜ | |
+| P4 | Shared: ปุ่ม + feedback | ✅ | consultant loop ผ่าน + เคาะ+commit 2026-07-21 |
+| P5 | Shared: list/display | 🔍 | เสร็จ+consultant loop ผ่าน (70 tests) รอผู้ใช้เคาะ |
 | P6 | Shared: form controls + shadcn base | ⬜ | |
 | P7 | Shared: Calendar + DateRangeField | ⬜ | ยากสุด §10.1 |
 | P8 | Auth core | ⬜ | |
@@ -116,3 +117,11 @@
   4. **[✅ ผู้ใช้เคาะ 2026-07-21 — shadcn strategy] hand-vendor** (ไม่ใช้ CLI): P6/P7 copy source (drawer=vaul, dialog/select=Radix, calendar=react-day-picker) มา restyle ด้วย token เราตรง ๆ — globals.css ปลอดภัย 100% (พิสูจน์กับ sonner แล้ว). **ห้ามรัน `shadcn init/add`** (ทับ @theme/Kanit)
   5. **[Figma pass]** toast bg ยืม `--color-primary-dark` (ควรมี token `--color-toast-bg` แยก — จริงในรูปเข้มกว่า)
   6. **[กับดักเพจ P14+/P20/P21]** หน้าที่ใช้ `BottomActionBar` (fixed) ต้องเผื่อ padding-bottom ของ content เอง (~pb-28+safe-area) ไม่งั้นรายการท้ายจอโดนบัง
+
+- **2026-07-21 (P5 — Shared: list/display)** — 10 components (SegmentedTabs/FilterChips/DropdownFilter/StatusBadge/LeaveTypeIcon/ListCard/DetailField/TypeBanner/AttachmentItem/ProfileBar) + `LeaveType`/`LeaveRequestStatus` ใน `src/types/leave.ts`. 70 tests, token-only, props-only. review เจอ+แก้ (loop ผ่าน): F1 SegmentedTabs prop `shape:'card'|'pill'` (default pill; Calendar=card), F2 DropdownFilter font 16px (กัน iOS zoom), F3 AttachmentItem hit area 44px, F6 เทสต์ FilterChips+LeaveTypeIcon src. **กับดัก/หนี้ที่เฟสหลังต้องรู้:**
+  1. **[ข้อเคาะ P6]** `DropdownFilter` = native `<select>` restyle (deviation — plan ไม่ได้เขียน native ตรง ๆ). P6 เคาะ: คง native ถาวร vs สลับ Radix — ตัดจาก Figma ว่ามี open-state design ไหม (ชุด PNG ปัจจุบันไม่มี). Radix select ใช้เฉพาะ `SelectField` ในฟอร์ม
+  2. **[กับดักมือถือ P6]** iOS WebKit zoom-on-focus ถ้า input/select/textarea font <16px → **form controls ทั้งชุด P6 ต้อง ≥16px** + เพิ่มเข้า manual checklist §21.4
+  3. **[กับดัก P14/P16]** LABEL ประเภทลาใน `LeaveTypeIcon` = **alt fallback เท่านั้น** — ชื่อประเภทจริงมาจาก `GET /leave/types` (อย่าใช้ map นี้แสดงชื่อในการ์ด/ฟอร์ม กัน 2 แหล่ง diverge)
+  4. **[กับดัก P17]** SegmentedTabs ฝั่ง Calendar ต้องส่ง `shape="card"` (Leave/Approval ใช้ default pill)
+  5. **[กับดัก P18]** จุดปฏิทินประเภทลา = ใช้ `bg-leave-*` **token** ไม่ใช่รูป PNG ของ LeaveTypeIcon (architecture §10.3); LeaveTypeIcon PNG พื้นตันไม่โปร่งใส (asset เดิม — ใช้ `rounded-card+object-cover` ครอบ)
+  6. **[Figma pass — ต่อ list เดิม]** badge SegmentedTabs (เหลืองในรูป vs `--color-warning` ส้ม), FilterChips unselected (ขาวจาง), AttachmentItem พื้นแถว (เทาอ่อน vs `bg-surface`), ListCard chevron alignment, pill borders (แทบไม่เห็นขอบในรูป)
