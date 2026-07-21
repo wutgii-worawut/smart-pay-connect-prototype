@@ -39,20 +39,14 @@
   --radius-card: 16px; /* placeholder — รอค่าจริงจาก Figma (architecture §9.5); design อ่านได้ช่วง ~16-20px */
   --shadow-card: 0 2px 8px rgb(0 0 0 / 0.06); /* placeholder — รอค่าจริงจาก Figma (architecture §9.5) */
 
-  /* ฟอนต์ — Kanit อย่างเดียวทั้งระบบ (D1 plan.md §1)
-   * ⚠️ ยังไม่มีไฟล์ woff2 ใน src/assets/fonts/ (list โฟลเดอร์แล้วไม่พบ, ยังไม่มีโฟลเดอร์ด้วยซ้ำ)
-   * ใช้ fallback system-ui/sans-serif ชั่วคราวจนกว่าจะได้ไฟล์ฟอนต์จริง — ดู @font-face ที่คอมเมนต์ไว้ด้านล่าง
-   */
+  /* ฟอนต์ — Kanit อย่างเดียวทั้งระบบ (D1 plan.md §1) */
   --font-sans:
-    'Kanit', system-ui, -apple-system, 'Segoe UI', sans-serif; /* fallback ชั่วคราว — รอไฟล์ Kanit woff2 */
+    'Kanit', system-ui, -apple-system, 'Segoe UI', sans-serif; /* system-ui = fallback ระหว่าง font-display: swap */
 }
 
 /* ============================================================
- * ฟอนต์ Kanit (self-host, D1 plan.md §1) — โครง @font-face ไว้ก่อน
- * ⚠️ ขาดไฟล์จริง: src/assets/fonts/Kanit-{Regular(400),Medium(500),SemiBold(600),Bold(700)}.woff2
- * เมื่อได้ไฟล์แล้ว: วางไฟล์ตาม path ด้านล่าง แล้วลบคอมเมนต์ปิด (/* ... * /) ออกเพื่อเปิดใช้งาน
+ * ฟอนต์ Kanit (self-host, D1 plan.md §1) — woff2 4 น้ำหนัก (400/500/600/700), normal เท่านั้น
  * ============================================================ */
-/*
 @font-face {
   font-family: 'Kanit';
   src: url('../assets/fonts/Kanit-Regular.woff2') format('woff2');
@@ -84,7 +78,6 @@
   font-style: normal;
   font-display: swap;
 }
-*/
 
 /* ============================================================
  * Reset พื้นฐาน (Tailwind preflight คุมส่วนใหญ่แล้วผ่าน @import 'tailwindcss' ด้านบน)

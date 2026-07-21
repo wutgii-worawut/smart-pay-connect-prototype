@@ -10,7 +10,7 @@
 - การตัดสินใจสถาปัตยกรรม D1-D3 (plan.md §1) **ผู้ใช้ยืนยันแล้ว 2026-07-21 พร้อมเงื่อนไข**:
   - **D1** shared `useHolidays` ✅ — เงื่อนไข: day-count เป็น **pure function รับ `holidays[]` param** (อยู่ utils/date.ts); `useHolidays` = **แค่ห่อ `useQuery(['holidays', year])` staleTime ยาว** ไม่มี logic นับวัน *(หมายเหตุ: `countLeaveDays` ถูกแทนด้วย `listLeaveWorkingDays`+`sumLeaveDays` — ดู entry "P1 leave-days redesign")*
   - **D2** ยก card ไป `src/components/` ✅ — เงื่อนไข: การ์ดทั้งสอง **presentational ล้วน** รับ data+callbacks props เท่านั้น **ห้าม useQuery/useMutation/navigate ในการ์ด**; type `LeaveRequest` **ย้ายไป `src/types/`**
-  - **D3** ฟอนต์ **Kanit อย่างเดียวทั้งระบบ** self-host ✅
+  - **D3** ฟอนต์ **Kanit อย่างเดียวทั้งระบบ** self-host ✅ — เปิด `@font-face` แล้ว (2026-07-21) ใช้ **`.woff2` 4 น้ำหนัก** (400/500/600/700, normal) ที่ `src/assets/fonts/`; build bundle เข้า dist (~53KB/ไฟล์). ลบไฟล์ไม่ใช้ 15 ตัวออกแล้ว (italic ทุกตัว + น้ำหนัก 100/200/300/800/900 + `Kanit.css` พ่วง). ✅ ไม่มีงานค้างฟอนต์แล้ว
 - **Mock service + swagger** (plan.md §1.5): host `https://infeasible-subcandidly-judie.ngrok-free.dev/`, swagger `/docs/`. กติกา: ถ้า API ขาด/ติด **แจ้งผู้ใช้** ให้แก้ backend.
   - 🔴 **ต้องแจ้ง/รอผู้ใช้แก้:** Swagger `/docs/` ยังไม่ถูก config (ชี้ petstore default) + ไม่มี `openapi.json` → ยังไม่มี machine-readable contract
   - ⚠️ **รอเคาะ path:** `/auth/register`, `/auth/otp/request`, `/auth/otp/verify` = 404 (กระทบ P9-P10)
