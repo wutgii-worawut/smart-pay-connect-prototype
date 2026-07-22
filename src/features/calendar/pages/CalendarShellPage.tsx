@@ -6,6 +6,9 @@
  * page เป็นเจ้าของ query (`useHolidays`) + state ปีที่เลือก + state holiday ที่เปิด details —
  * component ลูก (`NextHolidayHero`/`HolidayListItem`/`HolidayDetails`) presentational ล้วน (มิเรอร์
  * pattern D2 ของ leave — ห้าม useQuery/navigate ใน component ย่อย)
+ *
+ * แท็บ "ปฏิทินการลา" (P18) แยก query/state ของตัวเองไปที่ `LeaveCalendarView` (container ภายใน feature —
+ * มิเรอร์ `AttendanceHistoryPage`) หน้านี้แค่ render ไม่ถือ state ของแท็บนั้น
  */
 import { useState } from 'react'
 import { DropdownFilter } from '@/components/DropdownFilter'
@@ -19,6 +22,7 @@ import { ApiError } from '@/lib/api-client'
 import type { Holiday } from '@/types/holiday'
 import { HolidayDetails } from '../components/HolidayDetails'
 import { HolidayListItem } from '../components/HolidayListItem'
+import { LeaveCalendarView } from '../components/LeaveCalendarView'
 import { NextHolidayHero } from '../components/NextHolidayHero'
 import { daysUntil, generateHolidayYearOptions, getNextHoliday } from '../utils/holidays'
 
@@ -31,7 +35,7 @@ function isCalendarTab(value: string): value is CalendarTab {
 export function CalendarShellPage() {
   usePageTitle('ดูวันหยุด')
 
-  const [tab, setTab] = useState<CalendarTab>('holidays')
+  const [tab, setTab] = useState<CalendarTab>('leave')
 
   const [currentYear] = useState(() => new Date().getFullYear())
   const [year, setYear] = useState(currentYear)
@@ -62,8 +66,7 @@ export function CalendarShellPage() {
 
         <div className="mt-4">
           {tab === 'leave' ? (
-            // P18: LeaveCalendar tab — placeholder รอทำเต็ม (custom DayButton/MonthCaption ตาม §10.3)
-            <EmptyState message="ปฏิทินการลา — เร็ว ๆ นี้" />
+            <LeaveCalendarView />
           ) : holidaysQuery.isLoading ? (
             <div className="flex justify-center py-16">
               <Spinner className="h-8 w-8 border-primary" />
