@@ -15,6 +15,8 @@ afterEach(() => {
   server.resetHandlers()
   resetApprovalScenarios()
   useAuthStore.getState().clearSession()
+  // กัน listener จาก countPendingHits() รั่วข้ามเทสต์ (ผูก server.events.on ต่อเทสต์ ไม่เคย off เอง)
+  server.events.removeAllListeners()
 })
 afterAll(() => server.close())
 

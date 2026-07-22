@@ -11,6 +11,8 @@
  * in-page state ในไฟล์เดียวกัน, ผ่าน `LeaveFormPage`)
  * `/approval` (P19 — จอ pending/history ฝั่งหัวหน้า, ผ่าน `ApprovalRoute` — ดู `app/ApprovalRoute.tsx`
  * ครอบด้วย `ProtectedRoute requireRole="manager"` เป็น UI guard ชั้นสอง §17.3, backend 403 = ตัวจริง)
+ * และ `/approval/:id` (P20 — จอ detail + อนุมัติ/ไม่อนุมัติ, ผ่าน `ApprovalDetailPage` ครอบ
+ * `ProtectedRoute requireRole="manager"` เดียวกัน)
  * `createBrowserRouter` (History API — ข้อกำหนด LIFF, §11) + `errorElement` ทุก route
  *
  * route ที่ต้อง auth (ทุกอันยกเว้น `/register*`) อยู่ใต้ layout route ปลาย `AuthGate` (§13.1-13.3)
@@ -18,6 +20,7 @@
  */
 import { createBrowserRouter } from 'react-router-dom'
 import { AuthGate, OtpPage, ProtectedRoute, RegisterPage, RegisterSuccessPage } from '@/features/auth'
+import { ApprovalDetailPage } from '@/features/approval'
 import { CalendarShellPage } from '@/features/calendar'
 import { LeaveDetailPage, LeaveFormPage } from '@/features/leave'
 import { ApprovalRoute } from './ApprovalRoute'
@@ -75,7 +78,11 @@ export const router = createBrowserRouter([
       },
       {
         path: '/approval/:id',
-        element: <PlaceholderPage title="อนุมัติใบลา" />,
+        element: (
+          <ProtectedRoute requireRole="manager">
+            <ApprovalDetailPage />
+          </ProtectedRoute>
+        ),
         errorElement: <RouteErrorBoundary />,
       },
       {

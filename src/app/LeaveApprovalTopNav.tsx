@@ -16,7 +16,7 @@
  * TanStack Query ยิง request ทันทีที่ query mount ไม่สนว่า component จะ return null ทีหลังหรือไม่
  * (early-return เกิด "หลัง" hook ทำงานไปแล้วในทุก render) — ถ้าไม่ปิด query พนักงานทั่วไปทุกคนที่เปิด
  * `/leave` (หน้า traffic สูง) จะยิง `GET /approval/pending` ไปด้วย ทั้งที่ backend §17.3 ต้องตอบ
- * denial เสมอ — ถ้า backend จริงตอบ `UNAUTHORIZED` (ไม่ใช่ `FORBIDDEN`) จะโดน `onUnhandledRequest`
+ * denial เสมอ — ถ้า backend จริงตอบ `UNAUTHORIZED` (ไม่ใช่ `FORBIDDEN`) จะโดน `onUnauthorized`
  * ล้าง session ทันที (logout loop)
  *
  * active state อ่านจาก `useLocation().pathname` — whitelist: ขึ้นต้นด้วย `/approval` → แท็บ

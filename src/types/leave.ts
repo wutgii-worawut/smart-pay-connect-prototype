@@ -96,6 +96,22 @@ export interface LeaveRequestDetail {
   /** วันที่อนุมัติ 'YYYY-MM-DD' หรือ null ถ้ายังไม่อนุมัติ */
   approvedAt: string | null
   attachments: LeaveAttachment[]
+  /**
+   * ชื่อพนักงานเจ้าของใบลา — มีเฉพาะฝั่ง Approval (P20 `LeaveRequestDetailCard` mode
+   * `approver-action`/`approver-view`, `GET /approval/requests/{id}`) ไม่มีค่าตอนเจ้าของดูใบลาตัวเอง
+   * (`owner-view` ใช้ `LEAVE_TYPE_LABEL`/`LEAVE_TYPE_LABEL_EN` เป็นหัวการ์ดแทน)
+   */
+  employeeName?: string
+  /**
+   * วันลาคงเหลือของพนักงานคนนั้น (โดยประมาณ — server คำนวณ, §7.4) — มีเฉพาะฝั่ง Approval เช่นกัน
+   * (design `2.Pending Details.png` แถว "วันลาคงเหลือ")
+   */
+  remainingBalance?: number
+  /**
+   * ความเห็นผู้อนุมัติหลังตัดสินแล้ว (อนุมัติ/ไม่อนุมัติ) — มีเฉพาะฝั่ง Approval mode `approver-view`
+   * (read-only) ไม่มีค่าถ้าผู้อนุมัติไม่ได้ใส่ความเห็นตอนตัดสิน
+   */
+  approverComment?: string
 }
 
 /**
