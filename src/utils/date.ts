@@ -7,7 +7,7 @@
  * - แสดงผล พ.ศ. ผ่าน formatThaiDate เท่านั้น — ห้ามบวก 543 กระจายตามหน้าอื่น
  * - pure function ล้วน ไม่มี React/hook — ห้าม network/side effect
  */
-import { differenceInCalendarDays, eachDayOfInterval, format, isWeekend, parse } from 'date-fns'
+import { differenceInCalendarDays, eachDayOfInterval, format, isWeekend, parse, parseISO } from 'date-fns'
 import { th } from 'date-fns/locale'
 import type { LeaveDayEntry, LeaveDayPeriod } from '@/types/leave'
 
@@ -44,6 +44,19 @@ export function formatThaiDate(
     case 'MMMM-yyyy':
       return format(d, `MMMM 'พ.ศ. ${be}'`, { locale: th })
   }
+}
+
+/**
+ * แสดง**เวลาจริง (instant, ISO UTC)** เป็นวันปฏิทินไทย พ.ศ. — คนละกรณีกับ `formatThaiDate` ที่รับ
+ * calendar date string เท่านั้น (ห้ามส่ง datetime string เข้า `formatThaiDate` — §4.2)
+ * ใช้กับ field ที่ backend ส่งเป็น instant จริง เช่น `submittedAt`/`approvedAt` (`LeaveRequestDetail`)
+ *
+ * แปลงเป็นวันที่ปฏิทินไทยด้วย offset **+7 คงที่ (Asia/Bangkok ไม่มี DST)** แบบไม่พึ่ง timezone ของ
+ * เครื่องผู้ใช้ — deterministic ทุกที่ที่รัน แล้วส่งต่อให้ `formatThaiDate` บวก 543 ที่จุดเดียวเหมือนเดิม
+ */
+export function formatThaiInstant(iso: string, pattern?: ThaiDateFormat): string {
+  const bangkokYmd = new Date(parseISO(iso).getTime() + 7 * 3_600_000).toISOString().slice(0, 10)
+  return formatThaiDate(bangkokYmd, pattern)
 }
 
 /**

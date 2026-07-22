@@ -87,13 +87,15 @@ export interface LeaveRequestDetail {
   /** ป้ายสรุปช่วงเวลา เช่น 'เต็มวัน' | 'ครึ่งวัน (เช้า)' | 'ผสม' */
   periodSummary: string
   reason: string
-  /** วันที่ส่งคำขอ 'YYYY-MM-DD' */
+  /** วันที่ส่งคำขอ — ISO instant (UTC) เช่น '2026-06-15T08:30:00Z' ไม่ใช่ calendar date — แสดงผลด้วย
+   * `formatThaiInstant` (utils/date.ts) เท่านั้น ห้ามส่งเข้า `formatThaiDate` ตรง ๆ (§4.2) */
   submittedAt: string
   /** ผู้ปฏิบัติงานแทน */
   proxyName: string
   /** ผู้อนุมัติ */
   approverName: string
-  /** วันที่อนุมัติ 'YYYY-MM-DD' หรือ null ถ้ายังไม่อนุมัติ */
+  /** วันที่อนุมัติ — ISO instant (UTC, เหมือน `submittedAt`) หรือ null ถ้ายังไม่อนุมัติ — แสดงผลด้วย
+   * `formatThaiInstant` เท่านั้น */
   approvedAt: string | null
   attachments: LeaveAttachment[]
   /**

@@ -30,10 +30,10 @@ const leaveRequestDetailSchema = z.object({
   totalDays: z.number(),
   periodSummary: z.string(),
   reason: z.string(),
-  submittedAt: z.string(),
+  submittedAt: z.iso.datetime({ offset: true }),
   proxyName: z.string(),
   approverName: z.string(),
-  approvedAt: z.string().nullable(),
+  approvedAt: z.iso.datetime({ offset: true }).nullable(),
   attachments: z.array(leaveAttachmentSchema),
 })
 

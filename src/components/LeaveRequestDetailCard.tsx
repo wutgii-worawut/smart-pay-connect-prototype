@@ -31,7 +31,7 @@ import { PrimaryButton } from './PrimaryButton'
 import { StatusBadge } from './StatusBadge'
 import { Textarea } from './Textarea'
 import { TypeBanner } from './TypeBanner'
-import { formatLeaveDayLine, formatThaiDate, formatThaiDateRange } from '@/utils/date'
+import { formatLeaveDayLine, formatThaiDate, formatThaiDateRange, formatThaiInstant } from '@/utils/date'
 import { LEAVE_TYPE_LABEL, LEAVE_TYPE_LABEL_EN } from '@/utils/leaveType'
 import type { LeaveAttachment, LeaveRequestDetail } from '@/types/leave'
 
@@ -179,7 +179,7 @@ function ApproverHeader({ detail }: { detail: LeaveRequestDetail }) {
         <LeaveTypeIcon type={detail.type} size="md" />
         <div>
           <p className="text-lg font-semibold text-primary-dark">{detail.employeeName}</p>
-          <p className="text-sm text-text-secondary">ส่งคำขอเมื่อ {formatThaiDate(detail.submittedAt)}</p>
+          <p className="text-sm text-text-secondary">ส่งคำขอเมื่อ {formatThaiInstant(detail.submittedAt)}</p>
         </div>
       </div>
       <StatusBadge status={detail.status} />
@@ -368,12 +368,12 @@ export function LeaveRequestDetailCard({
                 }
               />
               <DetailField label="เหตุผล" value={detail.reason} />
-              <DetailField label="วันที่ส่งคำขอ" value={formatThaiDate(detail.submittedAt)} />
+              <DetailField label="วันที่ส่งคำขอ" value={formatThaiInstant(detail.submittedAt)} />
               <DetailField label="ผู้ปฏิบัติงานแทน" value={detail.proxyName} />
               <DetailField label="ผู้อนุมัติ" value={detail.approverName} />
               <DetailField
                 label="วันที่อนุมัติ"
-                value={detail.approvedAt ? formatThaiDate(detail.approvedAt) : '—'}
+                value={detail.approvedAt ? formatThaiInstant(detail.approvedAt) : '—'}
               />
             </div>
             <AttachmentsSection attachments={detail.attachments} />

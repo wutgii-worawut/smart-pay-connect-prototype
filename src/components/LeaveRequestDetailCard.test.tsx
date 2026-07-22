@@ -15,7 +15,7 @@ const PENDING_DETAIL: LeaveRequestDetail = {
   totalDays: 1,
   periodSummary: 'เต็มวัน',
   reason: 'เดินทางต่างจังหวัดกับครอบครัว',
-  submittedAt: '2026-06-15',
+  submittedAt: '2026-06-15T08:30:00Z',
   proxyName: 'นายแทนคุณ สมมุติ',
   approverName: 'คุณวิชัย มั่นคง',
   approvedAt: null,
@@ -35,8 +35,8 @@ const APPROVED_DETAIL: LeaveRequestDetail = {
     { date: '2026-05-14', period: 'pm' },
   ],
   totalDays: 2,
-  submittedAt: '2026-05-10',
-  approvedAt: '2026-05-14',
+  submittedAt: '2026-05-10T08:30:00Z',
+  approvedAt: '2026-05-14T08:30:00Z',
 }
 
 describe('LeaveRequestDetailCard', () => {

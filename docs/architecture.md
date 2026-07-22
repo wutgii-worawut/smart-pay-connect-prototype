@@ -209,7 +209,12 @@ export function sumLeaveDays(days: LeaveDayEntry[]): number {
 | ชนิด | คืออะไร | เก็บ/รับ-ส่งเป็น | ตัวอย่าง |
 |---|---|---|---|
 | **Calendar date** (วันในปฏิทิน) | ไม่มี concept เวลา/timezone ในตัว | **string `YYYY-MM-DD` ตลอดสาย** ทั้ง frontend ↔ backend ↔ database | วันลา "1-3 ก.ค.", งวดเงินเดือน |
-| **Instant** (จุดเวลาจริง) | timestamp ที่เกิดเหตุการณ์ | **server เป็นคนประทับเสมอ** เก็บ UTC แสดงผลเป็นเวลาไทย | เวลาลงเวลาเข้า-ออก, เวลาอนุมัติใบลา |
+| **Instant** (จุดเวลาจริง) | timestamp ที่เกิดเหตุการณ์ | **server เป็นคนประทับเสมอ** รับ-ส่งเป็น **ISO 8601 UTC** (`...Z`) แสดงผลเป็นเวลาไทย | เวลาลงเวลาเข้า-ออก, `submittedAt`/`approvedAt` ใบลา |
+
+**การแสดงผล (สำคัญ — คนละฟังก์ชัน ห้ามสลับ):**
+- **Calendar date** (`'YYYY-MM-DD'`) → `formatThaiDate()` (parse `'yyyy-MM-dd'` ไม่ shift timezone)
+- **Instant** (`'...T..:..:..Z'`) → **`formatThaiInstant()`** (แปลงเป็นวันปฏิทินไทยด้วย offset **+7 คงที่** — ไทยไม่มี DST ตั้งแต่ 2463 จึงไม่ต้องพึ่ง `@date-fns/tz`; deterministic ไม่อิง timezone เครื่องรัน/เทสต์)
+- **🔴 ห้ามส่ง instant เข้า `formatThaiDate`** — `parse('2026-05-27T08:30:00Z','yyyy-MM-dd')` = **Invalid Date** → `format()` throw ทั้งจอ (เจอจริง 2026-07-22: จอ leave/approval detail crash เพราะ `submittedAt` เป็น instant แต่เข้า formatThaiDate)
 
 **เหตุผลและกับดักที่ต้องรู้:**
 - กับดักคลาสสิก: `new Date('2026-07-01')` จะ parse เป็น **เที่ยงคืน UTC** ไม่ใช่เที่ยงคืนเวลาไทย — ไทยเป็น UTC+7 เลยรอดแบบฟลุก ๆ แต่ถ้าเครื่องพนักงานตั้ง timezone ผิด หรือ format กลับด้วย UTC วันจะเหลื่อมทันที → pure function ที่รับวันในปฏิทินให้รับ string แล้ว parse ด้วย `parse(str, 'yyyy-MM-dd', new Date())` ของ date-fns (parse เป็น local) หรือคำนวณจาก string ตรง ๆ

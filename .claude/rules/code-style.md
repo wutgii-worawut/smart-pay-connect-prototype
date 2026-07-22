@@ -45,7 +45,8 @@
 
 - วันในปฏิทินรับ-ส่งเป็น string `'YYYY-MM-DD'`; parse ด้วย `parse(str,'yyyy-MM-dd',new Date())`
   — **ห้าม `new Date('2026-07-01')`** (ได้เที่ยงคืน UTC)
-- แสดงผล พ.ศ. ผ่าน `formatThaiDate()` ใน `utils/date.ts` เท่านั้น — ห้ามบวก 543 กระจายตามหน้า
+- แสดงผล พ.ศ. ของ **calendar date** (`'YYYY-MM-DD'`) ผ่าน `formatThaiDate()` ใน `utils/date.ts` เท่านั้น — ห้ามบวก 543 กระจายตามหน้า
+- **instant** (ISO 8601 UTC เช่น `submittedAt`/`approvedAt`/เวลาลงเวลา) แสดงผลผ่าน `formatThaiInstant()` เท่านั้น (แปลงเป็นวันไทย +7 คงที่) — **ห้ามส่ง instant เข้า `formatThaiDate`** (`parse('...T..Z','yyyy-MM-dd')` = Invalid Date → `format()` throw ทั้งจอ, §4.2 แยก 2 ชนิดห้ามปน)
 - จำนวนเงิน format ผ่าน `formatBaht()` เท่านั้น
 - ห้ามใช้ moment / dayjs — date library เดียวคือ date-fns
 

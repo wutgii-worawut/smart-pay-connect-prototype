@@ -4,6 +4,7 @@ import {
   formatLeaveDayLine,
   formatThaiDate,
   formatThaiDateRange,
+  formatThaiInstant,
   formatThaiMonthCaption,
   listLeaveCalendarDays,
   listLeaveWorkingDays,
@@ -33,6 +34,24 @@ describe('formatThaiDate', () => {
   it('ปีข้ามเหลื่อม (ธ.ค. -> ม.ค.) คำนวณ พ.ศ. ถูกต้อง', () => {
     expect(formatThaiDate('2026-12-31')).toBe('31 ธ.ค. 2569')
     expect(formatThaiDate('2027-01-01')).toBe('1 ม.ค. 2570')
+  })
+})
+
+describe('formatThaiInstant', () => {
+  it('แปลง instant UTC เป็นวันปฏิทินไทย (+7 คงที่) — เวลาช่วงกลางวัน UTC ไม่ข้ามวัน', () => {
+    expect(formatThaiInstant('2026-05-27T08:30:00Z')).toBe('27 พ.ค. 2569')
+  })
+
+  it('เวลาดึก UTC (20:00Z) บวก 7 ชั่วโมง → เลื่อนไปวันถัดไปตามปฏิทินไทย', () => {
+    expect(formatThaiInstant('2026-05-27T20:00:00Z')).toBe('28 พ.ค. 2569')
+  })
+
+  it('รับ input ที่ระบุ offset ตรง ๆ (+07:00) ได้เหมือนกัน', () => {
+    expect(formatThaiInstant('2026-05-28T03:00:00+07:00')).toBe('28 พ.ค. 2569')
+  })
+
+  it('forward pattern ไปยัง formatThaiDate ได้ (เช่น d-MMMM-yyyy)', () => {
+    expect(formatThaiInstant('2026-05-27T08:30:00Z', 'd-MMMM-yyyy')).toBe('27 พฤษภาคม 2569')
   })
 })
 

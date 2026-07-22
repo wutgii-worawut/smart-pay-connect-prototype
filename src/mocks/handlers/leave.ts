@@ -191,7 +191,7 @@ const PENDING_DETAIL = {
   totalDays: 1,
   periodSummary: 'เต็มวัน',
   reason: 'เดินทางต่างจังหวัดกับครอบครัว',
-  submittedAt: '2026-06-15',
+  submittedAt: '2026-06-15T08:30:00Z',
   proxyName: 'นายแทนคุณ สมมุติ',
   approverName: 'คุณวิชัย มั่นคง',
   approvedAt: null,
@@ -214,10 +214,10 @@ const APPROVED_DETAIL = {
   totalDays: 2,
   periodSummary: 'เต็มวัน',
   reason: 'เดินทางต่างจังหวัดกับครอบครัว',
-  submittedAt: '2026-05-10',
+  submittedAt: '2026-05-10T08:30:00Z',
   proxyName: 'นายแทนคุณ สมมุติ',
   approverName: 'คุณวิชัย มั่นคง',
-  approvedAt: '2026-05-14',
+  approvedAt: '2026-05-14T08:30:00Z',
   attachments: [],
 }
 

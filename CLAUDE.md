@@ -96,7 +96,7 @@ src/
 - วันลาเป็น **period รายวัน** `days:[{date, period:'full'|'am'|'pm'}]` (full=1, am/บ่าย=0.5). `listLeaveWorkingDays(start,end,holidays)` คืนวันทำงานในช่วง (ตัดเสาร์อาทิตย์ **+ วันหยุดบริษัท** จาก `GET /holidays`); `sumLeaveDays(days)` รวมยอด. ฟอร์มวันเดียว=toggle เดียว (6.1) / หลายวัน=แถวต่อวัน (6.2)
 - หัวหน้า = manager (`role: 'manager'` in JWT). Sees only own team's leave requests; **never** team payslips/attendance. UI hides by role; backend 403 is the real guard
 - สลิปเงินเดือน = payslip, read-only. Email button sends to registered email only — no email input field ever
-- **Dates (§4.2):** calendar dates travel as `'YYYY-MM-DD'` strings end-to-end (parse with date-fns `parse`, never `new Date(str)`); instants are server-stamped UTC. Display via `formatThaiDate` — never scatter `+543` around the codebase
+- **Dates (§4.2):** calendar dates travel as `'YYYY-MM-DD'` strings end-to-end (parse with date-fns `parse`, never `new Date(str)`) — display via `formatThaiDate`; instants are server-stamped **ISO 8601 UTC** (e.g. `submittedAt`/`approvedAt`, clock times) — display via **`formatThaiInstant`** (fixed +7, ไทยไม่มี DST). Never mix the two (feeding an instant to `formatThaiDate` = Invalid Date → crash) and never scatter `+543` around the codebase
 
 ## Multi-session Workflow
 
