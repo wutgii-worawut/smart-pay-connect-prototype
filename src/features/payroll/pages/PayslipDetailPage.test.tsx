@@ -60,13 +60,13 @@ function renderPage(client?: QueryClient) {
 }
 
 describe('PayslipDetailPage', () => {
-  it('โหลดสำเร็จ → แสดง 3 การ์ด (พนักงาน/รายรับ/รายหัก) + ปุ่มส่งอีเมล', async () => {
+  it('โหลดสำเร็จ → แสดง 3 การ์ด (พนักงาน/รายรับ/รายการหัก) + ปุ่มส่งอีเมล', async () => {
     renderPage()
 
     expect(await screen.findByText('เงินเดือน มิถุนายน 2569')).toBeInTheDocument()
     expect(screen.getByText('พนักงานรายวัน')).toBeInTheDocument()
     expect(screen.getByText('รายรับ')).toBeInTheDocument()
-    expect(screen.getByText('รายหัก')).toBeInTheDocument()
+    expect(screen.getByText('รายการหัก')).toBeInTheDocument()
 
     // พนักงาน
     expect(screen.getByText('01009')).toBeInTheDocument()

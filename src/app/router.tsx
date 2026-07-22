@@ -20,20 +20,26 @@
  *
  * route ที่ต้อง auth (ทุกอันยกเว้น `/register*`) อยู่ใต้ layout route ปลาย `AuthGate` (§13.1-13.3)
  * — `AuthGate` เช็ค silent login ก่อนเสมอ ไม่ render route ลูกจนกว่าจะสำเร็จ (เทียบ LiffGate §20.2)
+ *
+ * **[P22 code-split]** `/leave/new`, `/leave/:id`, `/calendar`, `/approval/:id`, `/payroll`,
+ * `/payroll/:id` ใช้ route property `lazy` (react-router v7 — ตัด vaul/Radix/react-day-picker
+ * ออกจาก initial bundle) แทน static `element`/import ด้านบน ทุกจุด import **deep path ตรงไฟล์**
+ * ไม่ผ่าน barrel (`@/features/<x>` index.ts) เพราะ barrel เดียวกันยังถูก import แบบ static ที่อื่น
+ * (`LeaveRoute`→`LeaveShellPage`, `ApprovalRoute`/`LeaveApprovalTopNav`→`ApprovalListPage`/
+ * `usePendingRequests`) — ถ้า dynamic import ชนกับ static import ของโมดูลเดียวกัน bundler จะ inline
+ * ทันที (`INEFFECTIVE_DYNAMIC_IMPORT`, กับดัก P13 #5) การใช้ deep import ที่นี่จึงไม่ชนทาง static
+ * ใดเลย. `/approval/:id` ยังต้องคง `ProtectedRoute requireRole="manager"` — ห่อไว้ *ข้างใน*
+ * `Component` ที่ resolve จาก `lazy()` แทน (react-router merge `Component` เข้า route เฉพาะตอนไม่มี
+ * `element` ประกาศ static ไว้ก่อน จึงห่อ guardในนี้แทนห่อนอก)
  */
 import { createBrowserRouter } from 'react-router-dom'
 import { AuthGate, OtpPage, ProtectedRoute, RegisterPage, RegisterSuccessPage } from '@/features/auth'
-import { ApprovalDetailPage } from '@/features/approval'
-import { CalendarShellPage } from '@/features/calendar'
-import { LeaveDetailPage, LeaveFormPage } from '@/features/leave'
 import { ApprovalRoute } from './ApprovalRoute'
 import { AttendanceRoute } from './AttendanceRoute'
 import { AttendanceHistoryRoute } from './AttendanceHistoryRoute'
 import { HomePage } from './HomePage'
 import { LeaveRoute } from './LeaveRoute'
 import { NotFoundPage } from './NotFoundPage'
-import { PayrollRoute } from './PayrollRoute'
-import { PayrollDetailRoute } from './PayrollDetailRoute'
 import { RouteErrorBoundary } from './RouteErrorBoundary'
 
 export const router = createBrowserRouter([
@@ -63,12 +69,18 @@ export const router = createBrowserRouter([
       },
       {
         path: '/leave/new',
-        element: <LeaveFormPage />,
+        lazy: async () => {
+          const { LeaveFormPage } = await import('@/features/leave/pages/LeaveFormPage')
+          return { Component: LeaveFormPage }
+        },
         errorElement: <RouteErrorBoundary />,
       },
       {
         path: '/leave/:id',
-        element: <LeaveDetailPage />,
+        lazy: async () => {
+          const { LeaveDetailPage } = await import('@/features/leave/pages/LeaveDetailPage')
+          return { Component: LeaveDetailPage }
+        },
         errorElement: <RouteErrorBoundary />,
       },
       {
@@ -82,26 +94,40 @@ export const router = createBrowserRouter([
       },
       {
         path: '/approval/:id',
-        element: (
-          <ProtectedRoute requireRole="manager">
-            <ApprovalDetailPage />
-          </ProtectedRoute>
-        ),
+        lazy: async () => {
+          const { ApprovalDetailPage } = await import('@/features/approval/pages/ApprovalDetailPage')
+          return {
+            Component: () => (
+              <ProtectedRoute requireRole="manager">
+                <ApprovalDetailPage />
+              </ProtectedRoute>
+            ),
+          }
+        },
         errorElement: <RouteErrorBoundary />,
       },
       {
         path: '/payroll',
-        element: <PayrollRoute />,
+        lazy: async () => {
+          const { PayrollRoute } = await import('./PayrollRoute')
+          return { Component: PayrollRoute }
+        },
         errorElement: <RouteErrorBoundary />,
       },
       {
         path: '/payroll/:id',
-        element: <PayrollDetailRoute />,
+        lazy: async () => {
+          const { PayrollDetailRoute } = await import('./PayrollDetailRoute')
+          return { Component: PayrollDetailRoute }
+        },
         errorElement: <RouteErrorBoundary />,
       },
       {
         path: '/calendar',
-        element: <CalendarShellPage />,
+        lazy: async () => {
+          const { CalendarShellPage } = await import('@/features/calendar/pages/CalendarShellPage')
+          return { Component: CalendarShellPage }
+        },
         errorElement: <RouteErrorBoundary />,
       },
     ],

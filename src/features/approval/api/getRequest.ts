@@ -14,7 +14,7 @@ import { api } from '@/lib/api-client'
 import type { LeaveRequestDetail } from '@/types/leave'
 
 const leaveDayEntrySchema = z.object({
-  date: z.string(),
+  date: z.iso.date(),
   period: z.enum(['full', 'am', 'pm']),
 })
 
@@ -30,8 +30,8 @@ const approvalRequestDetailSchema = z.object({
   type: z.enum(['vacation', 'sick', 'personal']),
   status: z.enum(['PENDING', 'APPROVED', 'REJECTED', 'CANCELLED']),
   requestNumber: z.string(),
-  startDate: z.string(),
-  endDate: z.string(),
+  startDate: z.iso.date(),
+  endDate: z.iso.date(),
   days: z.array(leaveDayEntrySchema),
   totalDays: z.number(),
   periodSummary: z.string(),

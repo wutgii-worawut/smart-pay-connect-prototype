@@ -9,6 +9,7 @@
 - ตรงกับ demo ที่สร้างไว้แล้ว (`leave-calendar-demo.jsx`): header เดือนไทย + พ.ศ. + ปุ่ม ‹ › → แถวชื่อวัน อา.-ส. (วันหยุดสีเทา) → grid วันพร้อม**จุดสีตามประเภทลา** (วันนี้/วันเลือก = วงเขียว) → **legend** ล่าง: ● ลาพักร้อน ● ลาป่วย ● ลากิจ
 - Implement จริง: shadcn Calendar (react-day-picker) + custom `DayButton` + custom `MonthCaption` (พ.ศ.) ตามโค้ดเอกสารหลัก 10.3
 - กดวัน → เปิด `LeaveDayDetailSheet` (Drawer) รายละเอียดใครลา — **design ไม่มีจอนี้** แต่ตกลงกันไว้แล้ว (10.3) → **ทำ Drawer ตามแบบแผนเดิม + ให้ designer เติมภายหลัง** (noted)
+  - **⚠️ [P18 — ผู้ใช้เคาะ 2026-07-22] เปลี่ยนเป็น inline section:** PNG `1.Leave Calendar.png` มีจอ detail จริงเป็น **section inline ใต้ปฏิทิน** (หัวข้อ "วันที่ … (ลา N คน)" + การ์ดรายชื่อ) → implement เป็น `LeaveDayDetailSection` (inline) **ไม่ใช่ Drawer** ตาม PNG. ข้อความ Drawer ด้านบน/§10.3 เป็นของเดิม — อย่าแก้กลับเป็น Drawer
 - API: `GET /leave/calendar?month=` (จุด) + `GET /leave/calendar/{date}` (รายละเอียด, กรองตาม role/PDPA)
 
 ### 6.2 Holidays — `2.Holidays.png`

@@ -10,7 +10,6 @@
  * clock ตัดสิน geofence/quota) — เดือนจริงที่แสดงผลมาจาก `date` string ที่ server ส่งกลับต่อวันเสมอ
  */
 import { useState } from 'react'
-import { format } from 'date-fns'
 import { DropdownFilter } from '@/components/DropdownFilter'
 import { EmptyState } from '@/components/EmptyState'
 import { ErrorState } from '@/components/ErrorState'
@@ -23,8 +22,11 @@ import { generateMonthOptions } from '../utils/monthOptions'
 export function AttendanceHistoryPage() {
   // คำนวณครั้งเดียวตอน mount (lazy initializer) กัน re-render ทำให้ list ตัวเลือกขยับ และให้
   // `vi.setSystemTime` ในเทสต์มีผลตอน render จริง ไม่ใช่ตอน import module
+  // [P22 P13 #6] `month` seed จาก `monthOptions[0].value` (ตัวเลือกเดียวกันที่ผู้ใช้เห็นเป็น default)
+  // ไม่ใช่ `new Date()` แยกครั้งที่สอง — กัน `generateMonthOptions(new Date())` กับ
+  // `format(new Date(), 'yyyy-MM')` คร่อมวินาทีเปลี่ยนเดือนกันไม่ตรง (โอกาสแทบศูนย์ แต่ป้องกันได้ฟรี)
   const [monthOptions] = useState(() => generateMonthOptions(new Date()))
-  const [month, setMonth] = useState(() => format(new Date(), 'yyyy-MM'))
+  const [month, setMonth] = useState(() => monthOptions[0].value)
   const { data: days, isLoading, isError, error, refetch } = useAttendanceHistory(month)
 
   return (

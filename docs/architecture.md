@@ -325,6 +325,7 @@ src/
 1. **ห้าม import ข้าม feature โดยตรง** — ถ้า `attendance` ต้องใช้ข้อมูลจาก `auth` ให้ compose ที่ระดับ `app/` แทน
 2. **Dependency ไหลทางเดียว (unidirectional):** `shared (components/hooks/lib/utils/types)` → `features` → `app` — shared ห้าม import จาก features และ features ห้าม import จาก app
 3. **แต่ละ feature มี `index.ts` เป็น public API** — export เฉพาะสิ่งที่ตั้งใจให้ภายนอกใช้ (แต่อย่าทำ barrel file ที่ re-export ทุกไฟล์ เพราะกระทบ tree-shaking ของ Vite)
+   - **⚠️ [P22 — ข้อยกเว้นเพื่อ code-split] route ที่ทำ lazy ใน `app/router.tsx` (เช่น `LeaveFormPage`, `CalendarShellPage`, `ApprovalDetailPage`, payroll) ต้อง dynamic-import แบบ deep path ตรงไฟล์ (`import('@/features/x/pages/Y')`) ไม่ผ่าน barrel** — และ **ถอด export ของ page นั้นออกจาก `index.ts`** ด้วย ถ้าไม่มี static importer เหลือ. เหตุ: โมดูลที่ถูก import ทั้งแบบ static (ผ่าน barrel) และ dynamic พร้อมกัน Vite จะ inline กลับ (`INEFFECTIVE_DYNAMIC_IMPORT`) = code-split ตาย. deep import ที่ router/เทสต์ **ไม่ใช่การละเมิดกฎข้อนี้** — อย่า "แก้กลับ" ให้ไปผ่าน barrel
 4. **บังคับกฎด้วย ESLint** ตั้งแต่วันแรก:
 
 ```js
@@ -590,7 +591,7 @@ src/
 
 **ดีไซน์สองชั้น:**
 - **ชั้นปฏิทิน** — จุดตาม **ประเภท** ไม่ใช่ตามคน (มี 3 ประเภท = อย่างมาก 3 จุด ไม่มีทางล้นช่อง ต่อให้พักร้อน 5 คนก็จุดเดียว)
-- **ชั้นรายละเอียด** — กดวัน → เปิด Drawer (bottom sheet) แสดงรายชื่อ+ประเภท+ช่วงเวลา
+- **ชั้นรายละเอียด** — กดวัน → แสดงรายชื่อ+ประเภท+ช่วงเวลา · **⚠️ [P18 — ผู้ใช้เคาะ 2026-07-22] implement จริงเป็น `LeaveDayDetailSection` inline ใต้ปฏิทิน ไม่ใช่ Drawer** (PNG `1.Leave Calendar.png` มีจอ detail inline จริง) — ข้อความ "Drawer" ที่นี่เป็นดีไซน์เดิม อย่าแก้กลับ
 
 **API แยกสองเส้นตามสองชั้น:**
 

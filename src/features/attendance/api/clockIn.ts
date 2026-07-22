@@ -8,7 +8,7 @@ import { api } from '@/lib/api-client'
 import type { ClockRequestPayload, ClockResponse } from '../types/attendance'
 
 const clockResponseSchema = z.object({
-  date: z.string(),
+  date: z.iso.date(),
   time: z.string(),
   type: z.enum(['onsite', 'remote']),
 })

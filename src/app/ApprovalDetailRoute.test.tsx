@@ -12,7 +12,7 @@ import { setupServer } from 'msw/node'
 import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest'
 import { approvalHandlers, resetApprovalScenarios } from '@/mocks/handlers/approval'
 import { ProtectedRoute, useAuthStore } from '@/features/auth'
-import { ApprovalDetailPage } from '@/features/approval'
+import { ApprovalDetailPage } from '@/features/approval/pages/ApprovalDetailPage'
 
 const server = setupServer(...approvalHandlers)
 

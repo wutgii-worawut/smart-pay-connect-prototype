@@ -17,7 +17,7 @@ const payslipDetailSchema = z.object({
   id: z.string(),
   periodLabel: z.string(),
   netPay: z.number(),
-  payDate: z.string(),
+  payDate: z.iso.date(),
   periodRound: z.string(),
   employee: z.object({
     code: z.string(),

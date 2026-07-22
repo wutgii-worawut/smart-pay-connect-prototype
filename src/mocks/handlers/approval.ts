@@ -171,6 +171,9 @@ const APPROVED_DETAIL = {
   attachments: [{ id: 'att-1', name: 'หนังสือขออนุญาตไปต่างประเทศ.pdf', sizeLabel: '120 KB' }],
   employeeName: 'นายกุหลาบ ประพฤติดี',
   remainingBalance: 21,
+  // [P22 P20 (ง)] เติมตัวอย่างความเห็นผู้อนุมัติ (mock-only) — ให้ manual test เห็นจอ 4.5 ครบ
+  // (DetailField read-only ของ approver-view โชว์ค่านี้เมื่อมี — ดู LeaveRequestDetailCard.tsx)
+  approverComment: 'อนุมัติ กรุณาส่งมอบงานให้ทีมก่อนวันลา',
 }
 
 export const approvalHandlers = [

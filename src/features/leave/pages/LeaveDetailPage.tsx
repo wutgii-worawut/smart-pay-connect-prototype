@@ -26,6 +26,19 @@ export function LeaveDetailPage() {
   const { data: detail, isLoading, isError, error, refetch } = useLeaveRequest(id)
   const cancelMutation = useCancelLeave(id)
 
+  function handleClose() {
+    // ปุ่ม "ปิด" — กลับไปหน้าก่อนหน้าถ้ามีประวัติจริงในเซสชันนี้ (idx > 0, react-router browser
+    // history state) ไม่งั้น fallback ไปรายการ `/leave` (กันเคสเปิดลิงก์ detail ตรง ๆ ไม่มี history
+    // ให้ย้อน — เดิม `navigate(-1)` เปล่าไม่มี fallback นี้, backport จาก `ApprovalDetailPage` P20 (ฉ))
+    const state: unknown = window.history.state
+    const idx = state && typeof state === 'object' && 'idx' in state ? state.idx : undefined
+    if (typeof idx === 'number' && idx > 0) {
+      navigate(-1)
+    } else {
+      navigate('/leave')
+    }
+  }
+
   function handleConfirmCancel() {
     cancelMutation.mutate(undefined, {
       onSuccess: () => {
@@ -68,7 +81,7 @@ export function LeaveDetailPage() {
       <LeaveRequestDetailCard
         detail={detail}
         mode="owner-view"
-        onClose={() => navigate(-1)}
+        onClose={handleClose}
         onCancel={() => setCancelSheetOpen(true)}
       />
       <CancelConfirmSheet

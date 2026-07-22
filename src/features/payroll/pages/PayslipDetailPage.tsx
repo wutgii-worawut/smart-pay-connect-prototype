@@ -128,7 +128,7 @@ export function PayslipDetailPage() {
           />
 
           <PayslipSection
-            title="รายหัก"
+            title="รายการหัก"
             dotColor="bg-warning"
             items={detail.deductions.map((item) => ({
               label: item.label,

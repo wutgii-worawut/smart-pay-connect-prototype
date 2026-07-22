@@ -23,8 +23,8 @@ const leaveCreateResultSchema = z.object({
   requestNumber: z.string(),
   status: z.enum(['PENDING', 'APPROVED', 'REJECTED', 'CANCELLED']),
   type: z.enum(['vacation', 'sick', 'personal']),
-  startDate: z.string(),
-  endDate: z.string(),
+  startDate: z.iso.date(),
+  endDate: z.iso.date(),
   totalDays: z.number(),
   periodSummary: z.string(),
 })

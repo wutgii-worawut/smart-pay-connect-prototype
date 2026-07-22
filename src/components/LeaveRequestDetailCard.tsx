@@ -328,7 +328,7 @@ export function LeaveRequestDetailCard({
 
   return (
     <div className="flex h-full flex-col">
-      <div className="min-h-0 flex-1 overflow-y-auto px-4 pt-4 pb-32">
+      <div className="min-h-0 flex-1 overflow-y-auto px-4 pt-4 pb-[calc(8rem+env(safe-area-inset-bottom))]">
         {isApproverMode ? <ApproverHeader detail={detail} /> : <OwnerHeader detail={detail} />}
 
         {isApproverMode ? (

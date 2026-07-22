@@ -56,6 +56,12 @@ describe('api-client response interceptor', () => {
     })
   })
 
+  it('response 200 body JSON null → resolve เป็น undefined ไม่ throw (P22 #2 hardening)', async () => {
+    server.use(http.get('/null-body', () => HttpResponse.json(null)))
+
+    await expect(api.get('/null-body')).resolves.toBeUndefined()
+  })
+
   it('response ที่ไม่มี error envelope → code/message generic', async () => {
     server.use(http.get('/broken', () => HttpResponse.json({}, { status: 500 })))
 

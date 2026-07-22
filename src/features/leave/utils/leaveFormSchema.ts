@@ -21,8 +21,8 @@ export function buildLeaveFormSchema(holidays: string[]) {
   return z
     .object({
       type: z.enum(['vacation', 'sick', 'personal']).nullable(),
-      dateRange: z.object({ start: z.string(), end: z.string() }).nullable(),
-      days: z.array(z.object({ date: z.string(), period: z.enum(['full', 'am', 'pm']) })),
+      dateRange: z.object({ start: z.iso.date(), end: z.iso.date() }).nullable(),
+      days: z.array(z.object({ date: z.iso.date(), period: z.enum(['full', 'am', 'pm']) })),
       reason: z.string().trim().min(1, 'กรุณาระบุเหตุผลการลา'),
       attachments: z.array(z.instanceof(File)),
       proxyId: z.string(),

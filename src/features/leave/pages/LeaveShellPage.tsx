@@ -374,7 +374,7 @@ export function LeaveShellPage() {
           type="button"
           aria-label="ยื่นลา"
           onClick={() => navigate('/leave/new')}
-          className="fixed right-4 bottom-24 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-primary text-white shadow-card"
+          className="fixed right-4 bottom-[calc(6rem+env(safe-area-inset-bottom))] z-40 flex h-14 w-14 items-center justify-center rounded-full bg-primary text-white shadow-card"
         >
           <PlusIcon />
         </button>

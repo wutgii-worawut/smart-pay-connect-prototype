@@ -16,7 +16,7 @@ const historyEntrySchema = z.object({
 })
 
 const historyDaySchema = z.object({
-  date: z.string(),
+  date: z.iso.date(),
   entries: z.array(historyEntrySchema),
 })
 

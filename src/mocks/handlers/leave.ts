@@ -316,6 +316,19 @@ export const leaveHandlers = [
     const body = await parseCreateLeaveBody(request)
     const type = body.leaveType ?? 'vacation'
     const days = body.days ?? []
+
+    // [P22 consultant follow-up] days ว่าง = payload ไม่ถูกต้อง (Zod ฟอร์มด่านเข้มกันไว้อยู่แล้ว —
+    // เคสนี้จำลอง backend จริงที่ต้องปฏิเสธด้วย 422 ไม่ใช่คืน startDate/endDate เป็น '' ที่ผ่าน
+    // `z.iso.date()` ของ `createLeave.ts` ไม่ได้ (Zod parse throw ดิบแทน error ที่อ่านได้)
+    const firstDay = days[0]
+    const lastDay = days[days.length - 1]
+    if (!firstDay || !lastDay) {
+      return HttpResponse.json(
+        { error: { code: 'VALIDATION_ERROR', message: 'ต้องระบุวันลาอย่างน้อย 1 วัน' } },
+        { status: 422 },
+      )
+    }
+
     const totalDays = days.reduce((sum, day) => sum + (day.period === 'full' ? 1 : 0.5), 0)
 
     return HttpResponse.json({
@@ -324,8 +337,8 @@ export const leaveHandlers = [
         requestNumber: 'ล 0722/11',
         status: 'PENDING',
         type,
-        startDate: days[0]?.date ?? '',
-        endDate: days[days.length - 1]?.date ?? '',
+        startDate: firstDay.date,
+        endDate: lastDay.date,
         totalDays,
         periodSummary: periodSummaryOf(days),
       },

@@ -34,7 +34,10 @@ export function ApprovalDetailPage() {
   const rejectMutation = useReject(id)
 
   function handleApprove() {
-    approveMutation.mutate(comment || undefined, {
+    // [P22 P20 (ช)] comment ว่างล้วน (whitespace ล้วน เช่น ' ') ต้องไม่หลุดเข้า payload — ส่ง
+    // undefined แทนเพื่อให้ backend omit field ตามเจตนา "ถ้ามี" (validation จริงยังปล่อยผ่านเพราะ
+    // approve ไม่บังคับ comment)
+    approveMutation.mutate(comment.trim() || undefined, {
       onSuccess: () => {
         toastSuccess('อนุมัติคำขอลาแล้ว')
         navigate('/approval')
@@ -52,7 +55,7 @@ export function ApprovalDetailPage() {
       return
     }
     setCommentError(undefined)
-    rejectMutation.mutate(comment, {
+    rejectMutation.mutate(comment.trim(), {
       onSuccess: () => {
         toastError('ไม่อนุมัติคำขอลาแล้ว')
         navigate('/approval')
@@ -67,7 +70,7 @@ export function ApprovalDetailPage() {
   function handleClose() {
     // approver-view "ปิด" — กลับไปหน้าก่อนหน้า ถ้ามีประวัติจริงในเซสชันนี้ (idx > 0, react-router
     // browser history state) ไม่งั้น fallback ไปรายการ `/approval` (กันเคสเปิดลิงก์ detail ตรง ๆ
-    // ไม่มี history ให้ย้อน — ต่างจาก `LeaveDetailPage` P15 ที่ยังไม่มี fallback นี้)
+    // ไม่มี history ให้ย้อน)
     const state: unknown = window.history.state
     const idx = state && typeof state === 'object' && 'idx' in state ? state.idx : undefined
     if (typeof idx === 'number' && idx > 0) {

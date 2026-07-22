@@ -82,7 +82,7 @@ axiosInstance.interceptors.request.use((config) => {
 })
 
 axiosInstance.interceptors.response.use(
-  (res) => res.data.data,
+  (res) => res.data?.data,
   (err: AxiosError<ErrorEnvelope>) => {
     // ไม่มี response เลย = network ล้ม (สัญญาณวูบ — ปกติมากบนมือถือ) — สร้างโดย client (§16.2)
     if (!err.response) {

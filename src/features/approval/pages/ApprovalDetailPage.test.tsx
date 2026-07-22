@@ -95,6 +95,25 @@ describe('ApprovalDetailPage', () => {
     expect(await screen.findByText('รายการรออนุมัติ')).toBeInTheDocument()
   })
 
+  it('[P22 P20 ช] กดอนุมัติโดยกรอกความเห็นเป็น whitespace ล้วน → ส่ง body ไม่มี key comment', async () => {
+    let receivedBody: unknown
+    server.use(
+      http.post('*/approval/requests/:id/approve', async ({ request }) => {
+        receivedBody = await request.json()
+        return HttpResponse.json({ data: { id: 'approval-pending-1', status: 'APPROVED' } })
+      }),
+    )
+    const user = userEvent.setup()
+    renderPage()
+
+    const textarea = await screen.findByLabelText('ความเห็นผู้อนุมัติ (ถ้ามี)')
+    await user.type(textarea, '   ')
+    await user.click(screen.getByRole('button', { name: 'อนุมัติ' }))
+
+    expect(await screen.findByText('อนุมัติคำขอลาแล้ว')).toBeInTheDocument()
+    expect(receivedBody).toEqual({})
+  })
+
   it('กดไม่อนุมัติโดยไม่กรอกความเห็น → error ใต้ช่อง ไม่ยิง mutation', async () => {
     let hitCount = 0
     server.events.on('request:start', ({ request }) => {
@@ -103,6 +122,23 @@ describe('ApprovalDetailPage', () => {
     const user = userEvent.setup()
     renderPage()
 
+    await user.click(await screen.findByRole('button', { name: 'ไม่อนุมัติ' }))
+
+    expect(await screen.findByText('กรุณาระบุเหตุผลการไม่อนุมัติ')).toBeInTheDocument()
+    expect(hitCount).toBe(0)
+    server.events.removeAllListeners()
+  })
+
+  it('[P22 P20 ช] กดไม่อนุมัติโดยกรอกความเห็นเป็น whitespace ล้วน → ยัง validate เป็นค่าว่าง ไม่ยิง mutation', async () => {
+    let hitCount = 0
+    server.events.on('request:start', ({ request }) => {
+      if (request.url.endsWith('/reject')) hitCount += 1
+    })
+    const user = userEvent.setup()
+    renderPage()
+
+    const textarea = await screen.findByLabelText('ความเห็นผู้อนุมัติ (ถ้ามี)')
+    await user.type(textarea, '   ')
     await user.click(await screen.findByRole('button', { name: 'ไม่อนุมัติ' }))
 
     expect(await screen.findByText('กรุณาระบุเหตุผลการไม่อนุมัติ')).toBeInTheDocument()
