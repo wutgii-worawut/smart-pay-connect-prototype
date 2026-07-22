@@ -38,7 +38,13 @@
 
 - **P23 (กลุ่ม B: release prep — infra/design) ⬜ = งานถัดไป** (plan.md → P23 · **แยกออกจาก P22 เพราะต้องพึ่งผู้ใช้/เป็น infra บางส่วน อาจทำคนละ session**). **DEV Vercel เท่านั้น** (UAT/PRD = Open Q §23 ห้ามทำเอง):
   - (1) **Figma color tokens จริง** แทน placeholder `--color-*`/`--color-leave-*`/`--color-holiday-*`/`--color-toast-bg` (§9.5) — **ต้องมีค่าจริงจาก Figma (พึ่งผู้ใช้)**
-  - (2) **env DEV Vercel + LIFF ID จริงต่อ env** (§18) + `vercel.json` rewrites (SPA) + Vercel setup §19.3 — **LIFF ID จริงจากผู้ใช้**; ร่าง `vercel.json`/`.env.dev` skeleton (LIFF ID = placeholder) ทำเองได้เลย
+  - (2) **env DEV Vercel + LIFF ID จริงต่อ env** (§18) + `vercel.json` rewrites (SPA) + Vercel setup §19.3 — **LIFF ID จริงจากผู้ใช้**.
+    - **✅ ทำแล้ว 2026-07-22:** `public/vercel.json` (SPA rewrite `/(.*)`→`/index.html`) + `.env.dev` skeleton. verify: valid JSON, `vite build --mode dev` โหลด `.env.dev` + copy `vercel.json`→`dist/` ผ่าน, `.env.dev` commit ได้ (VITE_* = public config, ไม่โดน gitignore เหมือน `.env.development`), `public/mockServiceWorker.js` track อยู่ → MSW ทำงานบน deployed DEV ได้.
+    - **⚠️ vercel.json อยู่ที่ `public/` ไม่ใช่ root — จงใจ:** ผู้ใช้ deploy DEV แบบ **build `dist/` เอง แล้วอัปโหลด `dist/` ตรงขึ้น Vercel** (drag-drop / `vercel deploy dist`, ไม่ใช่ git-connect build) → deploy root = `dist/` → Vercel ต้องอ่าน vercel.json จาก `dist/` → วางที่ `public/` เพื่อให้ Vite copy ไป `dist/` ทุก build. **ถ้าเปลี่ยนเป็น git-connect (Vercel build เอง) ต้องย้ายกลับ repo root.** build DEV ต้องใช้ `vite build --mode dev` เสมอ (default = production ไม่โหลด `.env.dev`).
+    - **🔴 ต้องผู้ใช้กรอกก่อน deploy:** `VITE_LIFF_ID=` (LIFF ID จริง DEV — endpoint URL = โดเมน Vercel DEV) + `VITE_API_URL=` (backend DEV URL เมื่อพร้อม).
+    - **⚙️ ค่า default ที่ผมเลือก (รอผู้ใช้ยืนยัน/ปรับ):** `VITE_LIFF_MOCK=false` (LIFF จริงบนเครื่องตาม §21.4) · `VITE_API_MOCK=true` (คง MSW จนกว่า backend DEV พร้อม → แล้วค่อยเปลี่ยน false + กรอก API_URL) · `VITE_REGISTER_MODE=both`.
+    - **✅ เพิ่ม `build:dev` script แล้ว** (`tsc -b && vite build --mode dev`) = build ปกติเวอร์ชัน DEV (typecheck + โหลด `.env.dev`). **build DEV ใช้ `npm run build:dev` เสมอ** — `npm run build` เปล่า = production mode (ไม่โหลด `.env.dev` → mock/LIFF flags หาย). *(⚠️ `npx vite build --mode dev` ตรง ๆ ข้าม tsc — ใช้ `build:dev` แทน)*
+    - **flow deploy DEV ของผู้ใช้:** `npm run build:dev` → อัปโหลด `dist/` ตรงขึ้น Vercel (drag-drop / `vercel deploy dist`) → ได้โดเมน → ตั้ง LIFF endpoint = โดเมนนั้น → กรอก LIFF ID ใน `.env.dev` → build+อัปโหลดใหม่. ไม่ใส่ `buildCommand` ใน vercel.json (จะบังคับ mode เดียวทุก env — UAT/PRD พัง).
   - (3) **manual device checklist §21.4** iOS+Android จริง — ผมร่าง checklist ได้เลย, **ผู้ใช้รันเครื่องจริง**. เคสรวม: map/GPS โหลด+retry, toast ตำแหน่ง (mobileOffset P4#1), iOS zoom-on-focus input, JWT/idToken หมดอายุกลางคัน, Drawer swipe ตีกับ LIFF gesture, ปลายหมุด GPS ชี้พิกัด, HolidayDetails close animation (P17 4ก), **non-manager deep-link `/approval/:id` ต้องเด้ง / (P22 หนี้ ii)**
   - (4) CI (`vitest run` + `tsc -p tsconfig.app.json` + eslint) — ถ้าจะตั้ง GitHub Actions (ทำเองได้)
   - **[เก็บ P22 — follow-up ค้างสะสม (ไม่ block, จาก P19/P20/P21)]** (ก) mock `approval.ts` enforce role 403; (ข) filter ปี/เดือน pending = UI-only → client-side filter; (ค) การ์ด approval ประเภทลาเหลือแค่สี icon → compose meta "ลาพักร้อน"; (ง) mock `APPROVED_DETAIL` เพิ่ม `approverComment`; (จ) `canRevoke=true` เทสต์/ลบ YAGNI; (ฉ) backport `navigate(-1)` fallback ไป `LeaveDetailPage` (P15); (ช) approve/reject `comment.trim() || undefined`; (ซ) payroll: "รายหัก"→"รายการหัก", ภาษี ณ ที่จ่าย/รวมรายรับ-หัก เป็น field แยกรอ swagger, PayslipCard emoji→SVG CalendarIcon, decimals rule confirm designer, year dropdown scope; (ฌ) ProfileBar email subtitle + kebab (Employee ไม่มี email — contract gap P12/P13/P21).
@@ -85,7 +91,7 @@
 | P20 | Approval detail + ตัดสิน | ✅ | consultant ผ่าน (no must-fix) + ผู้ใช้เคาะ 2026-07-22 · revoke ตัดออก · mode-gate P15#4 · 6 follow-up noted |
 | P21 | Payroll | ✅ | consultant ผ่าน (no must-fix) + ผู้ใช้เคาะ 2026-07-22 · email 204 ไม่ throw · ไม่ซัมเงิน client · 6 follow-up→P22 |
 | P22 | Hardening (กลุ่ม A: code) | ✅ | consultant PASS + fixes PASS + **ผู้ใช้เคาะ 2026-07-22** · bundle 946→530KB · test 495 · ยังไม่ commit |
-| P23 | Release prep (กลุ่ม B: infra/design) | ⬜ | Figma tokens จริง / env DEV Vercel + LIFF ID + vercel.json / manual checklist §21.4 / CI · ต้องพึ่งผู้ใช้บางส่วน |
+| P23 | Release prep (กลุ่ม B: infra/design) | 🔄 | **vercel.json + .env.dev skeleton ✅ (2026-07-22)** · เหลือ Figma tokens จริง / LIFF ID+API URL จริง / manual checklist §21.4 / CI |
 
 ## บันทึกแก้แผน
 (append-only — วันที่ + สิ่งที่เปลี่ยนจาก plan.md + เหตุผล + กับดักที่เจอ)
