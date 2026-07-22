@@ -14,3 +14,23 @@ export function formatBaht(amount: number): string {
   }).format(amount)
   return `${formatted} บาท`
 }
+
+/**
+ * format จำนวนเงินเป็นตัวเลขคั่นหลักพัน **ไม่มีต่อท้าย "บาท"** — ใช้กับแถวรายรับ/รายหักในสลิปเงินเดือน
+ * (P21, design `5.Payroll/2.1.Payslip Details (fullscreen).png`) ที่โชว์ตัวเลขอย่างเดียวชิดขวา ส่วน
+ * "บาท" แยกเป็น `<span>` ต่างหากในตัว hero (`PayslipSummaryHero`/`PayslipLatestHero`)
+ *
+ * [ตัดสินใจเรื่องทศนิยม — คอมเมนต์ตาม progress.md P21]: PNG มีจำนวนเต็มไม่มีทศนิยม (เช่น "25,000")
+ * แต่แถวที่มีค่า 0 กลับโชว์ "0.00" (ทศนิยม) อยู่ในรูปเดียวกัน — ไม่ intentional ที่จะแยกกฎตาม "เป็น 0
+ * หรือไม่" (0 ก็คือจำนวนเต็มเหมือนกัน) เพราะจะทำให้ตัวเลขรูปแบบไม่คงเส้นคงวา จึงเลือกกฎเดียวที่สอดคล้อง
+ * กันทั้งไฟล์: **ไม่โชว์ทศนิยมถ้าเป็นจำนวนเต็ม (รวม 0) โชว์ 2 ตำแหน่งเฉพาะเมื่อมีเศษสตางค์จริง**
+ * (กันเงินหายจากการปัดถ้า backend เผลอส่งทศนิยมมา) — ผลคือแถวค่า 0 ในแอปนี้จะเห็น "0" ไม่ใช่ "0.00"
+ * ต่างจาก PNG เล็กน้อย ถือเป็น deviation ที่ยอมรับได้ (ไม่กระทบความถูกต้องของตัวเลข)
+ */
+export function formatBahtAmount(amount: number): string {
+  const hasFraction = amount % 1 !== 0
+  return new Intl.NumberFormat('th-TH', {
+    minimumFractionDigits: hasFraction ? 2 : 0,
+    maximumFractionDigits: 2,
+  }).format(amount)
+}

@@ -13,6 +13,9 @@
  * ครอบด้วย `ProtectedRoute requireRole="manager"` เป็น UI guard ชั้นสอง §17.3, backend 403 = ตัวจริง)
  * และ `/approval/:id` (P20 — จอ detail + อนุมัติ/ไม่อนุมัติ, ผ่าน `ApprovalDetailPage` ครอบ
  * `ProtectedRoute requireRole="manager"` เดียวกัน)
+ * `/payroll` (P21 — จอ 5.1 ประวัติสลิปเงินเดือน read-only, ผ่าน `PayrollRoute` compose ProfileBar —
+ * ดู `app/PayrollRoute.tsx`) และ `/payroll/:id` (P21 — จอ 5.2/5.3 รายละเอียด+ส่งอีเมล, ผ่าน
+ * `PayrollDetailRoute`) ไม่มี `requireRole` — พนักงานทุกคนมีสลิปตัวเอง (backend 403 กันข้าม id คนอื่น)
  * `createBrowserRouter` (History API — ข้อกำหนด LIFF, §11) + `errorElement` ทุก route
  *
  * route ที่ต้อง auth (ทุกอันยกเว้น `/register*`) อยู่ใต้ layout route ปลาย `AuthGate` (§13.1-13.3)
@@ -29,7 +32,8 @@ import { AttendanceHistoryRoute } from './AttendanceHistoryRoute'
 import { HomePage } from './HomePage'
 import { LeaveRoute } from './LeaveRoute'
 import { NotFoundPage } from './NotFoundPage'
-import { PlaceholderPage } from './PlaceholderPage'
+import { PayrollRoute } from './PayrollRoute'
+import { PayrollDetailRoute } from './PayrollDetailRoute'
 import { RouteErrorBoundary } from './RouteErrorBoundary'
 
 export const router = createBrowserRouter([
@@ -87,12 +91,12 @@ export const router = createBrowserRouter([
       },
       {
         path: '/payroll',
-        element: <PlaceholderPage title="ดูสลิปเงินเดือน" />,
+        element: <PayrollRoute />,
         errorElement: <RouteErrorBoundary />,
       },
       {
         path: '/payroll/:id',
-        element: <PlaceholderPage title="รายละเอียดสลิปเงินเดือน" />,
+        element: <PayrollDetailRoute />,
         errorElement: <RouteErrorBoundary />,
       },
       {
