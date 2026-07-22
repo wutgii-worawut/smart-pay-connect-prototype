@@ -5,7 +5,9 @@
  * function ทดสอบแยกต่างหากอยู่แล้ว) — hook นี้แค่ fetch + cache
  *
  * `staleTime` ยาว (24 ชม.) เพราะรายการวันหยุดบริษัทเปลี่ยนไม่บ่อย (D1) — ใช้ร่วมกันทั้ง leave (P16
- * ฟอร์มสร้างใบลา) และ calendar (P17-P18)
+ * ฟอร์มสร้างใบลา — ใช้ `.map(h => h.date)`) และ calendar (P17-P18 — ใช้เต็มรูป `Holiday[]`)
+ *
+ * คืน `Holiday[]` (P17 enrich shape จาก `string[]` เดิม — ดู `lib/holidays.ts` + `types/holiday.ts`)
  */
 import { useQuery } from '@tanstack/react-query'
 import { getHolidays } from '@/lib/holidays'

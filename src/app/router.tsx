@@ -15,6 +15,7 @@
  */
 import { createBrowserRouter } from 'react-router-dom'
 import { AuthGate, OtpPage, RegisterPage, RegisterSuccessPage } from '@/features/auth'
+import { CalendarShellPage } from '@/features/calendar'
 import { LeaveDetailPage, LeaveFormPage, LeaveShellPage } from '@/features/leave'
 import { AttendanceRoute } from './AttendanceRoute'
 import { AttendanceHistoryRoute } from './AttendanceHistoryRoute'
@@ -75,7 +76,7 @@ export const router = createBrowserRouter([
       },
       {
         path: '/calendar',
-        element: <PlaceholderPage title="ดูวันหยุด" />,
+        element: <CalendarShellPage />,
         errorElement: <RouteErrorBoundary />,
       },
     ],

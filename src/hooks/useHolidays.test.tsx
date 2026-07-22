@@ -21,23 +21,31 @@ function createWrapper() {
 }
 
 describe('useHolidays', () => {
-  it('เป็นแค่ thin wrapper ของ GET /holidays?year= — คืนค่าตรงตามที่ mock ส่งมา ไม่แปลง/นับอะไรเพิ่ม', async () => {
+  it('เป็นแค่ thin wrapper ของ GET /holidays?year= — คืนค่า Holiday[] ตรงตามที่ mock ส่งมา ไม่แปลง/นับอะไรเพิ่ม', async () => {
     server.use(
       http.get('*/holidays', ({ request }) => {
         const url = new URL(request.url)
         expect(url.searchParams.get('year')).toBe('2026')
-        return HttpResponse.json({ data: ['2026-04-13', '2026-04-14'] })
+        return HttpResponse.json({
+          data: [
+            { date: '2026-04-13', name: 'วันสงกรานต์', nameEn: 'Songkran Festival', type: 'government' },
+            { date: '2026-04-14', name: 'วันสงกรานต์', nameEn: 'Songkran Festival', type: 'government' },
+          ],
+        })
       }),
     )
 
     const { result } = renderHook(() => useHolidays(2026), { wrapper: createWrapper() })
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true))
-    expect(result.current.data).toEqual(['2026-04-13', '2026-04-14'])
+    expect(result.current.data).toEqual([
+      { date: '2026-04-13', name: 'วันสงกรานต์', nameEn: 'Songkran Festival', type: 'government' },
+      { date: '2026-04-14', name: 'วันสงกรานต์', nameEn: 'Songkran Festival', type: 'government' },
+    ])
   })
 
-  it('default mock (ยังว่างเปล่า P17-P18 ยังไม่ทำเต็ม) → คืน array ว่าง', async () => {
-    const { result } = renderHook(() => useHolidays(2026), { wrapper: createWrapper() })
+  it('default mock (mock ยังไม่มีข้อมูลปีที่ขอ) → คืน array ว่าง ไม่ crash', async () => {
+    const { result } = renderHook(() => useHolidays(2027), { wrapper: createWrapper() })
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true))
     expect(result.current.data).toEqual([])

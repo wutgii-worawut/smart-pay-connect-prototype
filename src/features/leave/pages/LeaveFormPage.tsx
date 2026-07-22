@@ -77,7 +77,7 @@ export function LeaveFormPage() {
   return (
     <LeaveForm
       balances={balanceQuery.data}
-      holidays={holidaysQuery.data}
+      holidays={holidaysQuery.data.map((h) => h.date)}
       teammates={teammatesQuery.data.teammates}
       approverName={teammatesQuery.data.approverName}
       isPending={submitMutation.isPending}
