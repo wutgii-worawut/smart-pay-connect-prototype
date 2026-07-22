@@ -4,8 +4,10 @@
 
 ### 1.1 สถานะปัจจุบัน
 - **2026-07-21** — **P0 ✅** · **P1 ✅** · **P2 ✅** · **P3 ✅ (consultant 2 รอบ + ผู้ใช้เคาะ+commit)** · **P4 เริ่มแล้ว (🔄)**.
-- **P11 ✅** · **P12 ทำเสร็จ+consultant loop ผ่าน รอผู้ใช้เคาะ (🔍)**.
-- **P12 — ClockPage state machine**: worker → consultant (core ผ่าน + F1-F9) → worker แก้ F1-F8 → main verify (`lint` 0·`tsc` ✓·`test` **273**·`build` ✓ maplibre แยก chunk) → consultant ตรวจ fixes: **ผ่าน**. contract flags + N1-N3 จดในบันทึกแก้แผน P12. *(วันที่ 2026-07-22)*
+- **2026-07-22** — **P11 ✅** · **P12 ✅** · **P13 ✅ (consultant ผ่าน ไม่มี must-fix + ผู้ใช้เคาะ+commit)**. **session หน้าเริ่ม P14**.
+- **P13 — Attendance history**: worker → main verify (`lint` 0·`tsc` ✓·`test` **282**·`build` ✓ maplibre code-split คงอยู่) → consultant: **ผ่าน ไม่มี MUST-FIX** (มาสายจาก server ไม่ derive เอง, §6 layering ถูก, วันที่ §4.2 ถูก, code-split ยังทำงาน, query semantics ถูก, a11y sr-only + เทสต์ครบ 3 เส้นทาง). 6 follow-up (ไม่ block) จดในบันทึกแก้แผน P13.
+- **P12 — ClockPage state machine**: worker → consultant (core ผ่าน + F1-F9) → worker แก้ F1-F8 → main verify (`lint` 0·`tsc` ✓·`test` **273**·`build` ✓ maplibre แยก chunk) → consultant ตรวจ fixes: **ผ่าน**. contract flags + N1-N3 จดในบันทึกแก้แผน P12.
+- **สรุป session นี้ (2026-07-21→22):** ทำ P0-P12 ครบ (scaffold, tokens/utils, lib API, LIFF shell, shared S1-S18, auth+register flow, attendance foundation+clock). ทุกเฟสผ่าน worker→consultant loop→ผู้ใช้เคาะ+commit. เหลือ **P13-P22** (attendance history, leave, calendar, approval, payroll, hardening).
 - **P11 — Attendance foundation**: worker → consultant (ผ่าน + decision placement) → ผู้ใช้เคาะ (ข) ย้าย geolocation/haversine → feature → worker move → main verify → consultant ตรวจ move: **ผ่าน**. geolocation retry §15 ถูกครบ, haversine, MapView init-once+cleanup, ไม่ log พิกัด, OSM tile ฟรีไม่ผูก key. `lint` 0·`tsc` ✓·`test` **232**·`build` ✓.
 - **P10 — OTP + Complete**: worker → consultant (core ผ่าน + F1 UX bug + F2 guard) → worker แก้ F1/F2/nicety → main verify (`lint` 0·`tsc` ✓·`test` **214**·`build` ✓) → consultant ตรวจ fixes: **ผ่าน**. contract flags (verify-otp invented) + notes จดในบันทึกแก้แผน P10.
 - **P9 — Register form**: worker → consultant: **ผ่านแบบมี follow-up ไม่มี must-fix** (checksum ถูก, formatted→digits, Open Q §23 อ้อมถูก, security สะอาด). ไม่มี fix code บังคับ (follow-up = doc/contract/Figma/P22 จดแล้ว). `lint` 0·`tsc` ✓·`test` **186**·`build` ✓.
@@ -27,7 +29,7 @@
   - ✅ ยืนยันแล้ว: envelope `{error:{code,message}}` ไทย, ไม่มี `/api` prefix, `POST /auth/login` รับ `idToken`, protected routes (holidays/attendance/leave/payroll) = 401
 
 ### 1.2 งานถัดไป
-- **P13 — Attendance history** (plan.md §3 → P13). เริ่มเมื่อผู้ใช้เคาะ P12. `/attendance/history`: DropdownFilter ปี/เดือน + ListCard ต่อวัน (เข้า-ออก, onsite/remote, ปกติ/มาสาย) + Empty/Error; MSW history. ⚠️ ป้าย "มาสาย" จาก server ไม่คำนวณเอง (จอ 10.History).
+- **P14 — Leave list shell** (plan.md → P14). เริ่มเมื่อผู้ใช้เคาะ P13. `LeaveShellPage` (SegmentedTabs การลาของฉัน|รออนุมัติลา — แท็บขวา render เฉพาะ manager, approval เป็น placeholder จนถึง P19), `LeaveBalanceCard`×3 label "คงเหลือ (โดยประมาณ)", list `LeaveRequestCard` (prop `showEmployeeName`) + FilterChips + DropdownFilter, types/api/hooks + MSW leave. ⚠️ **D2**: `LeaveRequestCard` อยู่ `src/components/` presentational ล้วน (ห้าม useQuery/useMutation/navigate ในการ์ด); type `LeaveRequest` **ประกาศครั้งแรกที่ `src/types/`** (ไม่ใช่ใน feature).
 
 ### 1.3 session ใหม่ทำแบบนี้
 1. อ่านไฟล์นี้ทั้งไฟล์ + "บันทึกแก้แผน" ท้ายไฟล์
@@ -60,8 +62,8 @@
 | P9 | Register form | ✅ | consultant ผ่าน + เคาะ+commit 2026-07-21 · ⚠️ ThaID/email domain = open Q |
 | P10 | OTP + Complete | ✅ | consultant loop ผ่าน + เคาะ+commit 2026-07-21 |
 | P11 | Attendance foundation | ✅ | consultant loop ผ่าน + เคาะ+commit 2026-07-21 · ⚠️ map provider = open Q |
-| P12 | ClockPage state machine | 🔍 | เสร็จ+consultant loop ผ่าน (273 tests) รอผู้ใช้เคาะ · ⚠️ remote policy = open Q |
-| P13 | Attendance history | ⬜ | |
+| P12 | ClockPage state machine | ✅ | consultant loop ผ่าน + เคาะ+commit 2026-07-22 · ⚠️ remote policy = open Q |
+| P13 | Attendance history | ✅ | consultant ผ่าน (no must-fix) + เคาะ+commit 2026-07-22 · 6 follow-up noted |
 | P14 | Leave list shell | ⬜ | |
 | P15 | Leave detail + cancel | ⬜ | ⚠️ ห้ามทำแก้ไขใบลา (23.1#5) |
 | P16 | Leave create form | ⬜ | ⚠️ teammates ไม่มี endpoint |
@@ -189,3 +191,11 @@
   - **[🔴 CONTRACT flags — invented รอ swagger]** `GET /attendance/today`: `office.name/address?`, `canRemoteClock`, `date`, `clockInType`; `POST clock-in/out` response `{date,time,type}` — ยังไม่ probe จริง; **Employee ไม่มี email** → ProfileBar จอ attendance ไม่มี subtitle (design มี)
   - **[follow-up จิ๋ว P22/ครั้งหน้า]** N1 accuracy warning มีเฉพาะ clock-in (ไม่มี clock-out/remote); N2 ปุ่ม "โหลดแผนที่ใหม่" ไม่ disabled ตอน isPending; N3 mock time overlay vs timeline ไม่ตรง (cosmetic dev)
   - **[§21.4 manual]** เดิน 6 state เครื่องจริง, กดตอน GPS ช้า (Android) ไม่ยิงซ้ำ, ปลายหมุดชี้พิกัดจริง, accuracy แย่ในอาคาร→เห็นคำเตือน
+
+- **2026-07-22 (P13 — Attendance history จอ 10)** — `/attendance/history`: `app/AttendanceHistoryRoute.tsx` (compose ProfileBar ชื่ออย่างเดียว + `AttendanceHistoryPage`, ไม่ lazy — ไม่มี maplibre) + `features/attendance/` getHistory (Zod boundary)/useAttendanceHistory (key `['attendance','history',month]`)/monthOptions (pure, 12 เดือนล่าสุด, strip "พ.ศ." ตาม design)/AttendanceHistoryList (timeline จุดน้ำเงิน+เส้นเชื่อม + TimeBadge สี **แดง=มาสาย/เขียว=ปกติ** จาก `entry.status` server + sr-only "(มาสาย)/(ปกติ)")/AttendanceHistoryPage (filter + query, Spinner/ErrorState+retry/EmptyState) + MSW `GET /attendance/history?month=` + `setAttendanceHistoryScenario('data'|'empty'|'error')`. 282 tests. consultant: **ผ่าน ไม่มี MUST-FIX** (มาสายจาก server ไม่ derive เอง — grep ยืนยันไม่มีเทียบเวลาฝั่ง client; §6 layering ถูก; วันที่ผ่าน formatThaiDate ที่เดียว; code-split maplibre ยังทำงาน; query semantics ถูก). **decision/follow-up (ไม่ block — จดไว้):**
+  1. **[deviation จาก plan]** plan บอก "ListCard ต่อวัน" แต่ทำ **timeline custom** (จุด+เส้นเชื่อม+pill เวลาสี) ตาม PNG แทน — ListCard chevron ไม่ตรง design; ยึด PNG ชนะ (ตาม CLAUDE.md "match design")
+  2. **[🔴 CONTRACT — invented รอ swagger]** shape `GET /attendance/history` ทั้งชุด (`direction` clock-in/out, `status` normal/late, `clockType` onsite/remote, `location` ต่อแถว) เดาเองทั้งหมด — §16.3 ระบุแค่ endpoint+query ไม่มี response contract. **fail-safe ถูกทาง:** ถ้า backend ส่ง status เป็นคำไทย/ไม่มี field → Zod throw → ErrorState (ไม่โชว์ข้อมูลผิด). `month` param = `'YYYY-MM'` (เดา). `api.get<T>(url,{params})` รองรับ axios params จริง
+  3. **[design/contract question — ถาม designer]** spec (feature-plans/02 บรรทัด 25) บอกโชว์ "ประเภท (onsite/remote)" ต่อแถว แต่ **UI ยังไม่ render `clockType`** (มีใน type/schema แล้ว) — PNG ไม่มีตัวอย่างแถว remote เลยไม่รู้หน้าตา → อย่าเดา รอ design ยืนยัน
+  4. **[Figma pass]** (ก) ProfileBar จอนี้ยังไม่มี **email subtitle + สรุปเวลาเข้า-ออก (08:00/17:00) trailing** ตาม PNG — contract gap เดิม (Employee ไม่มี email/กะงาน — ซ้ำ P12); (ข) badge สื่อสถานะด้วยสีล้วน (design เองก็สีล้วน) — ผู้ใช้ตาบอดสีแยกไม่ออก แม้ sr-only ช่วย screen reader แล้ว → เสนอ designer เติม label "มาสาย" ตัวเล็ก
+  5. **[โครง barrel — footgun แฝง, เก็บ P22]** `index.ts` export `AttendanceHistoryPage` แต่ route ใช้ **deep import** `@/features/attendance/pages/AttendanceHistoryPage` เลี่ยง barrel (ถ้า static-import barrel เดียวกับที่ `AttendanceRoute` lazy อยู่ → ดึง maplibre กลับเข้า initial bundle, `INEFFECTIVE_DYNAMIC_IMPORT`). ปัจจุบันถูก + มีคอมเมนต์ + build warning ดักชั้นเดียว. **ทางทนกว่า (ทำตอน P22 code-split pass):** กลับด้าน — barrel export ของเบา, ให้ `AttendanceRoute` lazy-import `pages/ClockPage` ตรงไฟล์แทน → history กลับมาใช้ barrel ตาม §6#3. ⚠️ ใครก็ตามที่ static-import `@/features/attendance` ในอนาคต (nav ฯลฯ) จะฆ่า code-split เงียบ ๆ
+  6. **[จิ๋ว เก็บครั้งหน้า]** default month กับ options คำนวณจาก `new Date()` คนละครั้ง (`AttendanceHistoryPage.tsx:26-27`) — ถ้า mount คร่อมวินาทีเปลี่ยนเดือน value อาจไม่ match option (select ว่าง, โอกาสแทบศูนย์). แก้ฟรี: `useState(() => monthOptions[0].value)`

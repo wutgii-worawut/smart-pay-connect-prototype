@@ -1,11 +1,12 @@
 /**
  * MSW handler — feature: attendance (§16.3) — `GET /attendance/today` (P11) +
- * `POST /attendance/clock-in`/`clock-out` (P12)
+ * `POST /attendance/clock-in`/`clock-out` (P12) + `GET /attendance/history?month=` (P13)
  *
  * `office.lat/lng/radiusMeters` = ตำแหน่งตัวอย่างเดิมของ skeleton (P2) — คงค่าไว้ไม่เปลี่ยนกัน
  * เทสต์/mock อื่นที่อาจอ้างอิงพิกัดนี้อยู่แล้ว
  *
- * scenario สลับได้ผ่าน `setAttendanceTodayScenario()` (dev console หรือเทสต์)
+ * scenario สลับได้ผ่าน `setAttendanceTodayScenario()` / `setAttendanceHistoryScenario()` (dev
+ * console หรือเทสต์)
  *
  * ⚠️ CONTRACT FLAGS เพิ่มจาก P11 (ดู plan/progress.md บันทึกแก้แผน P11 ข้อ 3 + P12 types/attendance.ts):
  * - `office.name`/`office.address`, `canRemoteClock`, `date` เป็น field ใหม่ที่ P12 เพิ่ม (ไม่มีใน
@@ -13,6 +14,9 @@
  * - `POST /attendance/clock-in`/`clock-out` ยังไม่เคย probe กับ mock service จริง (endpoint จาก
  *   §16.3 เท่านั้น) — error scenario (`OUT_OF_GEOFENCE`/`ALREADY_CLOCKED_IN`) คุมผ่าน
  *   `setClockActionScenario()` สำหรับเทสต์/dev console
+ * - `GET /attendance/history?month=` (P13): §16.3 ระบุแค่ path/query ไม่มี response shape ยืนยัน —
+ *   ทั้ง shape (`AttendanceHistoryDay[]`) และ mock ด้านล่างเป็นข้อมูลสมมติจาก design `10.History.png`
+ *   ล้วน ๆ (ไม่ได้กรองตาม `month` จริงจากพารามิเตอร์ — คืนชุดเดิมทุกเดือนเพื่อความง่ายของ mock)
  */
 import { http, HttpResponse } from 'msw'
 import { z } from 'zod'
@@ -36,10 +40,20 @@ export function setClockActionScenario(next: ClockActionScenario): void {
   clockActionScenario = next
 }
 
-/** reset ทั้งสอง scenario กลับ default — เรียกใน afterEach ของเทสต์กันรั่วข้ามเคส */
+/** ควบคุมผลของ `GET /attendance/history` ในเทสต์/dev console */
+export type AttendanceHistoryScenario = 'data' | 'empty' | 'error'
+
+let historyScenario: AttendanceHistoryScenario = 'data'
+
+export function setAttendanceHistoryScenario(next: AttendanceHistoryScenario): void {
+  historyScenario = next
+}
+
+/** reset scenario ทั้งหมดกลับ default — เรียกใน afterEach ของเทสต์กันรั่วข้ามเคส */
 export function resetAttendanceScenarios(): void {
   scenario = 'not-clocked-in'
   clockActionScenario = 'success'
+  historyScenario = 'data'
 }
 
 const OFFICE = {
@@ -51,6 +65,41 @@ const OFFICE = {
 }
 
 const TODAY_DATE = '2026-07-21'
+
+/**
+ * ข้อมูลตัวอย่างประวัติลงเวลา — อิงจาก design `10.History.png` (9/8/5/4 ตุลาคม 2568 = ต.ค. 2025)
+ * แถวแรกของวันที่ 9 ต.ค. เป็น `status: 'late'` (badge แดง 08:12) ตัวอย่างเดียวในชุด ที่เหลือ `normal`
+ */
+const HISTORY_DAYS = [
+  {
+    date: '2025-10-09',
+    entries: [
+      { direction: 'clock-in', time: '08:12', status: 'late', clockType: 'onsite', location: OFFICE.name },
+      { direction: 'clock-out', time: '17:05', status: 'normal', clockType: 'onsite', location: OFFICE.name },
+    ],
+  },
+  {
+    date: '2025-10-08',
+    entries: [
+      { direction: 'clock-in', time: '07:22', status: 'normal', clockType: 'onsite', location: OFFICE.name },
+      { direction: 'clock-out', time: '17:05', status: 'normal', clockType: 'onsite', location: OFFICE.name },
+    ],
+  },
+  {
+    date: '2025-10-05',
+    entries: [
+      { direction: 'clock-in', time: '07:22', status: 'normal', clockType: 'onsite', location: OFFICE.name },
+      { direction: 'clock-out', time: '17:05', status: 'normal', clockType: 'onsite', location: OFFICE.name },
+    ],
+  },
+  {
+    date: '2025-10-04',
+    entries: [
+      { direction: 'clock-in', time: '07:22', status: 'normal', clockType: 'onsite', location: OFFICE.name },
+      { direction: 'clock-out', time: '17:05', status: 'normal', clockType: 'onsite', location: OFFICE.name },
+    ],
+  },
+] as const
 
 /** body ของ clock-in/clock-out ไม่มี Zod schema ที่ export จาก types/attendance.ts (ยังเป็น prod
  * type เฉย ๆ) — narrow ปลอดภัยตอน parse body ของ mock ด้วย schema เล็ก ๆ ในนี้แทน `as` (code-style.md) */
@@ -169,5 +218,18 @@ export const attendanceHandlers = [
     return HttpResponse.json({
       data: { date: TODAY_DATE, time: '17:05', type },
     })
+  }),
+
+  http.get(`${BASE_URL}/attendance/history`, () => {
+    if (historyScenario === 'error') {
+      return HttpResponse.json(
+        { error: { code: 'SERVER_ERROR', message: 'โหลดประวัติลงเวลาไม่สำเร็จ กรุณาลองใหม่' } },
+        { status: 500 },
+      )
+    }
+    if (historyScenario === 'empty') {
+      return HttpResponse.json({ data: [] })
+    }
+    return HttpResponse.json({ data: HISTORY_DAYS })
   }),
 ]

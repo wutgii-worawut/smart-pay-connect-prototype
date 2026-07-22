@@ -55,3 +55,34 @@ export interface ClockResponse {
   time: string
   type: ClockType
 }
+
+/**
+ * ⚠️ CONTRACT FLAG (P13, หน้าประวัติลงเวลา `10.History.png`): shape ทั้งชุดด้านล่าง (`direction`,
+ * `status` late/normal, `clockType` ต่อแถว, `location`) เป็นการคาดเดาของเราเอง — ยังไม่เคย probe กับ
+ * mock service จริง §16.3 ระบุแค่ `GET /attendance/history?month=` เฉย ๆ ไม่มี response shape ยืนยัน
+ * รอ backend/swagger คอนเฟิร์ม โดยเฉพาะ:
+ * - `status`: "มาสาย/ปกติ" ต้องเป็นคำตัดสินฝั่ง server เท่านั้น (ห้าม derive จากเวลาฝั่ง client) —
+ *   เผื่อ field นี้ไว้ให้ backend ส่งมาตรง ๆ
+ * - `location`: ชื่อสถานที่ต่อแถว (ในดีไซน์ทุกแถวใช้ชื่อเดียวกับ office เดิม) — อาจตรงกับ `office.name`
+ *   ของ `GET /attendance/today` หรือมีชุดข้อมูลแยกก็ได้ ยังไม่ชัดเจน
+ */
+export type AttendanceEntryDirection = 'clock-in' | 'clock-out'
+
+/** สถานะมาสาย/ปกติ — server เป็นคนตัดสิน (ห้าม derive จากเวลาฝั่ง client, §7.4/§15) */
+export type AttendanceEntryStatus = 'normal' | 'late'
+
+export interface AttendanceHistoryEntry {
+  direction: AttendanceEntryDirection
+  /** "HH:mm" จัดรูปแบบจาก server แล้ว */
+  time: string
+  status: AttendanceEntryStatus
+  clockType: ClockType
+  /** ชื่อสถานที่ที่แสดงในแถว */
+  location: string
+}
+
+export interface AttendanceHistoryDay {
+  /** 'YYYY-MM-DD' */
+  date: string
+  entries: AttendanceHistoryEntry[]
+}
