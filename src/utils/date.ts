@@ -9,7 +9,7 @@
  */
 import { eachDayOfInterval, format, isWeekend, parse } from 'date-fns'
 import { th } from 'date-fns/locale'
-import type { LeaveDayEntry } from '@/types/leave'
+import type { LeaveDayEntry, LeaveDayPeriod } from '@/types/leave'
 
 const DATE_FORMAT = 'yyyy-MM-dd'
 
@@ -108,6 +108,23 @@ export function toBuddhistYear(yearCe: number): number {
  * ต่างกันให้แสดงเต็มทั้งสองฝั่งกันสับสน เช่น "30 มิ.ย. 2569–1 ก.ค. 2569"
  * pure function — ใช้ formatThaiDate เป็นจุดบวก 543 เดียวกันเสมอ (ไม่บวกเองในนี้)
  */
+/** ต่อท้ายวันที่ภาษาไทยสำหรับ period ครึ่งวัน — เต็มวันไม่มีคำต่อท้าย (P15 "รายละเอียดรายวัน") */
+const LEAVE_DAY_PERIOD_SUFFIX: Record<LeaveDayPeriod, string> = {
+  full: '',
+  am: 'เช้า',
+  pm: 'บ่าย',
+}
+
+/**
+ * แถวเดียวของ "รายละเอียดรายวัน" (`LeaveRequestDetailCard`, P15) — "12 พ.ค. 2569" (เต็มวัน)
+ * หรือ "13 พ.ค. 2569 เช้า" (ครึ่งวัน) ตาม design `4.History Details.png`
+ * pure function — ใช้ formatThaiDate เป็นจุดบวก 543 เดียวกันเสมอ (ไม่บวกเองในนี้)
+ */
+export function formatLeaveDayLine(day: LeaveDayEntry): string {
+  const suffix = LEAVE_DAY_PERIOD_SUFFIX[day.period]
+  return suffix ? `${formatThaiDate(day.date)} ${suffix}` : formatThaiDate(day.date)
+}
+
 export function formatThaiDateRange(startStr: string, endStr: string): string {
   if (startStr === endStr) return formatThaiDate(startStr)
 

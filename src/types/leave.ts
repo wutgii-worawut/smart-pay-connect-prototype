@@ -50,6 +50,55 @@ export interface LeaveRequest {
 }
 
 /**
+ * ไฟล์แนบของใบลา (P15 — `AttachmentItem` S10) — display-ready เช่นเดียวกับ field อื่นใน
+ * `LeaveRequestDetail` (การ์ดไม่ format ขนาดไฟล์เอง)
+ */
+export interface LeaveAttachment {
+  id: string
+  name: string
+  /** ขนาดไฟล์ format มาแล้วพร้อมแสดง เช่น "120 KB" */
+  sizeLabel: string
+  url?: string
+}
+
+/**
+ * รายละเอียดใบลาเต็ม (P15 — `LeaveRequestDetailCard` mode `owner-view`, ใช้ต่อใน Approval P20 ด้วย)
+ * `GET /leave/requests/{id}` — เป็น shared type เพราะการ์ดที่ใช้เป็น shared component (D2)
+ *
+ * 🔴 CONTRACT FLAG (P15): shape นี้ invented ทั้งหมด — §16.3 ระบุแค่ endpoint `GET /leave/requests/{id}`
+ * ไม่มี response contract ยืนยัน (เหมือนสถานการณ์เดียวกับ `LeaveRequest`/`LeaveBalance` ที่ P14) รอ
+ * probe swagger จริง — field ชื่อ/รูปแบบอิงจาก design `4.History Details.png` / `8. Sended Pending
+ * Details.png` (เลขที่ใบลารูปแบบ "ล 0706/10" เป็นตัวอย่างจาก design ล้วน ๆ, ไม่รู้กติกาจริงของเลขรัน)
+ */
+export interface LeaveRequestDetail {
+  id: string
+  type: LeaveType
+  status: LeaveRequestStatus
+  /** เลขที่ใบลา เช่น "ล 0706/10" */
+  requestNumber: string
+  /** วันเริ่ม 'YYYY-MM-DD' */
+  startDate: string
+  /** วันสิ้นสุด 'YYYY-MM-DD' */
+  endDate: string
+  /** รายละเอียดรายวัน (period ต่อวัน) ใช้ render แถว "รายละเอียดรายวัน" */
+  days: LeaveDayEntry[]
+  /** จำนวนวันลารวม (server คำนวณมาแล้ว) */
+  totalDays: number
+  /** ป้ายสรุปช่วงเวลา เช่น 'เต็มวัน' | 'ครึ่งวัน (เช้า)' | 'ผสม' */
+  periodSummary: string
+  reason: string
+  /** วันที่ส่งคำขอ 'YYYY-MM-DD' */
+  submittedAt: string
+  /** ผู้ปฏิบัติงานแทน */
+  proxyName: string
+  /** ผู้อนุมัติ */
+  approverName: string
+  /** วันที่อนุมัติ 'YYYY-MM-DD' หรือ null ถ้ายังไม่อนุมัติ */
+  approvedAt: string | null
+  attachments: LeaveAttachment[]
+}
+
+/**
  * โควตาวันลาต่อประเภท ต่อปี (P14 — `LeaveBalanceCard`, `GET /leave/balance?year=`)
  *
  * 🔴 CONTRACT FLAG (P14): shape นี้ invented ทั้งหมดเช่นกัน (§16.3 ระบุแค่ endpoint) — field name

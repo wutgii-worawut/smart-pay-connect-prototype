@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
+  formatLeaveDayLine,
   formatThaiDate,
   formatThaiDateRange,
   formatThaiMonthCaption,
@@ -78,6 +79,20 @@ describe('formatThaiDateRange', () => {
 
   it('คร่อมปี → แสดงเต็มทั้งสองฝั่งรวม พ.ศ. ต่างกัน', () => {
     expect(formatThaiDateRange('2026-12-30', '2027-01-02')).toBe('30 ธ.ค. 2569–2 ม.ค. 2570')
+  })
+})
+
+describe('formatLeaveDayLine', () => {
+  it('เต็มวัน (full) → ไม่มีคำต่อท้าย', () => {
+    expect(formatLeaveDayLine({ date: '2026-05-12', period: 'full' })).toBe('12 พ.ค. 2569')
+  })
+
+  it('ครึ่งเช้า (am) → ต่อท้าย "เช้า"', () => {
+    expect(formatLeaveDayLine({ date: '2026-05-13', period: 'am' })).toBe('13 พ.ค. 2569 เช้า')
+  })
+
+  it('ครึ่งบ่าย (pm) → ต่อท้าย "บ่าย"', () => {
+    expect(formatLeaveDayLine({ date: '2026-05-14', period: 'pm' })).toBe('14 พ.ค. 2569 บ่าย')
   })
 })
 

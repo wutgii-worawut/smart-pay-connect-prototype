@@ -17,3 +17,14 @@ export const LEAVE_TYPE_LABEL: Record<LeaveType, string> = {
   sick: 'ลาป่วย',
   personal: 'ลากิจ',
 }
+
+/**
+ * ป้ายอังกฤษใต้ชื่อไทย (P15 — `LeaveRequestDetailCard`, design `4.History Details.png` /
+ * `8. Sended Pending Details.png` มีบรรทัดรอง "Annual leave" ใต้ "ลาพักร้อน") ไม่มี endpoint ส่งค่านี้
+ * มาเหมือนกัน ใช้ map interim เดียวกับ `LEAVE_TYPE_LABEL` จนกว่าจะต่อ `GET /leave/types` จริง (P16)
+ */
+export const LEAVE_TYPE_LABEL_EN: Record<LeaveType, string> = {
+  vacation: 'Annual leave',
+  sick: 'Sick leave',
+  personal: 'Personal leave',
+}
