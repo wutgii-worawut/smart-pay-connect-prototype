@@ -117,3 +117,53 @@ export interface LeaveBalance {
   /** คงเหลือ (โดยประมาณ — server คำนวณ ไม่ใช่ frontend derive) */
   remaining: number
 }
+
+/**
+ * พนักงานร่วมทีมที่เลือกเป็น "ผู้ปฏิบัติงานแทน" ได้ (P16 — ฟอร์มสร้างใบลา จอ 6.1/6.2)
+ *
+ * 🔴 CONTRACT FLAG (P16, §23 landmine ข้อ 2 ของ feature-plans/03): ไม่มี endpoint จริงในสัญญา §16.3
+ * เลย — เพิ่มเอง `GET /employees/teammates` ทั้งหมด (invented) ขอบเขตยังไม่เคาะว่าเป็น "ทีมเดียวกัน"
+ * เท่านั้นหรือทั้งบริษัท — mock สมมติเป็น **ทีมเดียวกัน (team-scoped)** รายชื่อสั้น 3-4 คนเท่านั้น
+ * ห้ามสมมติว่าเป็นรายชื่อทั้งบริษัท รอ backend/swagger เคาะจริง
+ */
+export interface Teammate {
+  id: string
+  name: string
+}
+
+/**
+ * body ที่ประกอบจากฟอร์มไปส่ง `POST /leave/requests` (P16, feature-plans/03 §3.6) — client ไม่ส่ง
+ * timestamp/เงิน/โควตาที่ backend ต้องเป็นคนตัดสินเอง (§7.4)
+ *
+ * request body **มีระบุจริงใน architecture §16.3**: `{leaveType, days:[{date,period}], reason,
+ * substituteId?}` — ชื่อ field (`leaveType`/`substituteId`) และความ optional ของ `substituteId`
+ * ยึดตาม §16.3 ตรง ๆ ไม่ใช่ของที่ทีมสมมติเอง (แก้จาก draft เดิมที่เข้าใจผิดว่า request ยังไม่มีสัญญา —
+ * consultant review 2026-07-22) 🔴 CONTRACT FLAG เหลือแค่ฝั่ง **response** เท่านั้น (`LeaveCreateResult`
+ * ด้านล่าง) ที่ยัง invented รอ swagger ยืนยัน (เหมือนสถานการณ์ P14/P15)
+ * `attachments` เป็น `File[]` ฝั่ง client เท่านั้น — encode เป็น multipart ที่ `api/createLeave.ts`
+ * เมื่อมีไฟล์แนบ ไม่งั้นส่ง JSON ปกติ — mock service ไม่ persist ไบต์ไฟล์จริง (พอสำหรับ prototype)
+ *
+ * `substituteId` optional (ผู้ใช้เคาะ 2026-07-22: "ผู้ปฏิบัติงานแทน" ไม่บังคับ ตรงกับ `substituteId?`
+ * ใน §16.3) — ไม่เลือกก็ omit key นี้ทั้งอัน ไม่ส่ง `substituteId: undefined`/`''` (ดู `LeaveForm.tsx`)
+ */
+export interface LeaveCreatePayload {
+  leaveType: LeaveType
+  days: LeaveDayEntry[]
+  reason: string
+  substituteId?: string
+  attachments: File[]
+}
+
+/** ผลลัพธ์หลังส่งคำขอลาสำเร็จ (จอ 7 "ส่งคำขอลาเรียบร้อย", P16) — display-ready สำหรับการ์ดสรุป */
+export interface LeaveCreateResult {
+  id: string
+  requestNumber: string
+  status: LeaveRequestStatus
+  type: LeaveType
+  /** วันเริ่ม 'YYYY-MM-DD' */
+  startDate: string
+  /** วันสิ้นสุด 'YYYY-MM-DD' */
+  endDate: string
+  totalDays: number
+  periodSummary: string
+}

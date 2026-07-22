@@ -1,9 +1,11 @@
 import { describe, expect, it } from 'vitest'
 import {
+  countCalendarDays,
   formatLeaveDayLine,
   formatThaiDate,
   formatThaiDateRange,
   formatThaiMonthCaption,
+  listLeaveCalendarDays,
   listLeaveWorkingDays,
   sumLeaveDays,
   toBuddhistYear,
@@ -210,5 +212,54 @@ describe('sumLeaveDays', () => {
       { date: '2026-06-03', period: 'full' },
     ]
     expect(sumLeaveDays(days)).toBe(3)
+  })
+})
+
+describe('countCalendarDays', () => {
+  it('วันเดียว (start===end) → 1', () => {
+    expect(countCalendarDays('2026-06-19', '2026-06-19')).toBe(1)
+  })
+
+  it('นับรวมเสาร์-อาทิตย์ (ต่างจาก listLeaveWorkingDays)', () => {
+    // 2026-06-01 (จันทร์) ถึง 2026-06-07 (อาทิตย์) = 7 วันปฏิทิน แม้จะมีวันทำงานแค่ 5
+    expect(countCalendarDays('2026-06-01', '2026-06-07')).toBe(7)
+  })
+
+  it('ช่วง 31 วันพอดี → 31', () => {
+    expect(countCalendarDays('2026-06-01', '2026-07-01')).toBe(31)
+  })
+
+  it('end < start → คืน 0 ไม่ throw', () => {
+    expect(countCalendarDays('2026-06-05', '2026-06-01')).toBe(0)
+  })
+})
+
+describe('listLeaveCalendarDays', () => {
+  it('ช่วง 1 วันเป็นวันทำงาน → รายการเดียว isWorkingDay=true', () => {
+    expect(listLeaveCalendarDays('2026-06-19', '2026-06-19', [])).toEqual([
+      { date: '2026-06-19', isWorkingDay: true },
+    ])
+  })
+
+  it('คร่อมเสาร์อาทิตย์ → รวมวันเริ่มเสมอ + เสาร์-อาทิตย์ isWorkingDay=false คั่นกลาง (กันดัก mockup 6.2 ตกวันเริ่ม)', () => {
+    // 2026-06-18 (พฤหัส) ถึง 2026-06-21 (อาทิตย์)
+    expect(listLeaveCalendarDays('2026-06-18', '2026-06-21', [])).toEqual([
+      { date: '2026-06-18', isWorkingDay: true },
+      { date: '2026-06-19', isWorkingDay: true },
+      { date: '2026-06-20', isWorkingDay: false },
+      { date: '2026-06-21', isWorkingDay: false },
+    ])
+  })
+
+  it('วันหยุดบริษัทกลางช่วง → isWorkingDay=false เฉพาะวันนั้น', () => {
+    expect(listLeaveCalendarDays('2026-06-01', '2026-06-03', ['2026-06-02'])).toEqual([
+      { date: '2026-06-01', isWorkingDay: true },
+      { date: '2026-06-02', isWorkingDay: false },
+      { date: '2026-06-03', isWorkingDay: true },
+    ])
+  })
+
+  it('end < start → คืน [] ไม่ throw', () => {
+    expect(listLeaveCalendarDays('2026-06-05', '2026-06-01', [])).toEqual([])
   })
 })

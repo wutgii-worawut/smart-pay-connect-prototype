@@ -7,7 +7,7 @@
  * - แสดงผล พ.ศ. ผ่าน formatThaiDate เท่านั้น — ห้ามบวก 543 กระจายตามหน้าอื่น
  * - pure function ล้วน ไม่มี React/hook — ห้าม network/side effect
  */
-import { eachDayOfInterval, format, isWeekend, parse } from 'date-fns'
+import { differenceInCalendarDays, eachDayOfInterval, format, isWeekend, parse } from 'date-fns'
 import { th } from 'date-fns/locale'
 import type { LeaveDayEntry, LeaveDayPeriod } from '@/types/leave'
 
@@ -78,6 +78,52 @@ export function listLeaveWorkingDays(
  */
 export function sumLeaveDays(days: LeaveDayEntry[]): number {
   return days.reduce((sum, day) => sum + (day.period === 'full' ? 1 : 0.5), 0)
+}
+
+/**
+ * นับจำนวน "วันปฏิทิน" ทั้งหมดใน [start,end] (inclusive, รวมเสาร์-อาทิตย์/วันหยุด — คนละตัวกับ
+ * `listLeaveWorkingDays` ที่ตัดวันหยุดออก) ใช้ cap ช่วงวันลาไม่ให้เกิน 31 วัน (P16 ฟอร์มสร้างใบลา,
+ * progress.md P1 #5.1 — `listLeaveWorkingDays` เองไม่ได้ cap ความยาวช่วงไว้)
+ * pure function — คืน 0 ถ้า endStr < startStr (ไม่ throw ให้ฟอร์ม/Zod เป็นคน validate)
+ */
+export function countCalendarDays(startStr: string, endStr: string): number {
+  if (endStr < startStr) return 0
+  return differenceInCalendarDays(parseCalendarDate(endStr), parseCalendarDate(startStr)) + 1
+}
+
+/** แถวเดียวของผลลัพธ์ `listLeaveCalendarDays` — วันทำงาน (มี toggle เลือกช่วงเวลา) หรือวันหยุด (แถว disabled) */
+export interface LeaveCalendarDay {
+  date: string
+  isWorkingDay: boolean
+}
+
+/**
+ * คืน**ทุกวันปฏิทิน**ใน [start,end] (inclusive) พร้อม flag `isWorkingDay` — ใช้ render แถวรายวันของ
+ * ฟอร์มสร้างใบลาหลายวัน (P16, จอ `6.2.Create Request (more 1 days).png`) ที่ต้องโชว์ทั้งวันทำงาน
+ * (มี toggle เต็มวัน/เช้า/บ่าย) และวันหยุดคั่นกลาง (แถว disabled label "วันหยุด" ไม่นับ) ในลำดับเดียว
+ * ต่อเนื่องกัน — ต่างจาก `listLeaveWorkingDays` ที่คืนแค่วันทำงานล้วน (ไม่มีวันหยุดคั่น)
+ *
+ * `isWorkingDay` ใช้เกณฑ์เดียวกับ `listLeaveWorkingDays` เป๊ะ (เสาร์-อาทิตย์ + วันหยุดบริษัท) กัน
+ * 2 util ตัดสินไม่ตรงกัน — **รวมวันเริ่มเสมอ** ตามกติกาวันทำงาน §4.1 (กันดักจาก mockup 6.2 ที่วาด
+ * ตกแถววันเริ่มไปเอง — เป็นข้อผิดพลาดของ mockup ไม่ใช่กติกาจริง ดูคอมเมนต์ที่
+ * `features/leave/components/LeavePeriodSection.tsx`)
+ * pure function — คืน [] ถ้า endStr < startStr
+ */
+export function listLeaveCalendarDays(
+  startStr: string,
+  endStr: string,
+  holidays: string[],
+): LeaveCalendarDay[] {
+  if (endStr < startStr) return []
+
+  const workingDaySet = new Set(listLeaveWorkingDays(startStr, endStr, holidays))
+  const start = parseCalendarDate(startStr)
+  const end = parseCalendarDate(endStr)
+
+  return eachDayOfInterval({ start, end }).map((d) => {
+    const dateStr = format(d, DATE_FORMAT)
+    return { date: dateStr, isWorkingDay: workingDaySet.has(dateStr) }
+  })
 }
 
 /**

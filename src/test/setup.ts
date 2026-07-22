@@ -16,3 +16,10 @@ if (typeof window !== 'undefined' && !window.HTMLElement.prototype.hasPointerCap
   window.HTMLElement.prototype.setPointerCapture = () => undefined
   window.HTMLElement.prototype.releasePointerCapture = () => undefined
 }
+
+// jsdom ยังไม่ implement scrollIntoView — @radix-ui/react-select (Select, P4/P16) เรียกตอนเปิด
+// dropdown เพื่อเลื่อนไปหา item ที่เลือกอยู่ ไม่มี polyfill ทำให้ effect throw แล้ว React unmount ทั้งจอ
+// เงียบ ๆ (เทสต์เห็น body ว่างเปล่าโดยไม่มี error message ตรง ๆ) — polyfill เป็น no-op เฉพาะใน jsdom
+if (typeof window !== 'undefined' && !window.HTMLElement.prototype.scrollIntoView) {
+  window.HTMLElement.prototype.scrollIntoView = () => undefined
+}

@@ -1,7 +1,9 @@
 /**
- * MSW handler — feature: leave (§16.3, P14+P15) — `GET /leave/balance?year=` + `GET /leave/requests`
- * (status/type/year/month query) + `GET /leave/requests/{id}` + `POST /leave/requests/{id}/cancel`
- * ฟอร์มสร้างใบลา (P16) ยังไม่ทำ
+ * MSW handler — feature: leave (§16.3, P14+P15+P16) — `GET /leave/balance?year=` + `GET
+ * /leave/requests` (status/type/year/month query) + `GET /leave/requests/{id}` + `POST
+ * /leave/requests/{id}/cancel` + `POST /leave/requests` (P16 — สร้างใบลา, จอ 6.1/6.2 → 7)
+ * `GET /employees/teammates` (P16, ผู้ปฏิบัติงานแทน + ผู้อนุมัติ) อยู่คนละไฟล์ —
+ * `src/mocks/handlers/employees.ts`
  *
  * 🔴 CONTRACT FLAGS (invented ทั้งชุด — §16.3 ระบุแค่ endpoint ไม่มี response shape ยืนยัน เหมือน
  * สถานการณ์ P13 attendance/history):
@@ -16,6 +18,10 @@
  * - `POST /leave/requests/{id}/cancel` response shape invented — mock คืน `{ id, status:
  *   'CANCELLED' }` แบบง่าย (ดู CONTRACT FLAG ที่ `api/cancelRequest.ts` — client ไม่ parse response
  *   จริงอยู่แล้ว)
+ * - `POST /leave/requests` (P16): **request body มีระบุจริงใน §16.3** (`leaveType`/`days`/`reason`/
+ *   `substituteId?`) — mock parse field ชื่อนี้ตรง ๆ ไม่ได้สมมติเอง (`parseCreateLeaveBody` ด้านล่าง)
+ *   response shape ยังคง invented รอ swagger เหมือนเดิม (แก้จาก draft เดิมที่ผิดว่า request ไม่มีสัญญา
+ *   — consultant review 2026-07-22)
  *
  * scenario สลับได้ผ่าน `setLeaveRequestsScenario()` / `setLeaveDetailScenario()` (dev console หรือเทสต์)
  */
@@ -48,10 +54,59 @@ export function setLeaveDetailScenario(next: LeaveDetailScenario): void {
   detailScenario = next
 }
 
+/**
+ * scenario ของ `POST /leave/requests` (P16 — ฟอร์มสร้างใบลา):
+ * - 'success'           → สร้างสำเร็จ คืน `LeaveCreateResult` (id/requestNumber/status PENDING ฯลฯ)
+ * - 'quota-exceeded'    → 422 `QUOTA_EXCEEDED` — `LeaveForm` โชว์ error ที่ช่อง `dateRange`
+ * - 'validation-error'  → 422 `VALIDATION_ERROR` — `LeaveForm` โชว์ error ที่ root (เหนือปุ่มส่ง)
+ * - 'error'             → 500 ทั่วไป — toast
+ */
+export type LeaveCreateScenario = 'success' | 'quota-exceeded' | 'validation-error' | 'error'
+
+let createScenario: LeaveCreateScenario = 'success'
+
+/** สลับ scenario ของ `POST /leave/requests` (ใช้ในเทสต์ หรือ dev console ตอน `npm run dev`) */
+export function setLeaveCreateScenario(next: LeaveCreateScenario): void {
+  createScenario = next
+}
+
 /** reset scenario ทั้งหมดกลับ default — เรียกใน afterEach ของเทสต์กันรั่วข้ามเคส */
 export function resetLeaveScenarios(): void {
   requestsScenario = 'data'
   detailScenario = 'pending'
+  createScenario = 'success'
+}
+
+/** shape mirror ตรง §16.3: `{leaveType, days:[{date,period}], reason, substituteId?}` */
+interface CreateLeaveBody {
+  leaveType?: string
+  days?: { date: string; period: string }[]
+  substituteId?: string
+}
+
+/** แปลง request body ของ POST /leave/requests เป็นรูปกลาง — รองรับทั้ง JSON ปกติ (ไม่มีไฟล์แนบ) และ
+ * multipart/form-data (มีไฟล์แนบ, `days` มาเป็น JSON string ใน field เดี่ยว — ดู CONTRACT FLAG ที่
+ * `api/createLeave.ts`) — field name ตรง §16.3 (`leaveType`/`substituteId`) */
+async function parseCreateLeaveBody(request: Request): Promise<CreateLeaveBody> {
+  const contentType = request.headers.get('content-type') ?? ''
+  if (contentType.includes('multipart/form-data')) {
+    const form = await request.formData()
+    const daysRaw = form.get('days')
+    const substituteIdRaw = form.get('substituteId')
+    return {
+      leaveType: typeof form.get('leaveType') === 'string' ? String(form.get('leaveType')) : undefined,
+      days: typeof daysRaw === 'string' ? (JSON.parse(daysRaw) as CreateLeaveBody['days']) : undefined,
+      substituteId: typeof substituteIdRaw === 'string' ? substituteIdRaw : undefined,
+    }
+  }
+  return (await request.json()) as CreateLeaveBody
+}
+
+function periodSummaryOf(days: { date: string; period: string }[]): string {
+  if (days.length === 0) return ''
+  if (days.length > 1) return 'ผสม'
+  if (days[0].period === 'full') return 'เต็มวัน'
+  return days[0].period === 'am' ? 'ครึ่งวัน (เช้า)' : 'ครึ่งวัน (บ่าย)'
 }
 
 const BALANCE = [
@@ -236,5 +291,44 @@ export const leaveHandlers = [
       )
     }
     return HttpResponse.json({ data: { id: params.id, status: 'CANCELLED' } })
+  }),
+
+  http.post(`${BASE_URL}/leave/requests`, async ({ request }) => {
+    if (createScenario === 'quota-exceeded') {
+      return HttpResponse.json(
+        { error: { code: 'QUOTA_EXCEEDED', message: 'วันลาคงเหลือไม่พอสำหรับช่วงวันที่เลือก' } },
+        { status: 422 },
+      )
+    }
+    if (createScenario === 'validation-error') {
+      return HttpResponse.json(
+        { error: { code: 'VALIDATION_ERROR', message: 'ข้อมูลคำขอลาไม่ถูกต้อง กรุณาตรวจสอบอีกครั้ง' } },
+        { status: 422 },
+      )
+    }
+    if (createScenario === 'error') {
+      return HttpResponse.json(
+        { error: { code: 'SERVER_ERROR', message: 'ส่งคำขอลาไม่สำเร็จ กรุณาลองใหม่' } },
+        { status: 500 },
+      )
+    }
+
+    const body = await parseCreateLeaveBody(request)
+    const type = body.leaveType ?? 'vacation'
+    const days = body.days ?? []
+    const totalDays = days.reduce((sum, day) => sum + (day.period === 'full' ? 1 : 0.5), 0)
+
+    return HttpResponse.json({
+      data: {
+        id: 'leave-new-1',
+        requestNumber: 'ล 0722/11',
+        status: 'PENDING',
+        type,
+        startDate: days[0]?.date ?? '',
+        endDate: days[days.length - 1]?.date ?? '',
+        totalDays,
+        periodSummary: periodSummaryOf(days),
+      },
+    })
   }),
 ]

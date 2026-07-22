@@ -6,7 +6,8 @@
  * `AttendanceHistoryRoute` — ดู `app/AttendanceHistoryRoute.tsx`)
  * `/leave` (P14 — จอ balance/pending/history, ผ่าน `LeaveShellPage` — ไม่มี ProfileBar ใน design
  * ชุดนี้ จึงไม่ต้อง compose ที่ `app/` เหมือน attendance, import ตรงจาก barrel ของ feature ได้เลย)
- * และ `/leave/:id` (P15 — จอ detail + ยกเลิก PENDING, ผ่าน `LeaveDetailPage`)
+ * และ `/leave/:id` (P15 — จอ detail + ยกเลิก PENDING, ผ่าน `LeaveDetailPage`) และ `/leave/new` (P16 —
+ * จอ 6.1/6.2 สร้างใบลา → จอ 7 สำเร็จแบบ in-page state ในไฟล์เดียวกัน, ผ่าน `LeaveFormPage`)
  * `createBrowserRouter` (History API — ข้อกำหนด LIFF, §11) + `errorElement` ทุก route
  *
  * route ที่ต้อง auth (ทุกอันยกเว้น `/register*`) อยู่ใต้ layout route ปลาย `AuthGate` (§13.1-13.3)
@@ -14,7 +15,7 @@
  */
 import { createBrowserRouter } from 'react-router-dom'
 import { AuthGate, OtpPage, RegisterPage, RegisterSuccessPage } from '@/features/auth'
-import { LeaveDetailPage, LeaveShellPage } from '@/features/leave'
+import { LeaveDetailPage, LeaveFormPage, LeaveShellPage } from '@/features/leave'
 import { AttendanceRoute } from './AttendanceRoute'
 import { AttendanceHistoryRoute } from './AttendanceHistoryRoute'
 import { HomePage } from './HomePage'
@@ -49,7 +50,7 @@ export const router = createBrowserRouter([
       },
       {
         path: '/leave/new',
-        element: <PlaceholderPage title="ยื่นใบลา" />,
+        element: <LeaveFormPage />,
         errorElement: <RouteErrorBoundary />,
       },
       {
