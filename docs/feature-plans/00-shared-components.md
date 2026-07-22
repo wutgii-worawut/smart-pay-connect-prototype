@@ -20,7 +20,7 @@
 
 | # | Component | หน้าตาใน design | Reg | Att | Leave | Appr | Pay | Cal |
 |---|---|---|:-:|:-:|:-:|:-:|:-:|:-:|
-| S1 | `SegmentedTabs` | ปุ่มสลับ 2 ช่องมุมมนบนสุด (ขาว/น้ำเงิน + badge เลข) | | | ✔ การลาของฉัน\|รออนุมัติลา | ✔ เหมือน Leave เป๊ะ | | ✔ ปฏิทินการลา\|วันหยุด |
+| S1 | `SegmentedTabs` | ปุ่มสลับ 2 ช่องมุมมน (ขาว/น้ำเงิน + badge เลข) | | | ✔ **แถบล่าง** ประวัติการลาของฉัน\|ใบลารออนุมัติ (ใบตัวเอง, P14) | ✔ **แท็บบน** การลาของฉัน\|รออนุมัติ (manager, P19 compose ที่ app/) | | ✔ ปฏิทินการลา\|วันหยุด |
 | S2 | `FilterChips` | ชิปกลม ทั้งหมด/ลาป่วย/ลาพักร้อน/ลากิจ | | | ✔ | | | |
 | S3 | `DropdownFilter` | ปุ่ม ปี ▾ / เดือน ▾ / สถานะ ▾ | | ✔ History | ✔ | ✔ | ✔ ปี | ✔ ปี |
 | S4 | `StatusBadge` | pill จุดสี+ข้อความ: รออนุมัติ(ส้ม) อนุมัติแล้ว(เขียว) ไม่อนุมัติ(แดง) ยกเลิก(เทา) | | | ✔ | ✔ **สีและ state ชุดเดียวกัน** | | |
@@ -47,7 +47,7 @@
 | **`LeaveRequestCard`** — การ์ดใบลาใน list (LeaveTypeIcon + ชื่อ/ประเภท + วันที่ + StatusBadge + ตรวจสอบ ›) | Leave list ทุกแท็บ + Approval list ทุกแท็บ (ต่างแค่บรรทัดแรก: ฝั่งหัวหน้าโชว์ชื่อพนักงาน) | component เดียว prop `showEmployeeName` |
 | **`ListFilterBar`** — แถว DropdownFilter (ปี/เดือน/สถานะ) ± FilterChips | Leave, Approval, Attendance History, Calendar, Payroll | ประกอบจาก S2+S3 |
 | **จอแผนที่ Attendance** — Clock In/Out × onsite/remote ทั้ง 8 จอ คือ**จอเดียวกัน** ต่างแค่ state | Attendance 0-9 | หน้าเดียว `ClockPage` + state machine (ดู 02-attendance.md) |
-| **Segmented + banner + tabs ของ Leave/Approval** | Leave กับ Approval ใช้ shell หน้าเดียวกัน (สลับด้วย SegmentedTabs บนสุด) | ทำเป็น `LeaveShellPage` ที่สลับเนื้อหาตาม segment — ลด routing ซ้ำ |
+| **Segmented + banner + tabs ของ Leave/Approval** | shell ฝั่งพนักงาน = `LeaveShellPage` (balance + **แถบล่าง** pending\|history ของตัวเอง, P14); manager เห็น**แท็บบนสุด**เพิ่ม → สลับไปเนื้อหา approval | **compose ที่ระดับ `app/` route** (กฎเหล็ก §6 — ห้ามยุบ 2 feature ลงหน้าเดียว/leave import approval) ตอน P19 |
 
 ## 3. Design tokens ที่เห็นซ้ำทั้งชุด (ลง `@theme` — architecture.md 9.3)
 

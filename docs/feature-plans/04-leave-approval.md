@@ -1,7 +1,7 @@
 # 04 — Leave Approval (ฝั่งหัวหน้า) — 7 หน้าจอ
 
 > โฟลเดอร์: `features/approval/` | อ้างอิงเอกสารหลัก: 17 (role/สิทธิ์), 16.3 (API 🔒), 7.4 (atomic quota)
-> เข้าถึงผ่าน SegmentedTabs "รออนุมัติลา" ใน shell เดียวกับ Leave — **เห็นเฉพาะ `role === 'manager'`** (ตัวกันจริง = backend 403)
+> เข้าถึงผ่าน **แท็บบนสุด "การลาของฉัน | รออนุมัติ(n)"** บน `/leave` — render เฉพาะ `role === 'manager'` (ตัวกันจริง = backend 403). **compose ที่ระดับ `app/` route** (กฎเหล็ก §6 — approval เป็นคนละ feature กับ leave ห้าม import ข้าม; pattern เดียวกับ `AttendanceRoute`). badge "รออนุมัติ" นี้ = คิวลูกทีม `GET /approval/pending` (คนละตัวกับแถบล่างฝั่งพนักงานที่เป็น `GET /leave/requests?status=PENDING`)
 
 ## หน้าจอ
 

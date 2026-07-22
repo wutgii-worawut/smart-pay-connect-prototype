@@ -7,6 +7,7 @@
 import leavePersonal from '@/assets/leave/leave-personal.png'
 import leaveSick from '@/assets/leave/leave-sick.png'
 import leaveVacation from '@/assets/leave/leave-vacation.png'
+import { LEAVE_TYPE_LABEL } from '@/utils/leaveType'
 import type { LeaveType } from '@/types/leave'
 
 interface LeaveTypeIconProps {
@@ -21,12 +22,6 @@ const ICON_SRC: Record<LeaveType, string> = {
   personal: leavePersonal,
 }
 
-const LABEL: Record<LeaveType, string> = {
-  vacation: 'ลาพักร้อน',
-  sick: 'ลาป่วย',
-  personal: 'ลากิจ',
-}
-
 const SIZE_CLASS: Record<NonNullable<LeaveTypeIconProps['size']>, string> = {
   sm: 'h-10 w-10',
   md: 'h-14 w-14',
@@ -37,7 +32,7 @@ export function LeaveTypeIcon({ type, size = 'md', className }: LeaveTypeIconPro
   return (
     <img
       src={ICON_SRC[type]}
-      alt={LABEL[type]}
+      alt={LEAVE_TYPE_LABEL[type]}
       className={[SIZE_CLASS[size], 'shrink-0 rounded-card object-cover', className]
         .filter(Boolean)
         .join(' ')}

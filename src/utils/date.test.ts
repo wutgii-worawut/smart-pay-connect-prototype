@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vitest'
-import { formatThaiDate, formatThaiMonthCaption, listLeaveWorkingDays, sumLeaveDays } from './date'
+import {
+  formatThaiDate,
+  formatThaiDateRange,
+  formatThaiMonthCaption,
+  listLeaveWorkingDays,
+  sumLeaveDays,
+  toBuddhistYear,
+} from './date'
 import type { LeaveDayEntry } from '@/types/leave'
 
 describe('formatThaiDate', () => {
@@ -43,6 +50,34 @@ describe('formatThaiMonthCaption', () => {
       month: 'มกราคม',
       yearBe: 'พ.ศ. 2570',
     })
+  })
+})
+
+describe('toBuddhistYear', () => {
+  it('บวก 543 ตรงไปตรงมา', () => {
+    expect(toBuddhistYear(2026)).toBe(2569)
+  })
+
+  it('ปีอื่นก็บวก 543 เหมือนกัน', () => {
+    expect(toBuddhistYear(2000)).toBe(2543)
+  })
+})
+
+describe('formatThaiDateRange', () => {
+  it('วันเดียว (start===end) → เหมือน formatThaiDate ปกติ', () => {
+    expect(formatThaiDateRange('2026-06-08', '2026-06-08')).toBe('8 มิ.ย. 2569')
+  })
+
+  it('หลายวัน เดือน/ปีเดียวกัน → "16–17 มิ.ย. 2569"', () => {
+    expect(formatThaiDateRange('2026-06-16', '2026-06-17')).toBe('16–17 มิ.ย. 2569')
+  })
+
+  it('คร่อมเดือน → แสดงเต็มทั้งสองฝั่ง', () => {
+    expect(formatThaiDateRange('2026-06-29', '2026-07-03')).toBe('29 มิ.ย. 2569–3 ก.ค. 2569')
+  })
+
+  it('คร่อมปี → แสดงเต็มทั้งสองฝั่งรวม พ.ศ. ต่างกัน', () => {
+    expect(formatThaiDateRange('2026-12-30', '2027-01-02')).toBe('30 ธ.ค. 2569–2 ม.ค. 2570')
   })
 })
 

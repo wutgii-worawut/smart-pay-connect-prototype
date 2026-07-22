@@ -16,6 +16,8 @@ interface DropdownFilterProps {
   placeholder?: string
   /** label สำหรับ screen reader เช่น "กรองปี" (ไม่แสดงในจอ — ปุ่มจอนี้ไม่มี label ข้างนอกตาม design) */
   ariaLabel: string
+  /** ล็อกไม่ให้เปลี่ยนค่า (P14: dropdown สถานะฝั่งรายการรออนุมัติ ล็อกไว้ที่ "รออนุมัติ") */
+  disabled?: boolean
   className?: string
 }
 
@@ -25,6 +27,7 @@ export function DropdownFilter({
   onChange,
   placeholder,
   ariaLabel,
+  disabled = false,
   className,
 }: DropdownFilterProps) {
   return (
@@ -32,8 +35,9 @@ export function DropdownFilter({
       <select
         aria-label={ariaLabel}
         value={value}
+        disabled={disabled}
         onChange={(event) => onChange(event.target.value)}
-        className="appearance-none rounded-full border border-primary/15 bg-white py-2.5 pr-9 pl-4 text-base font-medium text-primary-dark focus:outline-none"
+        className="appearance-none rounded-full border border-primary/15 bg-white py-2.5 pr-9 pl-4 text-base font-medium text-primary-dark focus:outline-none disabled:opacity-60"
       >
         {placeholder ? (
           <option value="" disabled hidden>

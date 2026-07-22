@@ -796,7 +796,7 @@ export const router = createBrowserRouter([
 | `/register` → `/register/otp` → `/register/success` | ลงทะเบียน + OTP + สำเร็จ (plan 01) | auth ตอบ `NEED_REGISTER` |
 | `/attendance` | ClockPage (state machine — plan 02) | Rich Menu `?target=attendance` |
 | `/attendance/history` | ประวัติลงเวลา | ปุ่มใน dock |
-| `/leave` | LeaveShellPage — segment การลาของฉัน\|รออนุมัติลา (plans 03+04) | Rich Menu `?target=leave` |
+| `/leave` | พนักงาน: LeaveShellPage (balance + แถบล่าง history\|pending ของตัวเอง, P14); manager: แท็บบนสุด → approval (P19, compose ที่ `app/`) (plans 03+04) | Rich Menu `?target=leave` |
 | `/leave/new` | ฟอร์มยื่นลา | ปุ่ม + ใน balance |
 | `/leave/:id` | รายละเอียดใบลา (owner-view) | กดการ์ดใน list |
 | `/approval/:id` | รายละเอียดฝั่งหัวหน้า (approver modes) | กด "ตรวจสอบ" ใน segment รออนุมัติ |

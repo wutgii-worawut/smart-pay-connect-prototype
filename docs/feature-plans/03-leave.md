@@ -1,7 +1,7 @@
 # 03 — Leave (ระบบลา ฝั่งพนักงาน) — 9 หน้าจอ
 
 > โฟลเดอร์: `features/leave/` | อ้างอิงเอกสารหลัก: 3.2 (ยกเลิกใบลา), 7 (แยก logic), 16.3 (API), 4.2 (วันที่เป็น string)
-> Rich Menu → `/leave` | ใช้ shell ร่วมกับ Approval (SegmentedTabs บนสุด: **การลาของฉัน | รออนุมัติลา** — แท็บขวาเห็นเฉพาะ manager)
+> Rich Menu → `/leave` | **ฝั่งพนักงาน:** แถบล่าง SegmentedTabs **"ประวัติการลาของฉัน | ใบลารออนุมัติ(n)"** (ใบของตัวเอง) + balance เป็น view เริ่มต้น (P14, ตาม PNG ชุด `3.Leave`). **แท็บบนสุด "การลาของฉัน | รออนุมัติ(n)" = จอ manager เท่านั้น** (`4.Leave Approval/1.Pending List.png`) — ทำตอน P19 โดย **compose ที่ระดับ `app/`** (กฎเหล็ก §6 ห้าม leave import approval); design มี 2 persona ซ้อนกัน อย่าอ่านรวบเป็นแท็บเดียว
 
 ## หน้าจอ
 
@@ -63,7 +63,8 @@ features/leave/
 │                 # LeaveRequestDetailCard, CancelConfirmSheet
 ├── hooks/        # useLeaveBalance(), useLeaveRequests(), useSubmitLeave(), useCancelLeave()
 ├── utils/        # (day-count utils เป็น shared: src/utils/date.ts — listLeaveWorkingDays + sumLeaveDays, เทสต์ภาคบังคับ 21.2)
-├── pages/        # LeaveShellPage (segmented + สลับ list/approval),
+├── pages/        # LeaveShellPage (balance + สลับ pending/history ของตัวเองผ่านแถบล่าง —
+│                 #   ฝั่ง approval ของ manager compose ที่ app/ ตอน P19 ไม่อยู่ในไฟล์นี้),
 │                 # LeaveFormPage, LeaveDetailPage, LeaveSuccessPage
 └── index.ts
 ```

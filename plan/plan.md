@@ -178,7 +178,7 @@ Repo = **Vite starter เปล่า** — ยังไม่มี dependency 
 - **DoD:** มาตรฐาน + ป้าย "มาสาย" จาก server ไม่คำนวณเอง
 
 ### P14 — Leave list shell (จอ 3.1-3.3)
-- **ทำ:** `LeaveShellPage` (SegmentedTabs การลาของฉัน|รออนุมัติลา — แท็บขวา render เฉพาะ manager, เนื้อหา approval เป็น placeholder จนถึง P19), `LeaveBalanceCard`×3 label "คงเหลือ (โดยประมาณ)", list `LeaveRequestCard` (prop `showEmployeeName`) + FilterChips + DropdownFilter, types/api/hooks + MSW leave (balance, requests)
+- **ทำ:** `LeaveShellPage` (**ฝั่งพนักงานล้วน:** balance เป็น view เริ่มต้น + **แถบล่าง** SegmentedTabs สลับ pending/history ของตัวเอง — ~~SegmentedTabs บน + แท็บ manager placeholder~~ **[SUPERSEDED 2026-07-22: อ่าน design ผิด — แท็บบน "การลาของฉัน\|รออนุมัติ" คือจอ manager เท่านั้น (P19), ไม่มีในจอพนักงาน; manager compose ที่ `app/` ตอน P19]**), `LeaveBalanceCard`×3 label "คงเหลือ (โดยประมาณ)", list `LeaveRequestCard` (prop `showEmployeeName`) + FilterChips + DropdownFilter, types/api/hooks + MSW leave (balance, requests)
 - **รูป:** `3.Leave/1.Balance.png`, `2.Pending Requests.png`, `3.History.png`
 - **DoD:** มาตรฐาน + history/pending หน้าเดียวเปลี่ยน query (plan 03 §3.3)
 - **หมายเหตุ D2:** `LeaveRequestCard` อยู่ `src/components/` (shared) — **presentational ล้วน: รับ data+callbacks ผ่าน props, ห้าม useQuery/useMutation/navigate ในการ์ด** (data-fetching + onClick→navigate อยู่ที่ `LeaveShellPage`). Type `LeaveRequest` อยู่ `src/types/` (**ประกาศครั้งแรกที่เฟสนี้ ที่ `src/types/` ไม่ใช่ใน feature**)
@@ -208,7 +208,7 @@ Repo = **Vite starter เปล่า** — ยังไม่มี dependency 
 - **ระวัง:** ชั้น detail เปิดข้อมูลสุขภาพ — frontend render ตามที่ API คืน (กรอง role อยู่ backend §10.3)
 
 ### P19 — Approval list (จอ 4.1, 4.4)
-- **ทำ:** `ManagerBanner`, `ApprovalTabs` (รออนุมัติ(n)|ประวัติ + badge จาก count), list reuse `LeaveRequestCard showEmployeeName` (shared ตาม D2 — approval compose ที่ page level), role gating UI + backend 403 เป็นตัวจริง; MSW approval
+- **ทำ:** **แท็บบนสุด "การลาของฉัน | รออนุมัติ(n)" บน `/leave` — compose ที่ `app/` (สร้าง `LeaveRoute.tsx` แบบ `AttendanceRoute`; router เปลี่ยน `/leave` จาก import barrel ตรงเป็นผ่าน route component; กฎเหล็ก §6 ห้าม `LeaveShellPage` import approval)**, render เฉพาะ `role==='manager'`; `ManagerBanner`, `ApprovalTabs` (รออนุมัติ(n)|ประวัติ + badge **จาก `GET /approval/pending` — คนละ query กับแถบล่างฝั่งพนักงาน `GET /leave/requests?status=PENDING`**), list reuse `LeaveRequestCard showEmployeeName` (shared ตาม D2), role gating UI + backend 403 เป็นตัวจริง; MSW approval
 - **รูป:** `4.Leave Approval/1.Pending List.png`, `4.History.png`
 - **DoD:** มาตรฐาน + non-manager ไม่เห็นแท็บ
 

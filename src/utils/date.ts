@@ -92,3 +92,31 @@ export function formatThaiMonthCaption(date: Date): { month: string; yearBe: str
     yearBe: `พ.ศ. ${be}`,
   }
 }
+
+/**
+ * ปี ค.ศ. → พ.ศ. (จุดที่ 3 ในไฟล์นี้ที่บวก 543 — ยังอยู่ "จุดเดียว" ตามกติกา §4.1 เพราะรวมอยู่ในไฟล์นี้
+ * ไฟล์เดียว) ใช้กับตัวเลือก dropdown ปี / year stepper ที่รับ-ส่งปีเป็น ค.ศ. ล้วน (ตรง query param
+ * `year` ของ API) แต่ต้องแสดงผล พ.ศ. ให้ผู้ใช้ (P14 balance year stepper, filter ปี)
+ */
+export function toBuddhistYear(yearCe: number): number {
+  return yearCe + 543
+}
+
+/**
+ * ป้ายช่วงวันที่แบบไทย — ใช้ใน `LeaveRequestCard` (P14) meta line "8 มิ.ย. 2569" (วันเดียว)
+ * หรือ "16–17 มิ.ย. 2569" (หลายวัน, เดือน/ปีเดียวกัน — เว้นแค่วันเริ่มไม่ซ้ำเดือนปี) — คร่อมเดือน/ปี
+ * ต่างกันให้แสดงเต็มทั้งสองฝั่งกันสับสน เช่น "30 มิ.ย. 2569–1 ก.ค. 2569"
+ * pure function — ใช้ formatThaiDate เป็นจุดบวก 543 เดียวกันเสมอ (ไม่บวกเองในนี้)
+ */
+export function formatThaiDateRange(startStr: string, endStr: string): string {
+  if (startStr === endStr) return formatThaiDate(startStr)
+
+  const start = parseCalendarDate(startStr)
+  const end = parseCalendarDate(endStr)
+  const sameMonth = format(start, 'yyyy-MM') === format(end, 'yyyy-MM')
+
+  if (sameMonth) {
+    return `${format(start, 'd')}–${formatThaiDate(endStr)}`
+  }
+  return `${formatThaiDate(startStr)}–${formatThaiDate(endStr)}`
+}
