@@ -10,12 +10,21 @@
  * `/auth/register/request-otp` + `/auth/register/verify-otp` จริงตอบ 404 ตอน probe
  * (plan/progress.md บันทึกแก้แผน P8 ข้อ 3 / P9 ข้อ 2) — shape/error code ทั้งหมดด้านล่างเป็นการ
  * ออกแบบฝั่งเรา รอ backend/swagger ยืนยัน
+ *
+ * 🔴 P19 เพิ่ม scenario `'manager'` (additive — ไม่แตะ default 'authenticated' เดิม) ให้ทดสอบ/dev
+ * หน้า Approval ได้: `setAuthScenario('manager')` แล้ว reload → login คืน `MANAGER_EMPLOYEE`
+ * (`role: 'manager'`) แทน `MOCK_EMPLOYEE` ปกติ
  */
 import { http, HttpResponse } from 'msw'
 import { z } from 'zod'
 import { BASE_URL } from '../base'
 
-export type AuthScenario = 'authenticated' | 'need_register' | 'employee_inactive' | 'id_token_expired'
+export type AuthScenario =
+  | 'authenticated'
+  | 'need_register'
+  | 'employee_inactive'
+  | 'id_token_expired'
+  | 'manager'
 
 let scenario: AuthScenario = 'authenticated'
 
@@ -25,6 +34,9 @@ export function setAuthScenario(next: AuthScenario): void {
 }
 
 const MOCK_EMPLOYEE = { id: 'EMP001', name: 'สมชาย ใจดี', role: 'employee' }
+
+/** พนักงานบทบาทหัวหน้า (P19) — ชื่อตรง design `4.Leave Approval/1.Pending List.png` ("คุณวิชัย มั่นคง") */
+const MANAGER_EMPLOYEE = { id: 'EMP-MGR-001', name: 'วิชัย มั่นคง', role: 'manager' }
 
 export type RegisterOtpScenario =
   | 'success'
@@ -74,6 +86,11 @@ export const authHandlers = [
           { error: { code: 'ID_TOKEN_EXPIRED', message: 'โทเคนหมดอายุ กรุณาเข้าใหม่' } },
           { status: 401 },
         )
+
+      case 'manager':
+        return HttpResponse.json({
+          data: { token: 'mock-jwt-token-manager', employee: MANAGER_EMPLOYEE },
+        })
 
       case 'authenticated':
       default:
