@@ -86,7 +86,8 @@ Repo = **Vite starter เปล่า** — ยังไม่มี dependency 
 | P19 | Approval list | ManagerBanner, ApprovalTabs, pending+history list, role gating | P14 |
 | P20 | Approval detail + ตัดสิน | approver-action/view, approve/reject, REQUEST_NOT_PENDING | P15,P19 |
 | P21 | Payroll | list + detail + email (2 จอย่อย+success) | P5 |
-| P22 | Hardening + release prep | error boundaries, safe-area audit, vercel.json, .env, checklist §21.4 | ทุกเฟส |
+| P22 | Hardening (กลุ่ม A: code) | verify cmd, z.iso.date sweep, interceptor, error/safe-area audit, code-split | ทุกเฟส |
+| P23 | Release prep (กลุ่ม B: infra/design) | Figma tokens จริง, env DEV Vercel + LIFF ID + vercel.json, manual checklist §21.4, CI | P22 |
 
 ---
 
@@ -224,9 +225,16 @@ Repo = **Vite starter เปล่า** — ยังไม่มี dependency 
 - **DoD:** มาตรฐาน + ไม่มี log ตัวเลขเงินลง console + เทสต์ email mutation ไม่ retry
 - **ระวัง:** เข้มสิทธิ์สุด — read-only, ตัวตนจาก JWT เท่านั้น
 
-### P22 — Hardening + release prep
-- **ทำ:** audit: `errorElement` ทุก route + ErrorBoundary 2 ระดับ, mutation ทุกตัว `retry:0`+disabled, safe-area ทุก Drawer/BottomActionBar, `document.title` ทุก route ตรง design, ลบ demo/console, `vercel.json` rewrites, `.env.dev` + Vercel setup §19.3, CI (`vitest run` + `tsc --noEmit` + eslint), checklist §21.4 สำหรับเครื่องจริง
-- **DoD:** build+lint+test ทั้ง repo ผ่าน; ทดสอบบน Vercel dev เครื่องจริง ≥1 platform
+### P22 — Hardening (กลุ่ม A: code) ✅
+- **ทำแล้ว (2026-07-22):** (1) verify command → `npm run typecheck` (`tsc -p tsconfig.app.json`); (2) `z.iso.date()` sweep §4.2; (3) interceptor `res.data?.data`; (4) audit `errorElement`+ErrorBoundary 2 ระดับ / mutation `retry:0`+disabled / safe-area Drawer+BottomActionBar / `document.title` ทุก route / ลบ demo/console (ครบ ไม่มี gap); (5) code-split route-lazy (bundle 946→530KB); (6) follow-up cheap + doc notes
+- **DoD:** lint 0 · `tsc -p tsconfig.app.json` 0 · test 495 · build ✓ — **ผ่าน** (worker→consultant PASS)
+- รายละเอียด + หนี้เลื่อน (submittedAt/approvedAt รอ swagger ฯลฯ) ดู progress.md บันทึกแก้แผน P22
+
+### P23 — Release prep (กลุ่ม B: infra/design)
+- **ทำ:** (1) **Figma color tokens จริง** แทน placeholder `--color-*`/`--color-leave-*`/`--color-holiday-*`/`--color-toast-bg` (§9.5) — ต้องมีค่าจริงจาก Figma; (2) **env DEV Vercel + LIFF ID จริงต่อ env** (§18) + `vercel.json` rewrites (SPA) + Vercel setup §19.3 — LIFF ID จริงจากผู้ใช้; (3) **manual device checklist §21.4** เครื่องจริง iOS+Android (map/GPS/toast ตำแหน่ง/iOS zoom-on-focus/JWT หมดอายุกลางคัน/Drawer swipe/ปลายหมุด GPS/non-manager deep-link `/approval/:id` เด้ง); (4) CI (`vitest run` + `tsc -p tsconfig.app.json` + eslint) — ถ้าจะตั้ง GitHub Actions
+- **ทำเองได้เลย (ไม่ต้องรอค่าจริง):** ร่าง `vercel.json` + `.env.dev` skeleton (ค่า LIFF ID เว้น placeholder), ร่าง manual checklist §21.4, CI workflow
+- **ต้องพึ่งผู้ใช้:** ค่า Figma tokens จริง, LIFF ID จริงต่อ env, รันเทสต์บนเครื่องจริง
+- **DoD:** ทดสอบบน Vercel dev เครื่องจริง ≥1 platform; checklist §21.4 ครบ
 - **ระวัง §23:** **infra UAT/PRD (23.2) ยังไม่เคาะ** — deploy ได้แค่ DEV Vercel; ห้ามตั้ง UAT/PRD เอง; Sentry ยัง optional (§20.5)
 
 ---
@@ -242,7 +250,7 @@ Repo = **Vite starter เปล่า** — ยังไม่มี dependency 
 | Revoke ใบอนุมัติแล้ว (23.1#6) | P20 | `canRevoke=false` — ไม่ทำ endpoint |
 | Teammates endpoint (plan 03) | P16 | mock ไว้ + รอเคาะ contract |
 | Map provider (23.2#3) | P11-P12 | `MapView` interface + MapLibre ก่อน |
-| Infra UAT/PRD (23.2#1-2) | P22 | DEV Vercel เท่านั้น |
+| Infra UAT/PRD (23.2#1-2) | P23 | DEV Vercel เท่านั้น |
 
 ## 5. Definition of Done มาตรฐาน (ทุกเฟส)
 - `npm run lint` ผ่าน (รวม `import-x/no-restricted-paths`)
