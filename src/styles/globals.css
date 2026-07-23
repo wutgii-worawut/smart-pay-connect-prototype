@@ -13,8 +13,9 @@
  * ============================================================ */
 @theme {
   /* สีหลัก — ปุ่มหลัก, segment active, hero payslip */
-  --color-primary: #1b6bb8; /* placeholder — รอค่าจริงจาก Figma (architecture §9.5); design อ่านได้ช่วง #1B6BB8~#0D6EBD */
-  --color-primary-dark: #16335b; /* placeholder — รอค่าจริงจาก Figma (architecture §9.5); ตัวหนังสือหัวข้อ */
+  --color-primary: #0071bd; /* ค่าจริงจาก Figma 2026-07-23 — ปุ่มหลัก/action, segment active (เดิม placeholder #1b6bb8) */
+  --color-primary-dark: #16335b; /* placeholder — รอค่าจริงจาก Figma (architecture §9.5); ตัวหนังสือหัวข้อ/body */
+  --color-primary-strong: #004c97; /* ค่าจริงจาก Figma 2026-07-23 — น้ำเงินเข้มแบรนด์: หัวข้อจอลงทะเบียน, เส้นคั่น "หรือ", ThaID text/border */
 
   /* สีสถานะ — ใช้กับ StatusBadge, Toast icon, pill ในรัศมี GPS ฯลฯ */
   --color-success: #24a148; /* placeholder — รอค่าจริงจาก Figma (architecture §9.5); badge อนุมัติ/ในรัศมี/toast เขียว */
@@ -34,6 +35,12 @@
   /* พื้นหลัง/พื้นผิว */
   --color-surface: #eaf3fb; /* placeholder — รอค่าจริงจาก Figma (architecture §9.5); พื้นหลังทุกหน้า (ฟ้าอ่อนมาก) */
   --color-text-secondary: #8b95a1; /* placeholder — รอค่าจริงจาก Figma (architecture §9.5); ตัวหนังสือรอง/label */
+  --color-label: #666666; /* ค่าจริงจาก Figma 2026-07-23 — label ช่องกรอกจอลงทะเบียน (เทา) */
+  --color-caption: #434343; /* ค่าจริงจาก Figma 2026-07-23 — คำโปรย เช่น "ลงทะเบียนด้วย Digital ID" */
+
+  /* Gradient พื้นหลัง flow ลงทะเบียน (จอ 1.1/1.2/OTP) — ค่าจริงจาก Figma 2026-07-23 */
+  --color-onboarding-top: #ddf1ff; /* Figma: linear-gradient(180deg) 0% */
+  --color-onboarding-bottom: #86cdff; /* Figma: linear-gradient(180deg) 100% */
 
   /* Radius / shadow ของการ์ด-ปุ่ม-ช่องกรอกทั้งหมด */
   --radius-card: 16px; /* placeholder — รอค่าจริงจาก Figma (architecture §9.5); design อ่านได้ช่วง ~16-20px */

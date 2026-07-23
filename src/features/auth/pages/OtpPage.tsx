@@ -168,7 +168,7 @@ export function OtpPage() {
   const resendDisabled = !countdown.isReady || requestOtpMutation.isPending
 
   return (
-    <div className="flex min-h-screen flex-col items-center gap-6 bg-gradient-to-b from-primary/10 via-surface to-white px-6 pt-14 pb-10">
+    <div className="flex min-h-screen flex-col items-center gap-6 bg-gradient-to-b from-onboarding-top to-onboarding-bottom px-6 pt-14 pb-10">
       <img src={logoSmartpay} alt="SmartPay Connect" className="h-16 w-auto" />
 
       <h1 className="text-lg font-semibold text-primary-dark">ลงทะเบียนผู้ใช้งาน</h1>

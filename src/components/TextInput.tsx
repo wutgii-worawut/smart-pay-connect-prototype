@@ -31,6 +31,11 @@ interface TextInputProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 'si
   /** โหมด mask พิเศษ — ตอนนี้รองรับเลขบัตรประชาชน 13 หลักเท่านั้น */
   mask?: 'citizenId'
   containerClassName?: string
+  /**
+   * override สไตล์ <label> (สี/จัดวาง) — เช่น จอลงทะเบียนต้องการ label กึ่งกลางสีเทา
+   * (`text-center text-label`). ถ้าไม่ส่ง = default `text-primary-dark` ชิดซ้าย (ฟอร์มอื่นทั้งแอป)
+   */
+  labelClassName?: string
 }
 
 function shapeClass(shape: TextInputShape): string {
@@ -47,6 +52,7 @@ export const TextInput = forwardRef<HTMLInputElement, TextInputProps>(function T
     name,
     className,
     containerClassName,
+    labelClassName,
     onChange,
     inputMode,
     maxLength,
@@ -66,7 +72,12 @@ export const TextInput = forwardRef<HTMLInputElement, TextInputProps>(function T
   return (
     <div className={containerClassName}>
       {label ? (
-        <label htmlFor={fieldId} className="mb-1.5 block text-sm font-medium text-primary-dark">
+        <label
+          htmlFor={fieldId}
+          className={['mb-1.5 block text-sm font-medium', labelClassName ?? 'text-primary-dark']
+            .filter(Boolean)
+            .join(' ')}
+        >
           {label}
         </label>
       ) : null}

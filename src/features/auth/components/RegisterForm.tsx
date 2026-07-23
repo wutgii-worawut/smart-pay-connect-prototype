@@ -128,6 +128,8 @@ export function RegisterForm() {
         mask="citizenId"
         placeholder="1-2345-67890-12-3"
         error={errors.citizenId?.message}
+        labelClassName="text-center text-label"
+        className="text-center"
         {...register('citizenId')}
       />
       <TextInput
@@ -136,6 +138,8 @@ export function RegisterForm() {
         type="email"
         placeholder="spuser@sp.go.th"
         error={errors.email?.message}
+        labelClassName="text-center text-label"
+        className="text-center"
         {...register('email')}
       />
       <PrimaryButton

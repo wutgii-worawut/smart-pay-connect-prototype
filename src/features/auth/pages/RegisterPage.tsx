@@ -29,14 +29,14 @@ export function RegisterPage() {
   const mode = getRegisterMode()
 
   return (
-    <div className="flex min-h-screen flex-col items-center gap-8 bg-gradient-to-b from-primary/10 via-surface to-white px-6 pt-14 pb-10">
+    <div className="flex min-h-screen flex-col items-center gap-8 bg-gradient-to-b from-onboarding-top to-onboarding-bottom px-6 pt-14 pb-10">
       <img src={logoSmartpay} alt="SmartPay Connect" className="h-16 w-auto" />
 
-      <h1 className="text-lg font-semibold text-primary-dark">ลงทะเบียนผู้ใช้งาน</h1>
+      <h1 className="text-lg font-semibold text-primary-strong">ลงทะเบียนผู้ใช้งาน</h1>
 
       {mode === 'thaid' ? (
         <div className="flex flex-1 flex-col items-center gap-6 pt-2 text-center">
-          <p className="text-sm text-text-secondary">ด้วย Digital ID</p>
+          <p className="text-sm text-caption">ด้วย Digital ID</p>
           <ThaidButton variant="card" />
         </div>
       ) : (
@@ -45,12 +45,12 @@ export function RegisterPage() {
 
           {mode === 'both' ? (
             <>
-              <div className="flex items-center gap-3 text-sm font-medium text-text-secondary">
-                <span className="h-px flex-1 bg-primary/15" aria-hidden="true" />
+              <div className="flex items-center gap-3 text-sm font-medium text-primary-strong">
+                <span className="h-px flex-1 bg-primary-strong" aria-hidden="true" />
                 หรือ
-                <span className="h-px flex-1 bg-primary/15" aria-hidden="true" />
+                <span className="h-px flex-1 bg-primary-strong" aria-hidden="true" />
               </div>
-              <p className="text-center text-sm text-text-secondary">ลงทะเบียนด้วย Digital ID</p>
+              <p className="text-center text-sm text-caption">ลงทะเบียนด้วย Digital ID</p>
               <ThaidButton variant="pill" />
             </>
           ) : null}
