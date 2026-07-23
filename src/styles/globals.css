@@ -18,9 +18,9 @@
   --color-primary-strong: #004c97; /* ค่าจริงจาก Figma 2026-07-23 — น้ำเงินเข้มแบรนด์: หัวข้อจอลงทะเบียน, เส้นคั่น "หรือ", ThaID text/border */
 
   /* สีสถานะ — ใช้กับ StatusBadge, Toast icon, pill ในรัศมี GPS ฯลฯ */
-  --color-success: #24a148; /* placeholder — รอค่าจริงจาก Figma (architecture §9.5); badge อนุมัติ/ในรัศมี/toast เขียว */
-  --color-warning: #e8a33d; /* placeholder — รอค่าจริงจาก Figma (architecture §9.5); badge รออนุมัติ, TypeBanner */
-  --color-danger: #d64545; /* placeholder — รอค่าจริงจาก Figma (architecture §9.5); ไม่อนุมัติ/นอกรัศมี/ยกเลิก */
+  --color-success: #049855; /* ค่าจริงจาก Figma 2026-07-23; badge อนุมัติ/ในรัศมี/toast เขียว, pill remote */
+  --color-warning: #ffa000; /* ค่าจริงจาก Figma 2026-07-23; ปุ่มออกงาน, badge รออนุมัติ, TypeBanner */
+  --color-danger: #e92e2e; /* ค่าจริงจาก Figma 2026-07-23; ไม่อนุมัติ/นอกรัศมี/ยกเลิก */
 
   /* สีประเภทลา — ชุดเดียวใช้ทั้ง LeaveTypeIcon, จุดปฏิทิน, legend (code-style.md) */
   --color-leave-vacation: #2fa84f; /* placeholder — รอค่าจริงจาก Figma (architecture §9.5); ลาพักร้อน (เขียว) */
@@ -37,6 +37,7 @@
   --color-text-secondary: #8b95a1; /* placeholder — รอค่าจริงจาก Figma (architecture §9.5); ตัวหนังสือรอง/label */
   --color-label: #666666; /* ค่าจริงจาก Figma 2026-07-23 — label ช่องกรอกจอลงทะเบียน (เทา) */
   --color-caption: #434343; /* ค่าจริงจาก Figma 2026-07-23 — คำโปรย เช่น "ลงทะเบียนด้วย Digital ID" */
+  --color-clock-disabled: #d9e4ea; /* ค่าจริงจาก Figma 2026-07-23 — พื้นปุ่มวงกลม "ลงเวลา" ตอน out-of-range (disabled) */
 
   /* Gradient พื้นหลัง flow ลงทะเบียน (จอ 1.1/1.2/OTP) — ค่าจริงจาก Figma 2026-07-23 */
   --color-onboarding-top: #ddf1ff; /* Figma: linear-gradient(180deg) 0% */
@@ -44,6 +45,7 @@
 
   /* Radius / shadow ของการ์ด-ปุ่ม-ช่องกรอกทั้งหมด */
   --radius-card: 16px; /* placeholder — รอค่าจริงจาก Figma (architecture §9.5); design อ่านได้ช่วง ~16-20px */
+  --radius-pill: 30px; /* ค่าจริงจาก Figma 2026-07-23; pill สถานะ (อยู่ใน/นอกรัศมี, ไปทำงานนอกสถานที่) */
   --shadow-card: 0 2px 8px rgb(0 0 0 / 0.06); /* placeholder — รอค่าจริงจาก Figma (architecture §9.5) */
 
   /* ฟอนต์ — Kanit อย่างเดียวทั้งระบบ (D1 plan.md §1) */

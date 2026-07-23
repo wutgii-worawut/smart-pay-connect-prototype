@@ -14,37 +14,25 @@ interface AttendanceHistoryListProps {
 }
 
 function CalendarIcon() {
+  // ไอคอนปฏิทิน หน้าประวัติ (Figma 2026-07-23) — currentColor = #434343
   return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth={2}
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className="h-5 w-5 shrink-0"
-      aria-hidden="true"
-    >
-      <rect x="3" y="5" width="18" height="16" rx="2" />
-      <path d="M3 10h18M8 3v4M16 3v4" />
+    <svg viewBox="0 0 45 50" fill="none" className="h-5 w-5 shrink-0 text-caption" aria-hidden="true">
+      <path
+        fill="currentColor"
+        d="M40 5H37.5V0H32.5V5H12.5V0H7.5V5H5C2.225 5 0.025 7.25 0.025 10L0 45C0 47.75 2.225 50 5 50H40C42.75 50 45 47.75 45 45V10C45 7.25 42.75 5 40 5ZM40 45H5V20H40V45ZM40 15H5V10H40V15ZM15 30H10V25H15V30ZM25 30H20V25H25V30ZM35 30H30V25H35V30ZM15 40H10V35H15V40ZM25 40H20V35H25V40ZM35 40H30V35H35V40Z"
+      />
     </svg>
   )
 }
 
 function LocationPinIcon() {
+  // ไอคอนปักหมุด (Figma 2026-07-23) — currentColor = #434343
   return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth={2}
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className="h-4 w-4 shrink-0"
-      aria-hidden="true"
-    >
-      <path d="M12 21s7-6.2 7-11a7 7 0 1 0-14 0c0 4.8 7 11 7 11z" />
-      <circle cx="12" cy="10" r="2.5" />
+    <svg viewBox="0 0 40 50" fill="none" className="h-4 w-4 shrink-0 text-caption" aria-hidden="true">
+      <path
+        fill="currentColor"
+        d="M20 25C17.25 25 15 22.75 15 20C15 17.25 17.25 15 20 15C22.75 15 25 17.25 25 20C25 22.75 22.75 25 20 25ZM35 20.5C35 11.425 28.375 5 20 5C11.625 5 5 11.425 5 20.5C5 26.35 9.875 34.1 20 43.35C30.125 34.1 35 26.35 35 20.5ZM20 0C30.5 0 40 8.05 40 20.5C40 28.8 33.325 38.625 20 50C6.675 38.625 0 28.8 0 20.5C0 8.05 9.5 0 20 0Z"
+      />
     </svg>
   )
 }

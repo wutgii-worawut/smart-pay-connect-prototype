@@ -15,19 +15,13 @@ interface ClockButtonProps {
 }
 
 function AlarmPlusIcon() {
+  // ไอคอนนาฬิกาปลุก + (Figma 2026-07-23) — currentColor = ขาว (ตัวอักษรปุ่มเป็น text-white)
   return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth={2}
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className="h-7 w-7"
-      aria-hidden="true"
-    >
-      <circle cx="12" cy="13" r="7" />
-      <path d="M12 10v3l2 2M5 3 2 6M19 3l3 3M9 13h6" />
+    <svg viewBox="0 0 100 101" fill="none" className="h-7 w-7" aria-hidden="true">
+      <path
+        fill="currentColor"
+        d="M29.4 7.65L23 0L0 19.25L6.45 26.9L29.4 7.65ZM100 19.3L77 0L70.55 7.65L93.55 26.95L100 19.3ZM50 10.7C25.15 10.7 5 30.85 5 55.7C5 80.55 25.1 100.7 50 100.7C74.85 100.7 95 80.55 95 55.7C95 30.85 74.85 10.7 50 10.7ZM50 90.7C30.65 90.7 15 75.05 15 55.7C15 36.35 30.65 20.7 50 20.7C69.35 20.7 85 36.35 85 55.7C85 75.05 69.35 90.7 50 90.7ZM55 35.7H45V50.7H30V60.7H45V75.7H55V60.7H70V50.7H55V35.7Z"
+      />
     </svg>
   )
 }
@@ -66,7 +60,7 @@ function resolveVariant(state: AttendanceUiState): ClockButtonVariant {
       return {
         label: 'ลงเวลา',
         disabled: true,
-        bgClass: 'bg-primary/25 text-white/80',
+        bgClass: 'bg-clock-disabled text-white',
         icon: 'alarm',
       }
     case 'clocked-in':

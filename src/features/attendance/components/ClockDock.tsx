@@ -18,38 +18,25 @@ interface ClockDockProps {
 }
 
 function HistoryIcon() {
+  // ไอคอนประวัติ (Figma 2026-07-23) — currentColor = #434343 (dock ใช้ text-caption)
   return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth={2}
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className="h-6 w-6"
-      aria-hidden="true"
-    >
-      <path d="M3 12a9 9 0 1 0 2.6-6.4" />
-      <path d="M3 4v4h4" />
-      <path d="M12 8v4l3 2" />
+    <svg viewBox="0 0 105 90" fill="none" className="h-6 w-6" aria-hidden="true">
+      <path
+        fill="currentColor"
+        d="M60 0C35.15 0 15 20.15 15 45H0L19.45 64.45L19.8 65.15L40 45H25C25 25.65 40.65 10 60 10C79.35 10 95 25.65 95 45C95 64.35 79.35 80 60 80C50.35 80 41.6 76.05 35.3 69.7L28.2 76.8C36.35 84.95 47.55 90 60 90C84.85 90 105 69.85 105 45C105 20.15 84.85 0 60 0ZM55 25V50L76.25 62.6L80.1 56.2L62.5 45.75V25H55Z"
+      />
     </svg>
   )
 }
 
 function ReloadIcon() {
+  // ไอคอนโหลดใหม่ (Figma 2026-07-23) — currentColor = #434343 (dock ใช้ text-caption)
   return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth={2}
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className="h-6 w-6"
-      aria-hidden="true"
-    >
-      <path d="M3 12a9 9 0 0 1 15.3-6.4M21 12a9 9 0 0 1-15.3 6.4" />
-      <path d="M18 3v4h-4M6 21v-4h4" />
+    <svg viewBox="0 0 80 80" fill="none" className="h-6 w-6" aria-hidden="true">
+      <path
+        fill="currentColor"
+        d="M68.2 11.75C60.95 4.5 51 0 39.95 0C17.85 0 0 17.9 0 40C0 62.1 17.85 80 39.95 80C58.6 80 74.15 67.25 78.6 50H68.2C64.1 61.65 53 70 39.95 70C23.4 70 9.95 56.55 9.95 40C9.95 23.45 23.4 10 39.95 10C48.25 10 55.65 13.45 61.05 18.9L44.95 35H79.95V0L68.2 11.75Z"
+      />
     </svg>
   )
 }
@@ -71,7 +58,7 @@ export function ClockDock({
         <button
           type="button"
           onClick={onHistory}
-          className="flex flex-col items-center gap-1 text-sm font-medium text-primary-dark"
+          className="flex flex-col items-center gap-1 text-sm font-medium text-caption"
         >
           <HistoryIcon />
           ประวัติลงเวลา
@@ -82,7 +69,7 @@ export function ClockDock({
         <button
           type="button"
           onClick={onReloadMap}
-          className="flex flex-col items-center gap-1 text-sm font-medium text-primary-dark"
+          className="flex flex-col items-center gap-1 text-sm font-medium text-caption"
         >
           <ReloadIcon />
           โหลดแผนที่ใหม่

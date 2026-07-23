@@ -223,7 +223,7 @@ export function MapView({ userPos, officePos, radiusMeters, className }: MapView
   }, [])
 
   return (
-    <div className={`relative h-full w-full overflow-hidden rounded-card ${className ?? ''}`}>
+    <div className={`relative h-full w-full overflow-hidden ${className ?? ''}`}>
       <div ref={containerRef} className="h-full w-full" />
       {status === 'loading' ? (
         <div className="bg-surface absolute inset-0 flex items-center justify-center">
