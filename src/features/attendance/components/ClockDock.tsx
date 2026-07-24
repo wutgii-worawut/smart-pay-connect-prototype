@@ -80,7 +80,7 @@ export function ClockDock({
         <path d={HUMP_PATH} />
       </svg>
 
-      <div className="rounded-t-card bg-white pt-10 pb-[calc(1rem+env(safe-area-inset-bottom))] shadow-card">
+      <div className="bg-white pt-10 pb-[calc(1rem+env(safe-area-inset-bottom))] shadow-card">
         <div className="flex items-center justify-between px-6">
           <button
             type="button"
