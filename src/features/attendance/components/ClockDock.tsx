@@ -41,6 +41,28 @@ function ReloadIcon() {
   )
 }
 
+/**
+ * เนินกลาง (SVG authored เอง — ไม่มีไฟล์ export จาก Figma, docker.png เป็นแค่ภาพอ้างอิงตา):
+ * เรขาคณิตอ้างอิงขนาดปุ่มกลาง (ClockButton = h-32 w-32 = 128px, R_button=64) ตามสเปก —
+ * ถ้าแก้ขนาดปุ่มต้องคำนวณค่าด้านล่างใหม่ทั้งชุด (ตัวเลขผูกกันด้วยสมการ tangency ไม่ใช่ค่าอิสระ)
+ *
+ * - BUTTON_TOP_OFFSET = 28  (หัวปุ่มโผล่เหนือขอบบนแถบ 28px, ตรงกับ `-top-7` ของปุ่มด้านล่าง)
+ * - WHITE_MARGIN_ABOVE_HEAD = 18  (ขอบขาวเหนือหัวปุ่ม → ยอดเนินสูงกว่าหัวปุ่ม 18px)
+ * - CREST_R = R_button + WHITE_MARGIN_ABOVE_HEAD = 64+18 = 82  (รัศมี arc นูนของยอดเนิน,
+ *   ศูนย์กลาง = ศูนย์กลางปุ่ม)
+ * - HUMP_H = CREST_R − (R_button − BUTTON_TOP_OFFSET) = 82−(64−28) = 46  (ความสูง viewBox,
+ *   ทำให้ยอด arc แตะ y=0 พอดี)
+ * - crest center ในพิกัด local (y=0 บนสุด) = (W/2, HUMP_H+36) โดย 36 = R_button−BUTTON_TOP_OFFSET
+ * - SHOULDER_R ≈ 72.52 (อยู่ในช่วง 60-80 ตามสเปก) แก้สมการ tangency ภายนอกระหว่าง crest circle
+ *   กับ shoulder circle (ศูนย์กลางอยู่บน background side ที่ x=0/x=W, y=HUMP_H−SHOULDER_R) โดยกำหนด
+ *   ให้ปลาย shoulder arc สัมผัสขอบล่าง (ขอบบนแถบ) แนวนอนพอดีที่ x=0 และ x=W (ไม่มีเส้นตรงคั่น) —
+ *   ได้ W ≈ 220 (อยู่ในช่วง 210-220 ตามสเปก "ฐานเนินกว้าง")
+ * - จุดต่อ (tangent point) ระหว่าง shoulder arc กับ crest arc ≈ (51.62, 24.41) และคู่กระจก
+ *   (168.38, 24.41) — ได้จากสัดส่วนตามแนวเส้นเชื่อมศูนย์กลางสองวง (R_s/(R_s+R_c))
+ */
+const HUMP_PATH =
+  'M 0 46 A 72.52 72.52 0 0 0 51.62 24.41 A 82 82 0 0 1 168.38 24.41 A 72.52 72.52 0 0 0 220 46 Z'
+
 export function ClockDock({
   state,
   isPending,
@@ -49,31 +71,45 @@ export function ClockDock({
   onReloadMap,
 }: ClockDockProps) {
   return (
-    <div className="relative rounded-t-card bg-white pt-10 pb-[calc(1rem+env(safe-area-inset-bottom))] shadow-card">
-      <div className="absolute -top-12 left-1/2 -translate-x-1/2">
-        <ClockButton state={state} isPending={isPending} onClick={onClockAction} />
+    <div className="relative">
+      <svg
+        aria-hidden="true"
+        className="pointer-events-none absolute bottom-full left-1/2 h-[46px] w-[220px] -translate-x-1/2 translate-y-px fill-white"
+        viewBox="0 0 220 46"
+      >
+        <path d={HUMP_PATH} />
+      </svg>
+
+      <div className="rounded-t-card bg-white pt-10 pb-[calc(1rem+env(safe-area-inset-bottom))] shadow-card">
+        <div className="flex items-center justify-between px-6">
+          <button
+            type="button"
+            onClick={onHistory}
+            className="flex flex-col items-center gap-1 text-sm font-medium text-caption"
+          >
+            <HistoryIcon />
+            ประวัติลงเวลา
+          </button>
+
+          {/* spacer เว้นที่ให้ปุ่มกลาง (absolute เทียบ wrapper) — shrink-0 กันจอแคบ (320px) ทำให้
+              flex บีบ spacer จนปุ่มข้างล้ำเข้าเขตปุ่มกลาง/เนิน (ยอมให้ label ปุ่มข้าง wrap 2 บรรทัดแทน) */}
+          <div className="w-32 shrink-0" aria-hidden="true" />
+
+          <button
+            type="button"
+            onClick={onReloadMap}
+            disabled={isPending}
+            className="flex flex-col items-center gap-1 text-sm font-medium text-caption disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            <ReloadIcon />
+            โหลดแผนที่ใหม่
+          </button>
+        </div>
       </div>
 
-      <div className="flex items-center justify-between px-6">
-        <button
-          type="button"
-          onClick={onHistory}
-          className="flex flex-col items-center gap-1 text-sm font-medium text-caption"
-        >
-          <HistoryIcon />
-          ประวัติลงเวลา
-        </button>
-
-        <div className="w-32" aria-hidden="true" />
-
-        <button
-          type="button"
-          onClick={onReloadMap}
-          className="flex flex-col items-center gap-1 text-sm font-medium text-caption"
-        >
-          <ReloadIcon />
-          โหลดแผนที่ใหม่
-        </button>
+      {/* -top-7 = 28px = BUTTON_TOP_OFFSET ในคอมเมนต์ด้านบน — ต้องตรงกันเสมอ */}
+      <div className="absolute -top-7 left-1/2 z-10 -translate-x-1/2">
+        <ClockButton state={state} isPending={isPending} onClick={onClockAction} />
       </div>
     </div>
   )
