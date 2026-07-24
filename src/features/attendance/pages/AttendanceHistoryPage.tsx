@@ -2,8 +2,9 @@
  * features/attendance/pages/AttendanceHistoryPage.tsx — route `/attendance/history` (จอ `10.History.png`)
  * โครง: แถบกรอง "ประจำเดือน" (`DropdownFilter`, S3) → รายการไทม์ไลน์ต่อวัน (`AttendanceHistoryList`)
  *
- * ⚠️ ไม่มี `ProfileBar` ในไฟล์นี้ — เหตุผลเดียวกับ `ClockPage`: ต้องใช้ชื่อพนักงานจาก `features/auth`
- * แต่กฎเหล็ก §6 ห้าม cross-feature import — compose ที่ `app/AttendanceHistoryRoute.tsx` แทน
+ * [2026-07-24] ไม่มี `ProfileBar` ในไฟล์นี้ตามที่ผู้ใช้สั่ง (ดูคอมเมนต์ `app/AttendanceHistoryRoute.tsx`)
+ * root ใส่ `bg-white` เอง (แทน `--color-surface` ฟ้าอ่อนของ body) กันกรณีไฟล์นี้ถูก render เดี่ยว ๆ
+ * (เช่นในเทสต์) โดยไม่ผ่าน route wrapper ที่ตั้ง `bg-white` ไว้แล้วชั้นนอก
  *
  * ค่าเริ่มต้นของ filter เดือน: seed จาก `new Date()` (client clock) — ยอมรับได้เพราะเป็นแค่ค่าเริ่มต้น
  * ของ UI filter (ผู้ใช้เปลี่ยนเองได้ทันที) ไม่ใช่การตัดสินใจ business ใด ๆ (ต่างจาก §15 ที่ห้าม client
@@ -30,11 +31,11 @@ export function AttendanceHistoryPage() {
   const { data: days, isLoading, isError, error, refetch } = useAttendanceHistory(month)
 
   return (
-    <div className="flex h-full flex-col">
+    <div className="flex h-full flex-col bg-white">
       <div className="border-t border-dashed border-primary/15" />
 
       <div className="flex items-center justify-between px-4 py-4">
-        <span className="text-sm font-medium text-text-secondary">ประจำเดือน</span>
+        <span className="text-sm font-medium text-caption">ประจำเดือน</span>
         <DropdownFilter
           options={monthOptions}
           value={month}

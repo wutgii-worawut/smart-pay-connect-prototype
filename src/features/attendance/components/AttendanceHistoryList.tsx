@@ -1,7 +1,7 @@
 /**
  * features/attendance/components/AttendanceHistoryList.tsx — รายการประวัติลงเวลาแบบไทม์ไลน์
- * (จอ `10.History.png`, feature-plans/02) — จัดกลุ่มตามวัน แต่ละวันมีจุดสีน้ำเงิน+เส้นเชื่อม
- * ต่อด้วยแถวเวลาเข้า/ออก (badge สีตามสถานะที่ server ตัดสิน + ไอคอนหมุด + ชื่อสถานที่)
+ * (จอ `10.History.png`, feature-plans/02) — จัดกลุ่มตามวัน แต่ละวันมีจุดสีน้ำเงิน (`--color-primary-strong`
+ * #004c97) + เส้นเชื่อม ต่อด้วยแถวเวลาเข้า/ออก (badge สีตามสถานะที่ server ตัดสิน + ไอคอนหมุด + ชื่อสถานที่)
  *
  * Presentational ล้วน — ไม่ fetch/ไม่ตัดสิน logic ใด ๆ เอง (มาสาย/ปกติ มาจาก `entry.status` ที่ server
  * ส่งมาแล้วเท่านั้น ดู CONTRACT FLAG ที่ types/attendance.ts)
@@ -65,7 +65,7 @@ export function AttendanceHistoryList({ days }: AttendanceHistoryListProps) {
     <div className="space-y-6">
       {days.map((day) => (
         <section key={day.date}>
-          <h3 className="mb-3 flex items-center gap-2 text-base font-semibold text-primary-dark">
+          <h3 className="mb-3 flex items-center gap-2 text-base font-semibold text-caption">
             <CalendarIcon />
             {formatThaiDate(day.date, 'd-MMMM-yyyy')}
           </h3>
@@ -73,16 +73,16 @@ export function AttendanceHistoryList({ days }: AttendanceHistoryListProps) {
             {day.entries.map((entry, index) => (
               <div key={`${entry.direction}-${entry.time}-${index}`} className="flex items-stretch gap-3">
                 <div className="flex w-3 shrink-0 flex-col items-center">
-                  <span className="mt-3 h-3 w-3 shrink-0 rounded-full bg-primary" aria-hidden="true" />
+                  <span className="mt-3 h-3 w-3 shrink-0 rounded-full bg-primary-strong" aria-hidden="true" />
                   {index < day.entries.length - 1 ? (
-                    <span className="w-0.5 flex-1 bg-primary" aria-hidden="true" />
+                    <span className="w-0.5 flex-1 bg-primary-strong" aria-hidden="true" />
                   ) : null}
                 </div>
                 <div className="min-w-0 flex-1 pb-3">
                   <div className="flex items-center gap-3 rounded-full border border-primary/15 bg-white px-3 py-2 shadow-card">
                     <TimeBadge time={entry.time} status={entry.status} />
                     <LocationPinIcon />
-                    <span className="truncate text-sm text-primary-dark">{entry.location}</span>
+                    <span className="truncate text-sm text-caption">{entry.location}</span>
                   </div>
                 </div>
               </div>

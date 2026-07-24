@@ -16,8 +16,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Map as MapLibreMap, Marker, type StyleSpecification } from 'maplibre-gl'
 import 'maplibre-gl/dist/maplibre-gl.css'
-import gpsPinIcon from '@/assets/gps/gps-pin.png'
-import gpsOfficeIcon from '@/assets/gps/gps-checked-location.png'
 import { ErrorState } from '@/components/ErrorState'
 import { Spinner } from '@/components/Spinner'
 import type { LatLng } from '../utils/haversine'
@@ -79,13 +77,54 @@ function metersToPixelsAtMaxZoom(meters: number, latitude: number): number {
   return meters / 0.075 / Math.cos((latitude * Math.PI) / 180)
 }
 
-function createMarkerElement(iconUrl: string, altText: string): HTMLElement {
-  const img = document.createElement('img')
-  img.src = iconUrl
-  img.alt = altText
-  img.draggable = false
-  img.className = 'h-10 w-10 select-none'
-  return img
+/**
+ * teardrop pin path มาตรฐาน (หัวกลม + ปลายแหลมชี้ลง) วาดใน viewBox 24x24 —
+ * ปลายแหลมอยู่ที่ (12, 24) จรดขอบล่างสุดของ viewBox พอดี เพื่อให้ `anchor: 'bottom'` ของ Marker
+ * ชี้ตรงกับพิกัดจริง (ไม่ลอยเหนือพิกัด)
+ */
+const PIN_PATH_D = 'M21 10c0 7-9 14-9 14s-9-7-9-14a9 9 0 0 1 18 0z'
+const PIN_HEAD_CX = 12
+const PIN_HEAD_CY = 10
+/** เงานุ่มใต้หมุด (ไม่แบน) — วิ่งตาม silhouette ของ teardrop เพราะเป็น drop-shadow ไม่ใช่ box-shadow */
+const MARKER_DROP_SHADOW = 'drop-shadow(0 3px 4px rgb(0 0 0 / 0.35))'
+
+/** สร้าง `<div>` ครอบ inline SVG teardrop pin หนึ่งดวง — คืน HTMLElement ให้ MapLibre Marker ใช้ตรง ๆ */
+function createPinMarkerElement(options: { fillColor: string; ariaLabel: string; innerMarkupSvg: string }): HTMLElement {
+  const wrapper = document.createElement('div')
+  wrapper.className = 'h-14 w-14 select-none'
+  wrapper.setAttribute('role', 'img')
+  wrapper.setAttribute('aria-label', options.ariaLabel)
+  wrapper.style.filter = MARKER_DROP_SHADOW
+  wrapper.innerHTML = `
+    <svg viewBox="0 0 24 24" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+      <path d="${PIN_PATH_D}" style="fill: ${options.fillColor}" />
+      ${options.innerMarkupSvg}
+    </svg>
+  `
+  return wrapper
+}
+
+/** หมุดผู้ใช้ (current position) — น้ำเงิน token `--color-primary` + จุดวงกลมขาวตรงกลางหัวหมุด */
+function createUserMarkerElement(): HTMLElement {
+  const color = readThemeColor('--color-primary', '#0071bd')
+  return createPinMarkerElement({
+    fillColor: color,
+    ariaLabel: 'ตำแหน่งของคุณ',
+    innerMarkupSvg: `<circle cx="${PIN_HEAD_CX}" cy="${PIN_HEAD_CY}" r="3" fill="#ffffff" />`,
+  })
+}
+
+/** หมุดสถานที่ทำงาน (office) — แดง token `--color-danger` + เป้าวงกลมขาว (bullseye) ตรงกลางหัวหมุด */
+function createOfficeMarkerElement(): HTMLElement {
+  const color = readThemeColor('--color-danger', '#e92e2e')
+  return createPinMarkerElement({
+    fillColor: color,
+    ariaLabel: 'ตำแหน่งสถานที่ทำงาน',
+    innerMarkupSvg: `
+      <circle cx="${PIN_HEAD_CX}" cy="${PIN_HEAD_CY}" r="3.2" fill="none" stroke="#ffffff" stroke-width="1.6" />
+      <circle cx="${PIN_HEAD_CX}" cy="${PIN_HEAD_CY}" r="1.2" fill="#ffffff" />
+    `,
+  })
 }
 
 export function MapView({ userPos, officePos, radiusMeters, className }: MapViewProps) {
@@ -149,16 +188,16 @@ export function MapView({ userPos, officePos, radiusMeters, className }: MapView
             20,
             metersToPixelsAtMaxZoom(radiusMeters, officePos.lat),
           ],
-          'circle-color': readThemeColor('--color-primary', '#1b6bb8'),
+          'circle-color': readThemeColor('--color-primary', '#0071bd'),
           'circle-opacity': 0.15,
           'circle-stroke-width': 1,
-          'circle-stroke-color': readThemeColor('--color-primary', '#1b6bb8'),
+          'circle-stroke-color': readThemeColor('--color-primary', '#0071bd'),
           'circle-stroke-opacity': 0.4,
         },
       })
 
       officeMarkerRef.current = new Marker({
-        element: createMarkerElement(gpsOfficeIcon, 'ตำแหน่งสถานที่ทำงาน'),
+        element: createOfficeMarkerElement(),
         anchor: 'bottom',
       })
         .setLngLat([officePos.lng, officePos.lat])
@@ -208,7 +247,7 @@ export function MapView({ userPos, officePos, radiusMeters, className }: MapView
       userMarkerRef.current.setLngLat([userPos.lng, userPos.lat])
     } else {
       userMarkerRef.current = new Marker({
-        element: createMarkerElement(gpsPinIcon, 'ตำแหน่งของคุณ'),
+        element: createUserMarkerElement(),
         anchor: 'bottom',
       })
         .setLngLat([userPos.lng, userPos.lat])
