@@ -14,7 +14,7 @@ describe('BootstrapProgress', () => {
     expect(screen.getByText('กำลังเตรียม LINE LIFF...')).toBeInTheDocument()
     expect(screen.getByText('ตรวจสอบสิทธิ์การเข้าถึง')).toBeInTheDocument()
     expect(screen.getByText('รอดำเนินการ...')).toBeInTheDocument()
-    expect(screen.getByRole('status', { name: 'กำลังดำเนินการ' })).toBeInTheDocument()
+    expect(screen.getByRole('status')).toHaveTextContent('กำลังเตรียม LINE LIFF...')
   })
 
   it('step 2 active: ขั้น 1 กลายเป็นสำเร็จ ขั้น 2 active', () => {
@@ -27,7 +27,7 @@ describe('BootstrapProgress', () => {
     expect(screen.getAllByText('กำลังตรวจสอบสิทธิ์...')).toHaveLength(2)
   })
 
-  it('โหมด error: ขั้นที่พังโชว์ข้อความ error และไม่โชว์ spinner ใหญ่', () => {
+  it('โหมด error: ไม่มี role status (มีแต่ role alert)', () => {
     render(
       <BootstrapProgress
         step={1}
@@ -37,7 +37,8 @@ describe('BootstrapProgress', () => {
     )
 
     expect(screen.getByText('เชื่อมต่อ LINE ไม่สำเร็จ')).toBeInTheDocument()
-    expect(screen.queryByRole('status', { name: 'กำลังดำเนินการ' })).not.toBeInTheDocument()
+    expect(screen.getByRole('alert')).toHaveTextContent('เชื่อมต่อ LINE ไม่สำเร็จ')
+    expect(screen.queryByRole('status')).not.toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'ลองใหม่' })).not.toBeInTheDocument()
   })
 
