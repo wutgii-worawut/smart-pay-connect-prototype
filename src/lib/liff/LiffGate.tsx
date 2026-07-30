@@ -1,10 +1,16 @@
 /**
- * lib/liff/LiffGate.tsx — ประตูก่อนเข้าแอปจริง (§20.2)
+ * lib/liff/LiffGate.tsx — ประตูก่อนเข้าแอปจริง (§20.2, P23 Figma stepper)
  *
- * 3 สถานะ: loading (กำลัง init) / ready (render children) / error (init ล้มเหลว —
- * ต้องมีข้อความ+ปุ่มลองใหม่ ห้ามหมุนค้างตลอดกาล) ห้าม render router ก่อน init resolve (§12.1)
+ * 3 สถานะ: loading (กำลัง init, ขั้น 1 ของ 2 ใน BootstrapProgress) / ready (render children) /
+ * error (init ล้มเหลว — ต้องมีข้อความ+ปุ่มลองใหม่ ในการ์ดเดียวกัน ห้ามหมุนค้างตลอดกาล) ห้าม render
+ * router ก่อน init resolve (§12.1)
+ *
+ * ก่อนโชว์การ์ด loading หน่วง 300ms ผ่าน useDelayedReveal กัน flash (bootstrap จริงมัก <1s) —
+ * error โชว์ทันทีไม่รอ delay
  */
 import type { ReactNode } from 'react'
+import { BootstrapProgress } from '@/components/BootstrapProgress'
+import { useDelayedReveal } from '@/hooks/useDelayedReveal'
 import { useLiff } from './useLiff'
 
 function handleRetry(): void {
@@ -13,35 +19,25 @@ function handleRetry(): void {
 
 export function LiffGate({ children }: { children: ReactNode }) {
   const state = useLiff()
+  const revealed = useDelayedReveal()
 
   if (state.status === 'loading') {
+    if (!revealed) {
+      return <div className="min-h-screen bg-surface" />
+    }
     return (
-      <div className="flex min-h-screen flex-col items-center justify-center gap-3 bg-surface">
-        <div
-          role="status"
-          aria-label="กำลังโหลด"
-          className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"
-        />
-        <p className="text-sm text-text-secondary">กำลังโหลด...</p>
-      </div>
+      <BootstrapProgress step={1} title="กำลังเชื่อมต่อกับ LINE..." description="กรุณารอสักครู่" />
     )
   }
 
   if (state.status === 'error') {
     return (
-      <div className="flex min-h-screen flex-col items-center justify-center gap-4 bg-surface p-6 text-center">
-        <p className="text-lg font-semibold text-primary-dark">เปิดแอปไม่สำเร็จ</p>
-        <p className="text-sm text-text-secondary">
-          กรุณาเปิดผ่านแอป LINE หรือลองใหม่อีกครั้ง
-        </p>
-        <button
-          type="button"
-          onClick={handleRetry}
-          className="rounded-full bg-primary px-6 py-2 text-sm font-medium text-white"
-        >
-          ลองใหม่
-        </button>
-      </div>
+      <BootstrapProgress
+        step={1}
+        title="เปิดแอปไม่สำเร็จ"
+        description="กรุณาเปิดผ่านแอป LINE หรือลองใหม่อีกครั้ง"
+        error={{ message: 'เชื่อมต่อ LINE ไม่สำเร็จ', onRetry: handleRetry }}
+      />
     )
   }
 

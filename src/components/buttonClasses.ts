@@ -10,8 +10,15 @@
  */
 export type ButtonShape = 'card' | 'pill'
 
-const BASE =
-  'inline-flex w-full items-center justify-center gap-2 px-6 py-4 text-base font-semibold transition-opacity focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50'
+/**
+ * focus-visible ring ชุดเดียวที่ทั้งแอปใช้ — export ไว้ให้ปุ่ม compact ที่คุมขนาดเอง (เช่น ปุ่ม
+ * "ลองใหม่" ใน `BootstrapProgress`, ไม่ใช่ `w-full py-4 text-base` แบบปุ่มหลัก) เอาไปแปะได้โดยไม่
+ * ต้องประดิษฐ์สี ring ใหม่ (code-style: ห้าม arbitrary color + ห้าม copy class ซ้ำ)
+ */
+export const FOCUS_VISIBLE_RING_CLASS =
+  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:ring-offset-2'
+
+const BASE = `inline-flex w-full items-center justify-center gap-2 px-6 py-4 text-base font-semibold transition-opacity ${FOCUS_VISIBLE_RING_CLASS} disabled:cursor-not-allowed disabled:opacity-50`
 
 function shapeClass(shape: ButtonShape): string {
   return shape === 'pill' ? 'rounded-full' : 'rounded-card'
