@@ -1,7 +1,10 @@
 /**
  * components/DropdownFilter.tsx — ปุ่ม dropdown ปี/เดือน/สถานะ (S3, feature-plans/00 §1)
- * P5: native <select> restyle เป็น pill ก่อน (จะสลับเป็น shadcn select hand-vendor ตอน P6 —
- * ดู plan.md P5 หมายเหตุ "อย่าเพิ่งพึ่ง shadcn ที่ยังไม่มี") — controlled ล้วน (value+onChange)
+ * **native <select> restyle เป็น pill — จงใจคงไว้ ไม่ใช่งานค้าง** (P5 บันทึกแก้แผน: ยังไม่มี design
+ * ของ dropdown ตอนเปิดให้เทียบ จึงตัดสินคงเป็น native ต่อ ได้ wheel picker ของ OS บนมือถือด้วย)
+ * คนละตัวกับ Select (S16, Radix hand-vendor) ที่ใช้ในฟอร์ม — S3 vs S16 แยกกันตั้งแต่ต้นใน
+ * feature-plans/00 §1 (ปุ่มกรองบนหน้ารายการ vs form control) ดู Select.tsx หัวไฟล์ประกอบ
+ * controlled ล้วน (value+onChange)
  * font ต้อง >=16px (text-base) กัน iOS WebKit auto-zoom เมื่อ focus control ใน LINE in-app browser
  */
 interface DropdownFilterOption {
