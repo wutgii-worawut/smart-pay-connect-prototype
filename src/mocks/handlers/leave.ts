@@ -26,6 +26,8 @@
  * scenario สลับได้ผ่าน `setLeaveRequestsScenario()` / `setLeaveDetailScenario()` (dev console หรือเทสต์)
  */
 import { http, HttpResponse } from 'msw'
+import { sumLeaveDays } from '@/utils/date'
+import type { LeaveDayEntry } from '@/types/leave'
 import { BASE_URL } from '../base'
 
 export type LeaveRequestsScenario = 'data' | 'empty' | 'error'
@@ -56,8 +58,13 @@ export function setLeaveDetailScenario(next: LeaveDetailScenario): void {
 
 /**
  * scenario ของ `POST /leave/requests` (P16 — ฟอร์มสร้างใบลา):
- * - 'success'           → สร้างสำเร็จ คืน `LeaveCreateResult` (id/requestNumber/status PENDING ฯลฯ)
- * - 'quota-exceeded'    → 422 `QUOTA_EXCEEDED` — `LeaveForm` โชว์ error ที่ช่อง `dateRange`
+ * - 'success'           → **ไม่ได้แปลว่าสำเร็จเสมอ** — handler ยัง enforce โควตาจริงต่อจากนี้เทียบกับ
+ *   `BALANCE` (ตัวเดียวกับ `GET /leave/balance`) เสมอ: สำเร็จก็ต่อเมื่อ `sumLeaveDays(days)` ของ
+ *   `leaveType` ที่ขอ ≤ `remaining` ของประเภทนั้น ไม่งั้นตอบ 422 `QUOTA_EXCEEDED` เหมือนเคส override
+ *   ด้านล่าง (bug fix 2026-07-31 — เดิม mock ปล่อยผ่านทุกจำนวนวันเมื่อ scenario เป็น 'success' ทำให้
+ *   เส้นทาง `QUOTA_EXCEEDED` ยิงเองไม่ได้เลยตอนใช้งานปกติ ต้องสลับ scenario ด้วยมือเท่านั้น)
+ * - 'quota-exceeded'    → บังคับ 422 `QUOTA_EXCEEDED` เสมอ (ไม่เช็คโควตาจริง) — ใช้ตอนต้องการยืนยัน
+ *   error path แน่ ๆ ไม่ต้องพึ่ง payload/balance ปัจจุบัน — `LeaveForm` โชว์ error ที่ช่อง `dateRange`
  * - 'validation-error'  → 422 `VALIDATION_ERROR` — `LeaveForm` โชว์ error ที่ root (เหนือปุ่มส่ง)
  * - 'error'             → 500 ทั่วไป — toast
  */
@@ -77,10 +84,12 @@ export function resetLeaveScenarios(): void {
   createScenario = 'success'
 }
 
-/** shape mirror ตรง §16.3: `{leaveType, days:[{date,period}], reason, substituteId?}` */
+/** shape mirror ตรง §16.3: `{leaveType, days:[{date,period}], reason, substituteId?}` — `days` ใช้
+ * `LeaveDayEntry` ตัวเดียวกับฟอร์ม/`sumLeaveDays` (ไม่ประกาศ `period: string` แยกเอง) เพื่อเรียก
+ * `sumLeaveDays(body.days)` ตรง ๆ ตอนเช็คโควตาด้านล่างได้โดยไม่ต้อง cast */
 interface CreateLeaveBody {
   leaveType?: string
-  days?: { date: string; period: string }[]
+  days?: LeaveDayEntry[]
   substituteId?: string
 }
 
@@ -108,6 +117,9 @@ function periodSummaryOf(days: { date: string; period: string }[]): string {
   if (days[0].period === 'full') return 'เต็มวัน'
   return days[0].period === 'am' ? 'ครึ่งวัน (เช้า)' : 'ครึ่งวัน (บ่าย)'
 }
+
+/** ข้อความ error เดียวกันทั้ง 2 เส้นทางที่คืน `QUOTA_EXCEEDED` (scenario override + เช็คโควตาจริงด้านล่าง) */
+const QUOTA_EXCEEDED_MESSAGE = 'วันลาคงเหลือไม่พอสำหรับช่วงวันที่เลือก'
 
 const BALANCE = [
   { type: 'vacation', total: 20, carriedOver: 5, used: 5, pending: 3, remaining: 17 },
@@ -296,7 +308,7 @@ export const leaveHandlers = [
   http.post(`${BASE_URL}/leave/requests`, async ({ request }) => {
     if (createScenario === 'quota-exceeded') {
       return HttpResponse.json(
-        { error: { code: 'QUOTA_EXCEEDED', message: 'วันลาคงเหลือไม่พอสำหรับช่วงวันที่เลือก' } },
+        { error: { code: 'QUOTA_EXCEEDED', message: QUOTA_EXCEEDED_MESSAGE } },
         { status: 422 },
       )
     }
@@ -329,7 +341,19 @@ export const leaveHandlers = [
       )
     }
 
-    const totalDays = days.reduce((sum, day) => sum + (day.period === 'full' ? 1 : 0.5), 0)
+    const totalDays = sumLeaveDays(days)
+
+    // เทียบโควตาจริงกับ `BALANCE` (single source เดียวกับ `GET /leave/balance` ด้านบน — ห้าม
+    // hardcode เลขซ้ำ) เพื่อให้ `QUOTA_EXCEEDED` ยิงเองได้ตอนใช้งานปกติ ไม่ต้องพึ่งสลับ scenario ด้วยมือ
+    // (bug fix 2026-07-31 — ดู doc-comment `LeaveCreateScenario` ด้านบน) — ไม่พบประเภทใน `BALANCE` →
+    // ปล่อยผ่าน (ไม่ใช่เคสที่ mock ต้องตัดสิน)
+    const balanceEntry = BALANCE.find((b) => b.type === type)
+    if (balanceEntry && totalDays > balanceEntry.remaining) {
+      return HttpResponse.json(
+        { error: { code: 'QUOTA_EXCEEDED', message: QUOTA_EXCEEDED_MESSAGE } },
+        { status: 422 },
+      )
+    }
 
     return HttpResponse.json({
       data: {

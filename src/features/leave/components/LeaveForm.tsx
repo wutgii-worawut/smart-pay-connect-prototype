@@ -29,8 +29,10 @@
  * default 'full', วันที่หลุดช่วงตัดทิ้ง (ไม่ใช้ `useFieldArray` เพราะ key คือวันที่ ไม่ใช่ index คงที่)
  */
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useEffect, useMemo } from 'react'
+import { useEffect, useMemo, useRef } from 'react'
+import type { FormEvent } from 'react'
 import { Controller, useForm, useWatch } from 'react-hook-form'
+import type { FieldErrors } from 'react-hook-form'
 import { DateRangeField } from '@/components/DateRangeField'
 import { PrimaryButton } from '@/components/PrimaryButton'
 import { SelectField } from '@/components/SelectField'
@@ -49,6 +51,7 @@ import { AttachmentDropzone } from './AttachmentDropzone'
 import { LeavePeriodSection } from './LeavePeriodSection'
 import { LeaveTypeCard } from './LeaveTypeCard'
 import { buildLeaveFormSchema, type LeaveFormValues } from '../utils/leaveFormSchema'
+import { firstErrorField } from '../utils/firstErrorField'
 
 const LEAVE_TYPES: LeaveType[] = ['vacation', 'sick', 'personal']
 
@@ -98,6 +101,25 @@ function CheckIcon() {
   )
 }
 
+/** เลื่อนจอไป error แล้ว focus container ของ section นั้น (ไม่ใช่ input ข้างใน) — ใช้กับ section
+ * `type`/`dateRange` ที่ไม่มี native input ให้ RHF auto-focus เอง (ต่างจาก `reason` ที่ปล่อยให้
+ * RHF/browser จัดการผ่าน `register()` ตามปกติ ไม่เรียกฟังก์ชันนี้ซ้อน กันตีกับ viewport resize ตอน
+ * คีย์บอร์ดเด้ง) `preventScroll: true` กัน focus() เลื่อนจออีกรอบซ้อนกับ scrollIntoView ที่ทำไปแล้ว
+ *
+ * `scrollTarget` (พารามิเตอร์ที่ 2, optional) — แยก "เป้าที่เลื่อนจอไปหา" ออกจาก "element ที่ focus"
+ * (บั๊กที่พบจากเทสจริง 2026-07-31): section `dateRange` ครอบทั้ง `DateRangeField` (มีข้อความ error อยู่
+ * ส่วนบนของตัวมัน) **และ** `LeavePeriodSection` (แถวต่อวันทำงาน — เลือกช่วงยาวหลาย, สิบวันได้ สูงกว่า
+ * จอทั้งก้อน) ถ้า `scrollIntoView({block:'center'})` ที่ section ทั้งก้อนตรง ๆ พอ section สูงกว่า
+ * viewport จุดกึ่งกลางของมันจะไปอยู่กลางจอ = ข้อความ error ที่อยู่บนสุดหลุดขึ้นไปเหนือจอที่มองเห็น จึง
+ * ต้องส่ง `scrollTarget` เป็น wrapper เตี้ย ๆ ที่มีทั้งปุ่มเลือกวันและข้อความ error (ไม่รวมรายการวัน) มา
+ * แทน ส่วน `focus()` ยังคงเรียกที่ `section` เหมือนเดิมเสมอ (a11y ยึด section container `tabIndex={-1}`
+ * เป็นจุด focus canonical ของทุก field ในหมวดนั้น ไม่ใช่ jump ไปที่ wrapper ย่อย) */
+function scrollToSection(section: HTMLElement | null, scrollTarget?: HTMLElement | null) {
+  if (!section) return
+  ;(scrollTarget ?? section).scrollIntoView({ block: 'center', behavior: 'smooth' })
+  section.focus({ preventScroll: true })
+}
+
 export function LeaveForm({
   balances,
   holidays,
@@ -109,16 +131,34 @@ export function LeaveForm({
 }: LeaveFormProps) {
   const schema = useMemo(() => buildLeaveFormSchema(holidays), [holidays])
 
+  // container ref ต่อ section ที่ไม่มี native input ให้ RHF auto-focus เอง (`type` เลือกผ่านการ์ด,
+  // `dateRange` เลือกผ่านปุ่มเปิด Drawer) — ใช้กับ auto-scroll ตอน submit ไม่ผ่าน/QUOTA_EXCEEDED
+  const typeSectionRef = useRef<HTMLElement>(null)
+  const dateRangeSectionRef = useRef<HTMLElement>(null)
+  // wrapper เตี้ย ๆ รอบ `Controller name="dateRange"` เท่านั้น (ไม่รวม `LeavePeriodSection` ที่แถวต่อวัน
+  // ทำงานอาจสูงเกินจอ) — ใช้เป็น scroll target แยกจาก focus target (`dateRangeSectionRef`) ดูคอมเมนต์
+  // `scrollToSection` ด้านบน
+  const dateRangeControlRef = useRef<HTMLDivElement>(null)
+
   const {
     control,
     register,
     handleSubmit,
     setError,
     setValue,
+    setFocus,
     getValues,
     formState: { errors },
   } = useForm<LeaveFormValues>({
     resolver: zodResolver(schema),
+    // ปิด auto-focus ในตัวของ RHF (default true) — ทำเอง 100% ใน `handleInvalidSubmit` ด้านล่างแทน
+    // เหตุผล: `type`/`dateRange` ไม่มี native ref ให้ RHF โฟกัสได้ (`type` ตั้งผ่าน `setValue`,
+    // `dateRange` เป็น custom component ผ่าน `Controller`) มีแค่ `reason` ที่ register() จริง — ถ้าเปิด
+    // ไว้ ตอนฟอร์มว่างทั้งหมด (error พร้อมกันทั้ง 3 ช่อง) RHF จะ auto-focus `reason` เสมอ (ช่องเดียวที่
+    // โฟกัสได้จริง) ทับ scroll ไปช่อง "ประเภทการลา" ที่เราตั้งใจไว้เป็นช่องแรกตามลำดับบนจอ — จึงปิดแล้ว
+    // เรียก `setFocus('reason')` เองแทนในเคสนั้น (สั่ง native focus() เฉย ๆ ไม่ scrollIntoView ซ้อน —
+    // เท่ากับ "ปล่อยให้ browser จัดการ auto-scroll ตอน focus" ตามที่ตกลงไว้)
+    shouldFocusError: false,
     defaultValues: {
       type: null,
       dateRange: null,
@@ -156,6 +196,7 @@ export function LeaveForm({
     if (!submitError) return
     if (submitError.code === 'QUOTA_EXCEEDED') {
       setError('dateRange', { message: submitError.message })
+      scrollToSection(dateRangeSectionRef.current, dateRangeControlRef.current)
       return
     }
     if (submitError.code === 'VALIDATION_ERROR') {
@@ -180,17 +221,39 @@ export function LeaveForm({
     onSubmit(payload)
   }
 
+  // submit ไม่ผ่าน validation → auto-scroll ไป section แรกที่ error ตามลำดับบนจอ (ทางเลือก ก ที่เคาะ,
+  // ไม่ใช่ toast/error summary banner) `reason` ไม่อยู่ในเงื่อนไขนี้ — ปล่อยให้ RHF auto-focus textarea
+  // เอง (มี ref จาก `register('reason')` อยู่แล้ว, ดูคอมเมนต์ `scrollToSection` ด้านบน)
+  function handleInvalidSubmit(formErrors: FieldErrors<LeaveFormValues>) {
+    const field = firstErrorField(formErrors)
+    if (field === 'type') scrollToSection(typeSectionRef.current)
+    else if (field === 'dateRange') scrollToSection(dateRangeSectionRef.current, dateRangeControlRef.current)
+    else if (field === 'reason') setFocus('reason')
+  }
+
+  // ห่อเป็น event handler ธรรมดา (ไม่เรียก `handleSubmit(...)` ตรง ๆ ตอน render) — `handleInvalidSubmit`
+  // อ่านค่า ref (`typeSectionRef`/`dateRangeSectionRef`) ซึ่งต้องเกิดตอน submit event เท่านั้น ไม่ใช่
+  // ตอน render (react-hooks/refs — "Cannot access refs during render")
+  function onFormSubmit(event: FormEvent<HTMLFormElement>) {
+    return handleSubmit(handleFormSubmit, handleInvalidSubmit)(event)
+  }
+
   return (
     <form
-      onSubmit={handleSubmit(handleFormSubmit)}
+      onSubmit={onFormSubmit}
       noValidate
       className="flex flex-col gap-6 px-4 pt-4 pb-[calc(2rem+env(safe-area-inset-bottom))]"
     >
       <h1 className="text-lg font-semibold text-primary-dark">ขออนุมัติลา</h1>
 
-      <section className="flex flex-col gap-3">
+      <section ref={typeSectionRef} tabIndex={-1} className="flex flex-col gap-3 outline-none">
         <SectionHeading step={1} title="ประเภทการลา" />
-        <div role="radiogroup" aria-label="ประเภทการลา" className="flex flex-col gap-3">
+        <div
+          role="radiogroup"
+          aria-label="ประเภทการลา"
+          aria-describedby={errors.type ? 'leave-type-error' : undefined}
+          className="flex flex-col gap-3"
+        >
           {LEAVE_TYPES.map((type) => (
             <LeaveTypeCard
               key={type}
@@ -201,29 +264,36 @@ export function LeaveForm({
             />
           ))}
         </div>
-        {errors.type ? <p className="text-sm text-danger">{errors.type.message}</p> : null}
+        {errors.type ? (
+          <p id="leave-type-error" role="alert" className="text-sm text-danger">
+            {errors.type.message}
+          </p>
+        ) : null}
       </section>
 
-      <section className="flex flex-col gap-3">
+      <section ref={dateRangeSectionRef} tabIndex={-1} className="flex flex-col gap-3 outline-none">
         <SectionHeading step={2} title="ช่วงวันที่ลา" />
-        <Controller
-          name="dateRange"
-          control={control}
-          render={({ field, fieldState }) => (
-            <DateRangeField
-              name={field.name}
-              value={field.value}
-              onChange={field.onChange}
-              onBlur={field.onBlur}
-              error={fieldState.error?.message}
-            />
-          )}
-        />
+        <div ref={dateRangeControlRef}>
+          <Controller
+            name="dateRange"
+            control={control}
+            render={({ field, fieldState }) => (
+              <DateRangeField
+                name={field.name}
+                value={field.value}
+                onChange={field.onChange}
+                onBlur={field.onBlur}
+                error={fieldState.error?.message}
+              />
+            )}
+          />
+        </div>
         <LeavePeriodSection
           dateRange={dateRangeValue}
           days={days}
           holidays={holidays}
           onDaysChange={(next) => setValue('days', next, { shouldValidate: true })}
+          remaining={selectedType ? remainingByType(balances, selectedType) : undefined}
         />
       </section>
 
@@ -278,7 +348,11 @@ export function LeaveForm({
         />
       </div>
 
-      {errors.root?.message ? <p className="text-sm text-danger">{errors.root.message}</p> : null}
+      {errors.root?.message ? (
+        <p id="leave-form-root-error" role="alert" className="text-sm text-danger">
+          {errors.root.message}
+        </p>
+      ) : null}
 
       <PrimaryButton type="submit" icon={<CheckIcon />} isPending={isPending} pendingText="กำลังส่ง...">
         ส่งคำขอลา

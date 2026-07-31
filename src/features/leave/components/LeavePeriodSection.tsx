@@ -23,6 +23,10 @@ interface LeavePeriodSectionProps {
   days: LeaveDayEntry[]
   holidays: string[]
   onDaysChange: (days: LeaveDayEntry[]) => void
+  /** วันลาคงเหลือ (โดยประมาณ) ของประเภทลาที่เลือกอยู่ — ใช้แค่โชว์คำเตือน preview ไม่บล็อกการส่งฟอร์ม
+   * (โควตาจริงเป็นหน้าที่ backend เท่านั้น §7.5) `undefined` = ยังไม่รู้ค่า (ยังไม่เลือกประเภท/โหลด
+   * balance ไม่มา) → ไม่โชว์เตือน */
+  remaining: number | undefined
 }
 
 function CalendarDotIcon() {
@@ -61,11 +65,26 @@ function ClockIcon() {
   )
 }
 
-export function LeavePeriodSection({ dateRange, days, holidays, onDaysChange }: LeavePeriodSectionProps) {
+export function LeavePeriodSection({
+  dateRange,
+  days,
+  holidays,
+  onDaysChange,
+  remaining,
+}: LeavePeriodSectionProps) {
   if (!dateRange) return null
 
   const calendarDays = listLeaveCalendarDays(dateRange.start, dateRange.end, holidays)
   const isSingleDay = dateRange.start === dateRange.end
+  const totalDays = sumLeaveDays(days)
+  // [ผู้ใช้เคาะ 2026-07-31] เตือน preview เมื่อยอดรวมเกินคงเหลือ — ไม่มีองค์ประกอบนี้ใน design PNG
+  // 6.1/6.2 ต้นฉบับ เป็น deviation ที่ตั้งใจเพิ่มตามคำสั่งผู้ใช้ (ไม่ใช่ error, ไม่บล็อกการส่งฟอร์ม —
+  // โควตาจริงยังเป็นหน้าที่ backend เท่านั้น ตาม §7.5) เก็บเป็นจำนวนวันที่เกิน (0 = ไม่เกิน/ไม่รู้ค่า
+  // remaining) แทน boolean เพื่อให้ TS แคบชนิด `remaining` ไม่ได้ยังใช้แสดงผลตัวเลขต่อได้โดยไม่ต้อง `!`
+  const excessDays = remaining !== undefined ? Math.max(0, totalDays - remaining) : 0
+  // [ผู้ใช้เคาะ 2026-07-31 รอบเทสจริง] เปลี่ยนสีข้อความเป็น text-danger (เดิมเลือก text-warning ตอน
+  // 2026-07-31 รอบแรกเพื่อแยกจาก error จริง — ผู้ใช้เทสจริงแล้วขอเปลี่ยนเป็นสีแดงแทน) ยังเป็น preview
+  // เตือนเหมือนเดิมทุกอย่าง (ไม่บล็อก submit, ไม่มี role="alert"/aria-invalid)
 
   function handlePeriodChange(date: string, period: LeaveDayPeriod) {
     onDaysChange(days.map((d) => (d.date === date ? { ...d, period } : d)))
@@ -126,9 +145,15 @@ export function LeavePeriodSection({ dateRange, days, holidays, onDaysChange }: 
           <ClockIcon /> รวมจำนวนวันลา
         </span>
         <span className="text-lg font-bold text-success">
-          {sumLeaveDays(days)} <span className="text-sm font-normal">วัน</span>
+          {totalDays} <span className="text-sm font-normal">วัน</span>
         </span>
       </div>
+
+      {/* [ผู้ใช้เคาะ 2026-07-31] คำเตือน preview ไม่ใช่ error — ไม่มี role="alert"/aria-invalid ตั้งใจ
+          เพราะไม่บล็อกการส่ง ยังกดปุ่มส่งคำขอลาได้ปกติ */}
+      {excessDays > 0 ? (
+        <p className="text-sm text-danger">เกินวันลาคงเหลือ (โดยประมาณ) {excessDays} วัน</p>
+      ) : null}
     </div>
   )
 }

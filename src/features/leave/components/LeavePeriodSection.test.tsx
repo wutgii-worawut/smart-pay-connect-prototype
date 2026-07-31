@@ -7,7 +7,13 @@ import type { LeaveDayEntry } from '@/types/leave'
 describe('LeavePeriodSection', () => {
   it('ไม่มี dateRange → ไม่ render อะไรเลย', () => {
     const { container } = render(
-      <LeavePeriodSection dateRange={null} days={[]} holidays={[]} onDaysChange={() => undefined} />,
+      <LeavePeriodSection
+        dateRange={null}
+        days={[]}
+        holidays={[]}
+        onDaysChange={() => undefined}
+        remaining={undefined}
+      />,
     )
     expect(container).toBeEmptyDOMElement()
   })
@@ -20,6 +26,7 @@ describe('LeavePeriodSection', () => {
         days={days}
         holidays={[]}
         onDaysChange={() => undefined}
+        remaining={undefined}
       />,
     )
 
@@ -40,6 +47,7 @@ describe('LeavePeriodSection', () => {
         days={days}
         holidays={[]}
         onDaysChange={() => undefined}
+        remaining={undefined}
       />,
     )
 
@@ -66,11 +74,67 @@ describe('LeavePeriodSection', () => {
         days={days}
         holidays={[]}
         onDaysChange={() => undefined}
+        remaining={undefined}
       />,
     )
 
     expect(screen.getByText('รวมจำนวนวันลา')).toBeInTheDocument()
     expect(screen.getByText('1.5')).toBeInTheDocument()
+  })
+
+  // [ผู้ใช้เคาะ 2026-07-31] คำเตือน preview เกินโควตา — deviation จาก design PNG 6.1/6.2 (ไม่มีใน mockup)
+  it('remaining น้อยกว่ายอดรวมวันลา → โชว์ข้อความเตือน "เกินวันลาคงเหลือ (โดยประมาณ)"', () => {
+    const days: LeaveDayEntry[] = [
+      { date: '2026-06-18', period: 'full' },
+      { date: '2026-06-19', period: 'am' },
+    ]
+    render(
+      <LeavePeriodSection
+        dateRange={{ start: '2026-06-18', end: '2026-06-19' }}
+        days={days}
+        holidays={[]}
+        onDaysChange={() => undefined}
+        remaining={1}
+      />,
+    )
+
+    expect(screen.getByText('เกินวันลาคงเหลือ (โดยประมาณ) 0.5 วัน')).toBeInTheDocument()
+  })
+
+  it('remaining มากกว่าหรือเท่ายอดรวมวันลา → ไม่โชว์ข้อความเตือน', () => {
+    const days: LeaveDayEntry[] = [
+      { date: '2026-06-18', period: 'full' },
+      { date: '2026-06-19', period: 'am' },
+    ]
+    render(
+      <LeavePeriodSection
+        dateRange={{ start: '2026-06-18', end: '2026-06-19' }}
+        days={days}
+        holidays={[]}
+        onDaysChange={() => undefined}
+        remaining={1.5}
+      />,
+    )
+
+    expect(screen.queryByText(/เกินวันลาคงเหลือ/)).not.toBeInTheDocument()
+  })
+
+  it('remaining เป็น undefined → ไม่โชว์ข้อความเตือนแม้ยอดรวมวันลาจะสูง', () => {
+    const days: LeaveDayEntry[] = [
+      { date: '2026-06-18', period: 'full' },
+      { date: '2026-06-19', period: 'am' },
+    ]
+    render(
+      <LeavePeriodSection
+        dateRange={{ start: '2026-06-18', end: '2026-06-19' }}
+        days={days}
+        holidays={[]}
+        onDaysChange={() => undefined}
+        remaining={undefined}
+      />,
+    )
+
+    expect(screen.queryByText(/เกินวันลาคงเหลือ/)).not.toBeInTheDocument()
   })
 
   it('กด toggle ของแถววันที่ → เรียก onDaysChange พร้อม period ใหม่ของวันนั้นวันเดียว', async () => {
@@ -86,6 +150,7 @@ describe('LeavePeriodSection', () => {
         days={days}
         holidays={[]}
         onDaysChange={onDaysChange}
+        remaining={undefined}
       />,
     )
 
@@ -109,6 +174,7 @@ describe('LeavePeriodSection', () => {
         days={days}
         holidays={['2026-06-02']}
         onDaysChange={() => undefined}
+        remaining={undefined}
       />,
     )
 

@@ -93,6 +93,57 @@ describe('LeaveForm', () => {
     expect(onSubmit).not.toHaveBeenCalled()
   })
 
+  it('ส่งฟอร์มว่าง → auto-scroll + focus ไป section ประเภทการลา (field แรกที่ error ตามลำดับบนจอ)', async () => {
+    const user = userEvent.setup()
+    const scrollSpy = vi.spyOn(window.HTMLElement.prototype, 'scrollIntoView')
+    // กัน call history ค้างจากเทสต์ก่อนหน้าที่ spy method เดียวกัน (ไม่มี restoreMocks/clearMocks ใน
+    // vitest.config.ts ทั้ง repo) — ไม่ clear แล้ว assertion ด้านล่างจะ pass เสมอแม้ลบ scroll ออกจริง
+    scrollSpy.mockClear()
+    renderForm()
+
+    await user.click(screen.getByRole('button', { name: /ส่งคำขอลา/ }))
+    await screen.findByText('กรุณาเลือกประเภทการลา')
+
+    expect(scrollSpy).toHaveBeenCalledWith({ block: 'center', behavior: 'smooth' })
+    const typeSection = screen.getByText('ประเภทการลา').closest('section')
+    expect(typeSection).not.toBeNull()
+    expect(document.activeElement).toBe(typeSection)
+  })
+
+  it('ส่งฟอร์มที่เลือกประเภทแล้วแต่ยังไม่เลือกช่วงวันที่ → auto-scroll ไป wrapper ที่มีข้อความ error ช่วงวันที่ (ไม่ใช่ section ทั้งก้อน) + focus section เดิม', async () => {
+    const user = userEvent.setup()
+    const scrollSpy = vi.spyOn(window.HTMLElement.prototype, 'scrollIntoView')
+    scrollSpy.mockClear()
+    renderForm()
+
+    await user.click(screen.getByRole('radio', { name: /ลาพักร้อน/ }))
+    await user.click(screen.getByRole('button', { name: /ส่งคำขอลา/ }))
+
+    const errorText = await screen.findByText('กรุณาเลือกช่วงวันที่ลา')
+    expect(scrollSpy).toHaveBeenCalledWith({ block: 'center', behavior: 'smooth' })
+    const [scrolledElement] = scrollSpy.mock.contexts
+    if (!(scrolledElement instanceof HTMLElement)) throw new Error('scrollIntoView ไม่ถูกเรียก')
+    expect(scrolledElement.contains(errorText)).toBe(true)
+
+    const dateRangeSection = screen.getByText('ช่วงวันที่ลา').closest('section')
+    expect(scrolledElement).not.toBe(dateRangeSection)
+    expect(document.activeElement).toBe(dateRangeSection)
+  })
+
+  it('ส่งฟอร์มที่กรอกครบยกเว้นเหตุผล → focus ไป textarea เหตุผล (guard shouldFocusError: false ไม่ถูกลบ)', async () => {
+    const user = userEvent.setup()
+    renderForm()
+
+    await user.click(screen.getByRole('radio', { name: /ลาพักร้อน/ }))
+    await pickSingleDay(user, /16 มิถุนายน/)
+
+    await user.click(screen.getByRole('button', { name: /ส่งคำขอลา/ }))
+    await screen.findByText('กรุณาระบุเหตุผลการลา')
+
+    const reasonField = screen.getByPlaceholderText(/ระบุเหตุผล/)
+    expect(document.activeElement).toBe(reasonField)
+  })
+
   it('กดการ์ดประเภทลา → เลือกได้ทีละใบ (radio) เปลี่ยนใบที่ selected ตามที่กด', async () => {
     const user = userEvent.setup()
     renderForm()
@@ -205,13 +256,83 @@ describe('LeaveForm', () => {
     })
   })
 
-  it('QUOTA_EXCEEDED (submitError prop) → โชว์ error ตรงช่องวันที่ ไม่ใช่ toast', () => {
+  // [ผู้ใช้เคาะ 2026-07-31] คำเตือน preview เกินโควตา — deviation จาก design PNG 6.1/6.2 (ยังต้อง
+  // ส่งฟอร์มได้ปกติ ไม่บล็อก — โควตาจริงเป็นหน้าที่ backend §7.5)
+  it('เลือกลากิจ (คงเหลือ 9 วัน) + ช่วงวันที่ทำงานรวม 10 วัน → โชว์คำเตือนเกินคงเหลือ แต่ยังส่งฟอร์มได้ปกติ', async () => {
+    const user = userEvent.setup()
+    const onSubmit = renderForm()
+
+    await user.click(screen.getByRole('radio', { name: /ลากิจ/ }))
+
+    // 2026-06-01 (จ.) ถึง 2026-06-12 (ศ.) → วันทำงาน 10 วัน (ตัดเสาร์-อาทิตย์ 6-7) เกินคงเหลือ 9 วัน
+    // aria-label เต็มรูปแบบ "วันจันทร์ที่ 1 มิถุนายน 2026" — ใช้ negative lookbehind กันชนกับวันที่
+    // ลงท้ายด้วยเลขเดียวกัน (11, 21 มิถุนายน ก็มี "1 มิถุนายน" เป็น substring)
+    await user.click(screen.getAllByText('เลือกวันที่')[0])
+    await user.click(await screen.findByRole('button', { name: /(?<!\d)1 มิถุนายน 2026/ }))
+    await user.click(screen.getByRole('button', { name: /(?<!\d)12 มิถุนายน 2026/ }))
+    await user.click(screen.getByRole('button', { name: 'ยืนยัน' }))
+
+    expect(await screen.findByText('เกินวันลาคงเหลือ (โดยประมาณ) 1 วัน')).toBeInTheDocument()
+
+    await user.type(screen.getByPlaceholderText(/ระบุเหตุผล/), 'ธุระส่วนตัว')
+    await user.click(screen.getByRole('button', { name: /ส่งคำขอลา/ }))
+
+    expect(onSubmit).toHaveBeenCalled()
+  })
+
+  it('QUOTA_EXCEEDED (submitError prop) → โชว์ error ตรงช่องวันที่ ไม่ใช่ toast + scroll ไปหา + role=alert', () => {
+    const scrollSpy = vi.spyOn(window.HTMLElement.prototype, 'scrollIntoView')
+    // กัน call history ค้างจากเทสต์ก่อนหน้า (ดูคอมเมนต์เดียวกันที่เทสต์ auto-scroll ด้านบน)
+    scrollSpy.mockClear()
     renderForm({
       submitError: new ApiError('QUOTA_EXCEEDED', 'วันลาคงเหลือไม่พอสำหรับช่วงวันที่เลือก', 422),
     })
 
-    expect(screen.getByText('วันลาคงเหลือไม่พอสำหรับช่วงวันที่เลือก')).toBeInTheDocument()
+    const errorText = screen.getByText('วันลาคงเหลือไม่พอสำหรับช่วงวันที่เลือก')
+    expect(errorText).toBeInTheDocument()
+    expect(errorText).toHaveAttribute('role', 'alert')
     expect(screen.queryByRole('status')).not.toBeInTheDocument()
+    expect(scrollSpy).toHaveBeenCalledWith({ block: 'center', behavior: 'smooth' })
+  })
+
+  // บั๊กที่พบจากเทสจริง 2026-07-31: `dateRangeSectionRef` ครอบทั้ง `DateRangeField` (error อยู่บนสุด)
+  // และ `LeavePeriodSection` (แถวต่อวันทำงาน — เลือกช่วงยาวหลายสิบวันสูงเกินจอ) scrollIntoView ที่
+  // section ทั้งก้อนตรง ๆ จะเลื่อนผิดจุด (error หลุดขึ้นเหนือจอ) ต้องเลื่อนไปที่ wrapper เตี้ย ๆ ที่มี
+  // ข้อความ error อยู่ข้างในแทน — เทสต์นี้ยืนยันว่า element ที่ถูก `scrollIntoView` จริง ๆ ไม่ใช่ section
+  // ทั้งก้อน แต่เป็น wrapper ที่ `.contains()` ข้อความ error (พิสูจน์ผ่าน `mock.contexts` คือ `this` ตอน
+  // เรียก method ไม่ใช่แค่ argument ที่ส่งเข้าไป)
+  it('QUOTA_EXCEEDED → scrollIntoView ถูกเรียกที่ wrapper ที่มีข้อความ error อยู่ข้างใน ไม่ใช่ section ทั้งก้อน', () => {
+    const scrollSpy = vi.spyOn(window.HTMLElement.prototype, 'scrollIntoView')
+    scrollSpy.mockClear()
+    renderForm({
+      submitError: new ApiError('QUOTA_EXCEEDED', 'วันลาคงเหลือไม่พอสำหรับช่วงวันที่เลือก', 422),
+    })
+
+    const errorText = screen.getByText('วันลาคงเหลือไม่พอสำหรับช่วงวันที่เลือก')
+    const [scrolledElement] = scrollSpy.mock.contexts
+    if (!(scrolledElement instanceof HTMLElement)) throw new Error('scrollIntoView ไม่ถูกเรียก')
+    expect(scrolledElement.contains(errorText)).toBe(true)
+
+    const dateRangeSection = screen.getByText('ช่วงวันที่ลา').closest('section')
+    expect(scrolledElement).not.toBe(dateRangeSection)
+    // focus ยังคงยึด section container เดิมเสมอ (a11y canonical) แม้ scroll target เปลี่ยน
+    expect(document.activeElement).toBe(dateRangeSection)
+  })
+
+  it('QUOTA_EXCEEDED → ปุ่มเลือกวันที่มี aria-invalid + aria-describedby ชี้ id ข้อความ error', () => {
+    renderForm({
+      submitError: new ApiError('QUOTA_EXCEEDED', 'วันลาคงเหลือไม่พอสำหรับช่วงวันที่เลือก', 422),
+    })
+
+    const errorText = screen.getByText('วันลาคงเหลือไม่พอสำหรับช่วงวันที่เลือก')
+    const dateButtons = [
+      screen.getByRole('button', { name: 'วันที่เริ่ม' }),
+      screen.getByRole('button', { name: 'ถึงวันที่' }),
+    ]
+    for (const button of dateButtons) {
+      expect(button).toHaveAttribute('aria-invalid', 'true')
+      expect(button).toHaveAttribute('aria-describedby', errorText.id)
+    }
   })
 
   it('VALIDATION_ERROR (submitError prop) → โชว์ error เหนือปุ่มส่ง (root)', () => {

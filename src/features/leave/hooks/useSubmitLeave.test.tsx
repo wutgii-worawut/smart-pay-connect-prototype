@@ -34,6 +34,15 @@ const PAYLOAD: LeaveCreatePayload = {
   attachments: [],
 }
 
+/** สร้าง `days` ยาว `count` วัน (เต็มวันทั้งหมด) — เดทสมมติล้วน ไม่ต้องเรียงต่อเนื่อง/เลี่ยงวันหยุดจริง
+ * เพราะ handler เช็คแค่ผลรวม `sumLeaveDays` เทียบ `remaining` ไม่ได้ validate ช่วงวันที่ */
+function buildDays(count: number): LeaveCreatePayload['days'] {
+  return Array.from({ length: count }, (_, i) => ({
+    date: `2026-01-${String(i + 1).padStart(2, '0')}`,
+    period: 'full' as const,
+  }))
+}
+
 function countCreateHits(): { get: () => number } {
   let hitCount = 0
   server.events.on('request:start', ({ request }) => {
@@ -66,6 +75,33 @@ describe('useSubmitLeave', () => {
     await waitFor(() => expect(result.current.isError).toBe(true))
     expect(result.current.error).toBeInstanceOf(ApiError)
     expect((result.current.error as ApiError).code).toBe('QUOTA_EXCEEDED')
+  })
+
+  // bug fix 2026-07-31: mock เดิม (scenario 'success') ไม่เคยเทียบโควตาจริงกับ `GET /leave/balance`
+  // เลย ทำให้ขอลาเกินคงเหลือ (เช่น vacation เหลือ 17 แต่ขอ 22) แล้วผ่านได้เสมอ — 2 เทสต์ด้านล่างยิง
+  // ผ่าน MSW จริงโดย**ไม่ override scenario** (ปล่อยเป็น default 'success') เพื่อยืนยันว่า handler เอง
+  // enforce โควตาแล้ว ไม่ต้องพึ่ง `setLeaveCreateScenario('quota-exceeded')` ด้วยมือ
+  it('ขอเกินคงเหลือจริง (vacation เหลือ 17 ขอ 22) → ได้ QUOTA_EXCEEDED โดยไม่ต้อง override scenario', async () => {
+    const { result } = renderHook(() => useSubmitLeave(), { wrapper: createWrapper() })
+
+    act(() => {
+      result.current.mutate({ ...PAYLOAD, days: buildDays(22) })
+    })
+
+    await waitFor(() => expect(result.current.isError).toBe(true))
+    expect(result.current.error).toBeInstanceOf(ApiError)
+    expect((result.current.error as ApiError).code).toBe('QUOTA_EXCEEDED')
+  })
+
+  it('ขอพอดีคงเหลือ (vacation เหลือ 17 ขอ 17) → สำเร็จ', async () => {
+    const { result } = renderHook(() => useSubmitLeave(), { wrapper: createWrapper() })
+
+    act(() => {
+      result.current.mutate({ ...PAYLOAD, days: buildDays(17) })
+    })
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true))
+    expect(result.current.data?.status).toBe('PENDING')
   })
 
   it('ไม่ retry อัตโนมัติ (ใช้ query-client จริงของแอป) — ยิงครั้งเดียวแม้เจอ error', async () => {

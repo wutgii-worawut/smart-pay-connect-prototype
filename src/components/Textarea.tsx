@@ -21,6 +21,7 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(function 
   ref,
 ) {
   const fieldId = id ?? name
+  const errorId = error && fieldId ? `${fieldId}-error` : undefined
 
   return (
     <div className={containerClassName}>
@@ -35,6 +36,7 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(function 
         name={name}
         rows={rows}
         aria-invalid={Boolean(error) || undefined}
+        aria-describedby={errorId}
         className={[
           'w-full resize-none rounded-card border bg-white px-4 py-3.5 text-base text-primary-dark placeholder:text-text-secondary focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 disabled:cursor-not-allowed disabled:opacity-50',
           error ? 'border-danger' : 'border-primary/15',
@@ -44,7 +46,11 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(function 
           .join(' ')}
         {...rest}
       />
-      {error ? <p className="mt-1 text-sm text-danger">{error}</p> : null}
+      {error ? (
+        <p id={errorId} className="mt-1 text-sm text-danger">
+          {error}
+        </p>
+      ) : null}
     </div>
   )
 })

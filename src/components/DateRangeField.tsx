@@ -82,6 +82,8 @@ export function DateRangeField({
   const [open, setOpen] = useState(false)
   const [draftRange, setDraftRange] = useState(() => valueToDateRange(value))
 
+  const errorId = name ? `${name}-error` : undefined
+
   function openPicker() {
     if (disabled) return
     setDraftRange(valueToDateRange(value))
@@ -118,6 +120,8 @@ export function DateRangeField({
             id={name ? `${name}-start` : undefined}
             disabled={disabled}
             onClick={openPicker}
+            aria-invalid={Boolean(error) || undefined}
+            aria-describedby={error ? errorId : undefined}
             className={[
               'flex w-full items-center gap-2 rounded-card border bg-white px-4 py-3.5 text-left text-base text-primary-dark disabled:cursor-not-allowed disabled:opacity-50',
               error ? 'border-danger' : 'border-primary/15',
@@ -139,6 +143,8 @@ export function DateRangeField({
             id={name ? `${name}-end` : undefined}
             disabled={disabled}
             onClick={openPicker}
+            aria-invalid={Boolean(error) || undefined}
+            aria-describedby={error ? errorId : undefined}
             className={[
               'flex w-full items-center gap-2 rounded-card border bg-white px-4 py-3.5 text-left text-base text-primary-dark disabled:cursor-not-allowed disabled:opacity-50',
               error ? 'border-danger' : 'border-primary/15',
@@ -173,7 +179,11 @@ export function DateRangeField({
         </div>
       </div>
 
-      {error ? <p className="mt-1 text-sm text-danger">{error}</p> : null}
+      {error ? (
+        <p id={errorId} role="alert" className="mt-1 text-sm text-danger">
+          {error}
+        </p>
+      ) : null}
 
       <Drawer open={open} onOpenChange={handleOpenChange} title="เลือกช่วงวันที่">
         <Calendar
