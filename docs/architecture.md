@@ -1547,6 +1547,12 @@ describe('sumLeaveDays', () => {
 - [ ] ยื่นลา + ไฟล์แนบ + ยกเลิกใบ PENDING (3.2)
 - [ ] หัวหน้า: อนุมัติ/ปฏิเสธ + badge จำนวน + ประวัติ (17.5)
 - [ ] Drawer: swipe ไม่ตีกับ gesture LINE, ปุ่มไม่โดน home bar บัง (10.2)
+- [ ] **Drawer + คีย์บอร์ด** (`repositionInputs={false}` — vaul#538/#619, ดู `Drawer.tsx` หัวไฟล์) ที่จอ "ลงเวลานอกสถานที่":
+  - [ ] **Android ขาขึ้น** — focus textarea → textarea ต้องลอยพ้นคีย์บอร์ด (**พิสูจน์สมมติฐานหลักของ fix ว่า LIFF webview ทำ adjustResize จริง** — ถ้าไม่ resize ต้องคิดทางแก้ใหม่ทั้งแผน)
+  - [ ] **Android ขาลง** — แตะข้างนอกให้ blur → เนื้อหาต้อง**ไม่**เหลือ vertical scroll ค้าง
+  - [ ] **iOS ขณะคีย์บอร์ดเปิด** — ต้องเห็นทั้ง textarea และปุ่ม "ยืนยันลงเวลา" (ถ้าปุ่มโดนทับ = เติม `onFocus` → `scrollIntoView({block:'nearest'})` ที่ textarea)
+  - [ ] **iOS ปิดคีย์บอร์ด** — Drawer กลับตำแหน่งเดิม ไม่ค้างลอย
+- [ ] **iOS body scroll lock** — เปิด Drawer ใดก็ได้ (รวมปฏิทิน/ยืนยันยกเลิก/วันหยุด) แล้วลากนิ้วบนพื้นหลัง → หน้าข้างหลังต้องไม่เลื่อน (`repositionInputs={false}` ปิด `usePreventScroll` ของ vaul ไปด้วย เหลือ RemoveScroll ของ Radix + อาจมี `usePositionFixed` ช่วยถ้า UA match Safari — ยังไม่พิสูจน์บนเครื่อง)
 - [ ] สลิป: เปิดดู + ส่งอีเมล (3.3)
 - [ ] ปิดแอปแล้วเปิดใหม่ → silent auth ไม่สะดุด (13.1)
 - [ ] เน็ตวูบกลางทาง → NETWORK_ERROR + ลองใหม่ได้ ไม่ยิงซ้ำ (20.4)
